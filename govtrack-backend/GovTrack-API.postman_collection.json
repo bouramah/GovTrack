@@ -1,0 +1,1377 @@
+{
+	"info": {
+		"name": "GovTrack API - Partie 1",
+		"description": "Collection complète des endpoints pour la gestion des utilisateurs, entités, postes, rôles et permissions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "1.0.0"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🏢 Type Entités",
+			"item": [
+				{
+					"name": "Lister tous les types d'entités",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/type-entites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-entites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un type d'entité",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Bureau\",\n    \"description\": \"Bureau départemental\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/type-entites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-entites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir un type d'entité",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/type-entites/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-entites",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier un type d'entité",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Direction Générale\",\n    \"description\": \"Direction générale mise à jour\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/type-entites/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-entites",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un type d'entité",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/type-entites/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"type-entites",
+								"4"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏛️ Entités",
+			"item": [
+				{
+					"name": "Lister toutes les entités",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer une entité",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Service Communication\",\n    \"type_entite_id\": 2,\n    \"parent_id\": 2,\n    \"description\": \"Service de communication et relations publiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir une entité détaillée",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier une entité",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Direction IT et Digital\",\n    \"type_entite_id\": 1,\n    \"parent_id\": null,\n    \"description\": \"Direction informatique et transformation digitale\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer une entité",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"4"
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtenir entités enfants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/1/enfants",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"1",
+								"enfants"
+							]
+						}
+					}
+				},
+				{
+					"name": "Obtenir hiérarchie complète",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/1/hierarchy",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"1",
+								"hierarchy"
+							]
+						}
+					}
+				},
+				{
+					"name": "Organigramme complet de l'organisation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/organigramme",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"organigramme"
+							]
+						}
+					}
+				},
+				{
+					"name": "Liste tous les chefs actuels",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/chefs-actuels",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"chefs-actuels"
+							]
+						}
+					}
+				},
+				{
+					"name": "Affecter un chef à une entité",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 3,\n    \"date_debut\": \"2025-01-01\",\n    \"terminer_mandat_precedent\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites/2/affecter-chef",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"2",
+								"affecter-chef"
+							]
+						}
+					}
+				},
+				{
+					"name": "Terminer mandat d'un chef",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date_fin\": \"2025-06-30\",\n    \"raison\": \"Fin de mandat temporaire\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites/2/terminer-mandat-chef",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"2",
+								"terminer-mandat-chef"
+							]
+						}
+					}
+				},
+				{
+					"name": "Historique des chefs d'une entité",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/2/historique-chefs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"2",
+								"historique-chefs"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💼 Postes",
+			"item": [
+				{
+					"name": "Lister tous les postes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/postes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"postes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un poste",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Chef de Projet Senior\",\n    \"description\": \"Responsable de la gestion de projets stratégiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/postes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"postes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir un poste détaillé",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/postes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"postes",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier un poste",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Directeur Général Adjoint\",\n    \"description\": \"Poste de direction générale adjointe\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/postes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"postes",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un poste",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/postes/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"postes",
+								"4"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 Utilisateurs",
+			"item": [
+				{
+					"name": "Lister tous les utilisateurs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un utilisateur",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"matricule\": \"TECH001\",\n    \"nom\": \"Sow\",\n    \"prenom\": \"Moussa\",\n    \"email\": \"moussa.sow@govtrack.gov\",\n    \"telephone\": \"+221 77 123 45 67\",\n    \"adresse\": \"Dakar, Sénégal\",\n    \"password\": \"password123\",\n    \"statut\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir un utilisateur détaillé",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier un utilisateur",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"matricule\": \"DIR001\",\n    \"nom\": \"Diop\",\n    \"prenom\": \"Amadou\",\n    \"email\": \"amadou.diop@govtrack.gov\",\n    \"telephone\": \"+221 77 555 66 77\",\n    \"adresse\": \"Plateau, Dakar\",\n    \"statut\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un utilisateur",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"4"
+							]
+						}
+					}
+				},
+				{
+					"name": "Historique affectations utilisateur",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/2/affectations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2",
+								"affectations"
+							]
+						}
+					}
+				},
+				{
+								"name": "Affecter utilisateur à un poste",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"poste_id\": 2,\n    \"entite_id\": 3,\n    \"date_debut\": \"2025-01-15\",\n    \"terminer_affectation_precedente\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/users/3/affecter",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"3",
+						"affecter"
+					]
+				}
+			}
+		},
+		{
+			"name": "Terminer affectation utilisateur",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"date_fin\": \"2024-12-29\",\n    \"raison\": \"Mutation vers une autre direction\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/users/2/terminer-affectation",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"users",
+						"2",
+						"terminer-affectation"
+					]
+				}
+			}
+		},
+		{
+			"name": "Assigner un rôle à un utilisateur",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/3/assign-role",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"3",
+								"assign-role"
+							]
+						}
+					}
+				},
+				{
+					"name": "Retirer un rôle d'un utilisateur",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/3/roles/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"3",
+								"roles",
+								"2"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🛡️ Rôles",
+			"item": [
+				{
+					"name": "Lister tous les rôles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un rôle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Superviseur\",\n    \"description\": \"Rôle de supervision et contrôle\",\n    \"permissions\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/roles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir un rôle détaillé",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier un rôle",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Administrateur Système\",\n    \"description\": \"Administrateur avec droits étendus\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/roles/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un rôle",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles/4",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"4"
+							]
+						}
+					}
+				},
+				{
+					"name": "Permissions disponibles pour un rôle",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles/3/available-permissions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"3",
+								"available-permissions"
+							]
+						}
+					}
+				},
+				{
+					"name": "Assigner une permission à un rôle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permission_id\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/roles/3/assign-permission",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"3",
+								"assign-permission"
+							]
+						}
+					}
+				},
+				{
+					"name": "Retirer une permission d'un rôle",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles/3/permissions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roles",
+								"3",
+								"permissions",
+								"1"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔐 Permissions",
+			"item": [
+				{
+					"name": "Lister toutes les permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions"
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer une permission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"export_reports\",\n    \"description\": \"Exporter les rapports et statistiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/permissions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions"
+							]
+						}
+					}
+				},
+				{
+					"name": "Voir une permission détaillée",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Modifier une permission",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"create_instruction_advanced\",\n    \"description\": \"Créer des instructions avec options avancées\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/permissions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer une permission",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions/7",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions",
+								"7"
+							]
+						}
+					}
+				},
+				{
+					"name": "Utilisateurs ayant cette permission",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions/1/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions",
+								"1",
+								"users"
+							]
+						}
+					}
+				},
+				{
+					"name": "Rôles disponibles pour cette permission",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions/1/available-roles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"permissions",
+								"1",
+								"available-roles"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🧪 Tests Spéciaux",
+			"item": [
+				{
+					"name": "Test création entité avec parent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Bureau des Statistiques\",\n    \"type_entite_id\": 3,\n    \"parent_id\": 3,\n    \"description\": \"Bureau spécialisé dans les analyses statistiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites"
+							]
+						}
+					}
+				},
+				{
+					"name": "Test affectation avec conflit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"poste_id\": 1,\n    \"entite_id\": 2,\n    \"date_debut\": \"2025-02-01\",\n    \"terminer_affectation_precedente\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2/affecter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2",
+								"affecter"
+							]
+						}
+					}
+				},
+				{
+					"name": "Test double assignation de rôle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2/assign-role",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"2",
+								"assign-role"
+							]
+						}
+					}
+				},
+				{
+					"name": "Test suppression entité avec enfants",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"entites",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "Test données utilisateur existant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"matricule\": \"ADM001\",\n    \"nom\": \"Duplicate\",\n    \"prenom\": \"Test\",\n    \"email\": \"admin@govtrack.gov\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

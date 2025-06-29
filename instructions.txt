@@ -1,0 +1,297 @@
+Je dois travailler sur une application de gestion de suivi d'instruction et de recommandation,
+par exemple après un conseil de cabinet si un ministre donne des instructions, qu'il puisse suivre l'execution.
+
+Je vais déjà t'expliquer :
+
+Ca sera une App Web pour suivi des recommandation et instruction donnés par exemple lors d'un conseil de cabinet, mais pas forcement lors d'un conseil de cabinet ca ce n'est pas important.
+
+Lors qu'une instruction ou recommandation est donnée on doit pourvoir suivre le Niveau exécution de l'instruction pour évaluer ou ca en est.
+on doit pouvoir avoir des types d'instruction pour définir les SLA.
+
+on doit ensuite avoir un Tableau de Bord par direction (Nb instruction donné, Nb de recommandation, Niveau d'exécution des instructions et recommandations (A faire, En cours d'execution, terminé, etc..), taux d'execution en pourcentage des instructions et recommandations lorsquonn clique sur un d'eux...)
+
+Pour le ministre par exemple ou quelquun qui a le droit de tout voir on Recense pour toutes les directions, on mettra des filtres etc.
+
+pour les niveau d'execution Quand on change de statut pour aller à executer on doit mettre une preuve (document) obligatoirement.
+Pour les autres changement de niveau la preuve n'est pas obligatoire mais on doit les des commentaites et ajuster le pourcentage.
+
+on doit conserver l'Historique des modifications de l'evolution des executions.
+
+concernant les privilèges on rendra dynamique.
+y'a des gens qui peuvent mettre à le statut executer à des des instructions comme le SG, Chef Cabinet,BSD, Ministre
+
+on devra gerer les notifications par mail.
+ employés, leurs fonctions, qui est chef d'un service etc..
+on devra gerer les Notification par mail.
+
+Ex recommandation : Pour devélopper une app, travaille avec Le BSD (par exemple sur un fait qui est en cours, on recommande quelque chose)
+Ex instruction : developpe une application (tu es le porteur et tu es obligé)
+
+tu as l'idée générale je vais te dire maintenant comment on décomposera le projet.
+il y'aura 3 parties : on va d'abord discuter de la
+Premiere partie qui  concernera la gestion des utilisateurs :
+
+✅ Entité (ex : DSI, DRH…) : contient les vraies entités, avec parent_id pour gérer la hiérarchie.
+
+✅ Type_Entité : référence les types (Direction, Service, Division, etc.)
+
+✅ Poste : liste des postes (sans rattachement direct à une entité, comme tu l’as précisé).
+
+✅ Utilisateur : informations de base (email, statut, etc.)
+
+✅ Service_Chef_Histories → renommé Entité_Chef_Histories
+
+✅ Utilisateur_Entité_Histories : pour tracer les affectations comme tu l’as décrit.
+
+📘 Documentation des Tables — Application de Suivi des Instructions
+📂 Table : Utilisateur
+Description : Contient les informations sur les utilisateurs.
+Utilité : Permet de gérer les employés de l'organisation, leurs informations personnelles et leurs identifiants pour l'accès et les notifications.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant unique
+matricule	VARCHAR	Matricule interne
+nom	VARCHAR	Nom de l'utilisateur
+prenom	VARCHAR	Prénom de l'utilisateur
+email	VARCHAR	Adresse email
+telephone	VARCHAR	Numéro de téléphone
+adresse	VARCHAR	Adresse postale
+photo	VARCHAR	Chemin ou URL de la photo
+statut	BOOLEAN	Actif / Inactif
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de dernière modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Type_Entité
+Description : Types d'entités (Direction, Service, Division).
+Utilité : Permet de catégoriser les entités pour structurer l'organisation et différencier les niveaux hiérarchiques.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+nom	VARCHAR	Nom du type d'entité
+description	TEXT	Description du type
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Entité
+Description : Liste des entités de l'organisation.
+Utilité : Stocke toutes les entités (directions, services, divisions) et leur hiérarchie via parent_id.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant unique
+nom	VARCHAR	Nom de l'entité
+type_entite_id	FK	Référence vers Type_Entité
+parent_id	FK	Référence à une autre entité
+description	TEXT	Description de l'entité
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Poste
+Description : Liste des postes disponibles.
+Utilité : Permet de gérer les rôles internes des utilisateurs au sein d'une entité, sans lien direct avec l'entité.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant unique
+nom	VARCHAR	Nom du poste
+description	TEXT	Description du poste
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Utilisateur_Entité_Histories
+Description : Historique des affectations utilisateurs ↔ entités.
+Utilité : Trace l'affectation d'un utilisateur à un poste dans une entité, permet de reconstruire l'historique des mouvements et affectations.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+user_id	FK	Référence vers Utilisateur
+poste_id	FK	Référence vers Poste
+service_id	FK	Référence vers Entité
+statut	BOOLEAN	Actif / Inactif
+date_debut	DATE	Date de début d'affectation
+date_fin	DATE	Date de fin
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Entité_Chef_Histories
+Description : Historique des chefs des entités.
+Utilité : Permet de savoir qui était/est le responsable d'une entité pour gérer les droits de validation et de pilotage.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+entite_id	FK	Référence vers Entité
+user_id	FK	Référence vers Utilisateur
+date_debut	DATE	Début de fonction
+date_fin	DATE	Fin de fonction
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Role
+Description : Rôles attribuables aux utilisateurs.
+Utilité : Contrôle des accès et des privilèges au sein de l'application (ex: Administrateur, Valideur).
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+nom	VARCHAR	Nom du rôle
+description	TEXT	Description du rôle
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Permission
+Description : Permissions disponibles dans le système.
+Utilité : Liste des actions précises que les rôles peuvent effectuer (ex: créer instruction, changer statut, valider).
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+nom	VARCHAR	Nom de la permission
+description	TEXT	Description
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Role_Permission
+Description : Relations entre rôles et permissions.
+Utilité : Attribue des permissions aux rôles pour gérer les droits d'accès.
+Nom du champ	Type / Clé	Description
+role_id	FK	Référence vers Role
+permission_id	FK	Référence vers Permission
+date_creation	DATETIME	Date de création
+📂 Table : Utilisateur_Role
+Description : Attribution des rôles aux utilisateurs.
+Utilité : Permet d'associer des utilisateurs à un ou plusieurs rôles pour gérer leurs droits et accès.
+Nom du champ	Type / Clé	Description
+user_id	FK	Référence vers Utilisateur
+role_id	FK	Référence vers Role
+date_creation	DATETIME	Date de création
+
+
+on va passer à la deuxième partie : La gestion des instructions et recommandations.
+Voilà comment je vois :
+Chaque Instruction Ou Recommandation C'est un Projet en vrai. Donc on a des types de projet.
+Chaque Projet est affecté à une personne qui est la personne principale. et chaque projet peut avoir divers statut : à faire, en cours, terminé, bloqué, ... et a un niveau d'execution à définir des quil passe à en cours.
+Chaque projet doit avoir une date de debut et une date de fin previsionnelle qui sera définit par defaut selon un SLA par type de projet, mais qui est modifiable lors de la creation du projet, mais si c'est modifié on doit dire pourquoi.
+
+mais pour chaque projet il y'a divers tâche à partir du moment ou ca passe en cours, et ces taches aussi ont des statuts et s'il y'a divers tâche le responsable de projet peut affecter ces taches à des personnes, donc si on affecte une tache à quelqu'un c'est comme sil rejoignait le projet mais c'est pas lui le porteur du projet, ca permet juste de savoir qui bloque le projet. après l'execution de chaque tache on doit mettre à jour le niveau d'execution du projet.
+
+
+Pour les projets on mettra aussi un espace de discussion / commentaire pour permettre aux gens de discuter.
+et pour le projet globalement et pour chaque tache particulière on peut joindre des pièces jointes.
+
+Pour le changement de statut du projet de en cours à demande_de_cloture  on doit forcement joindre une pièce justificative et ensuite un ayant droit pourra mettre à terminer le projet.
+c'est la même logique pour les taches mais là c'est à qui le projet est affecté qui peut mettre à terminer la tache.
+
+quiconque ayant fait un etache dans le projet rejoint l'equipe projet.
+
+📘 Documentation des Tables — Gestion des Instructions et recommandations
+📂 Table : Projet
+Description : Représente une instruction ou recommandation considérée comme un projet.
+Utilité : Permet de suivre le cycle de vie, l'exécution et la validation des projets donnés.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant unique
+titre	VARCHAR	Titre du projet
+description	TEXT	Description détaillée
+type_projet_id	FK	Type de projet
+statut	VARCHAR	Statut actuel
+niveau_execution	INT	Niveau d'exécution en %
+date_debut_previsionnelle	DATE	Date début prévisionnelle
+date_fin_previsionnelle	DATE	Date fin prévisionnelle
+date_debut_reelle	DATE	Date début réelle
+date_fin_reelle	DATE	Date fin réelle
+justification_modification_dates	TEXT	Raison de modification des dates
+porteur_id	FK	Utilisateur porteur principal
+donneur_ordre_id	FK	Utilisateur ayant donné l'ordre
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de dernière modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Type_Projet
+Description : Types de projets possibles.
+Utilité : Permet de classifier les projets par type (Instruction, Recommandation, etc).
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+nom	VARCHAR	Nom du type
+description	TEXT	Description du type
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Tache
+Description: Représente une tâche d'un projet.
+Utilité : Permet de diviser un projet en tâches gérables et de suivre leur exécution.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+projet_id	FK	Référence vers Projet
+titre	VARCHAR	Titre de la tâche
+description	TEXT	Description
+statut	VARCHAR	Statut actuel
+responsable_id	FK	Utilisateur responsable
+date_debut_previsionnelle	DATE	Début prévisionnel
+date_fin_previsionnelle	DATE	Fin prévisionnelle
+date_debut_reelle	DATE	Début réel
+date_fin_reelle	DATE	Fin réelle
+niveau_execution	INT	Avancement (%)
+date_creation	DATETIME	Date de création
+date_modification	DATETIME	Date de modification
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Projet_Historique_Statut
+Description : Historique des changements de statut d'un projet.
+Utilité : Permet de tracer l'évolution des statuts et des actions liées (justificatifs, commentaires).
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+projet_id	FK	Référence vers Projet
+ancien_statut	VARCHAR	Ancien statut
+nouveau_statut	VARCHAR	Nouveau statut
+user_id	FK	Utilisateur ayant fait le changement
+commentaire	TEXT	Commentaire
+justificatif_path	VARCHAR	Fichier justificatif
+date_changement	DATETIME	Date du changement
+📂 Table : Piece_Jointe_Projet
+Description : Pièces jointes liées à un projet.
+Utilité : Stocke les fichiers liés au projet.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+projet_id	FK	Référence vers Projet
+fichier_path	VARCHAR	Chemin vers le fichier
+description	TEXT	Description
+user_id	FK	Utilisateur ayant ajouté
+date_creation	DATETIME	Date d'ajout
+📂 Table : Piece_Jointe_Tache
+Description : Pièces jointes liées à une tâche.
+Utilité : Stocke les fichiers liés à une tâche.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+tache_id	FK	Référence vers Tache
+fichier_path	VARCHAR	Chemin vers le fichier
+description	TEXT	Description
+user_id	FK	Utilisateur ayant ajouté
+date_creation	DATETIME	Date d'ajout
+
+
+📂 Table : Discussion_Projet
+Description : Fil de discussion d'un projet.
+Utilité : Permet les échanges et commentaires collaboratifs au niveau projet.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+projet_id	FK	Référence vers Projet
+user_id	FK	Utilisateur auteur
+parent_id	FK	Réponse à (nullable)
+message	TEXT	Contenu du message
+date_creation	DATETIME	Date de création
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+📂 Table : Discussion_Tache
+Description : Fil de discussion d'une tâche.
+Utilité : Permet les échanges collaboratifs sur une tâche spécifique.
+Nom du champ	Type / Clé	Description
+id	PK	Identifiant
+tache_id	FK	Référence vers Tache
+user_id	FK	Utilisateur auteur
+parent_id	FK	Réponse à (nullable)
+message	TEXT	Contenu du message
+date_creation	DATETIME	Date de création
+creer_par	VARCHAR	Créé par
+modifier_par	VARCHAR	Modifié par
+
+
+
+
+On aura le backend en API laravel et le frontend en React.
+On travaillera partie par partie donc je propose qu'on fasse d'abord la partie backend 1 gestion des utilisateurs
