@@ -2,12 +2,116 @@
 
 ## 📋 Vue d'ensemble
 
-L'API GovTrack Partie 1 est une API REST complète pour la gestion des utilisateurs, entités organisationnelles, postes, rôles et permissions. Cette documentation présente tous les endpoints disponibles avec des exemples d'utilisation.
+L'API GovTrack Partie 1 est une API REST complète pour la gestion des utilisateurs, entités organisationnelles, postes, rôles et permissions avec **authentification sécurisée**. Cette documentation présente tous les endpoints disponibles avec des exemples d'utilisation.
+
+## 🔐 Authentification & Sécurité
+
+### 🛡️ Système d'authentification
+L'API utilise **Laravel Sanctum** pour l'authentification avec tokens personnels. Toutes les routes (sauf login) sont protégées par authentification.
+
+### 🔑 Endpoints d'authentification
+
+#### **Connexion utilisateur**
+```http
+POST /api/v1/auth/login
+```
+
+**Payload :**
+```json
+{
+    "email": "admin@govtrack.gov",
+    "password": "password"
+}
+```
+
+**Réponse succès :**
+```json
+{
+    "message": "Connexion réussie",
+    "success": true,
+    "data": {
+        "user": {
+            "id": 1,
+            "matricule": "ADM001",
+            "nom": "Admin",
+            "prenom": "Super",
+            "email": "admin@govtrack.gov",
+            "affectation_actuelle": {
+                "poste": "Directeur Général",
+                "entite": "Direction des Systèmes d'Information",
+                "date_debut": "2024-12-29"
+            },
+            "entites_dirigees": [
+                {
+                    "entite_id": 1,
+                    "entite_nom": "Direction des Systèmes d'Information",
+                    "date_debut": "2024-12-29"
+                }
+            ],
+            "roles": [
+                {
+                    "id": 1,
+                    "nom": "Administrateur",
+                    "description": "Administrateur système",
+                    "permissions": ["create_instruction", "edit_instruction", "validate_instruction", "view_all_instructions", "manage_users", "manage_entities"]
+                }
+            ],
+            "permissions": ["create_instruction", "edit_instruction", "validate_instruction", "view_all_instructions", "manage_users", "manage_entities"]
+        },
+        "token": "2|abc123def456..."
+    }
+}
+```
+
+#### **Profil utilisateur connecté**
+```http
+GET /api/v1/auth/me
+Authorization: Bearer {token}
+```
+
+#### **Déconnexion**
+```http
+POST /api/v1/auth/logout
+Authorization: Bearer {token}
+```
+
+#### **Déconnexion de tous les appareils**
+```http
+POST /api/v1/auth/logout-all
+Authorization: Bearer {token}
+```
+
+#### **Rafraîchir le token**
+```http
+POST /api/v1/auth/refresh
+Authorization: Bearer {token}
+```
+
+### 🔒 Système de permissions
+
+#### **Permissions disponibles :**
+- `manage_users` : Gestion des utilisateurs, postes, rôles
+- `manage_entities` : Gestion des entités et types d'entités
+- `create_instruction` : Créer des instructions (Partie 2)
+- `edit_instruction` : Modifier des instructions (Partie 2)
+- `validate_instruction` : Valider des instructions (Partie 2)
+- `view_all_instructions` : Voir toutes les instructions (Partie 2)
+
+#### **Protection par endpoint :**
+- **Lecture (GET)** : Accessible à tous les utilisateurs authentifiés
+- **Création/Modification/Suppression** : Nécessite permissions spécifiques
+
+### 📝 Utilisation des tokens
+
+Tous les appels API (sauf login) doivent inclure le header :
+```http
+Authorization: Bearer {votre_token}
+```
 
 ## 🔧 Configuration
 
 ### Prérequis
-- Laravel 12 en cours d'exécution
+- Laravel 12 avec Sanctum installé
 - Base de données MySQL configurée
 - Serveur web démarré : `php artisan serve`
 
@@ -20,6 +124,7 @@ http://localhost:8000/api/v1
 ```
 Accept: application/json
 Content-Type: application/json (pour POST/PUT)
+Authorization: Bearer {token} (pour routes protégées)
 ```
 
 ## 📦 Import de la Collection Postman

@@ -59,7 +59,7 @@ class PermissionController extends Controller
             'description' => $validated['description'] ?? null,
             'date_creation' => $now,
             'date_modification' => $now,
-            'creer_par' => 'api_user', // TODO: Remplacer par l'utilisateur authentifié
+            'creer_par' => $request->user()->email,
         ]);
 
         return response()->json([
@@ -164,7 +164,7 @@ class PermissionController extends Controller
             'nom' => $validated['nom'],
             'description' => $validated['description'] ?? $permission->description,
             'date_modification' => Carbon::now(),
-            'modifier_par' => 'api_user', // TODO: Remplacer par l'utilisateur authentifié
+            'modifier_par' => $request->user()->email,
         ]);
 
         return response()->json([

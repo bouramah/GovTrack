@@ -1,0 +1,465 @@
+{
+	"info": {
+		"_postman_id": "govtrack-api-secured-v1",
+		"name": "🚀 GovTrack API v1 - SÉCURISÉE",
+		"description": "Collection complète pour l'API GovTrack Partie 1 avec authentification Laravel Sanctum.\n\n🔐 **AUTHENTIFICATION REQUISE** pour toutes les routes sauf login.\n\n📝 **Instructions d'usage :**\n1. Exécuter POST /auth/login pour obtenir le token\n2. Le token sera automatiquement utilisé pour les autres requêtes\n3. Les permissions sont vérifiées selon les rôles utilisateur\n\n👥 **Comptes de test :**\n- admin@govtrack.gov (Administrateur - 6 permissions)\n- amadou.diop@govtrack.gov (Directeur - 4 permissions) \n- fatou.fall@govtrack.gov (Développeur - 2 permissions)\n- Mot de passe pour tous : `password`\n\n🔒 **Permissions :**\n- manage_users : Gestion utilisateurs, postes, rôles\n- manage_entities : Gestion entités, types d'entités\n- Les routes GET sont libres, POST/PUT/DELETE nécessitent permissions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"exec": [
+					"// Vérifier si on a un token d'auth (sauf pour login)",
+					"if (pm.request.url.getPath().indexOf('/auth/login') === -1) {",
+					"    if (!pm.globals.get('auth_token')) {",
+					"        console.log('⚠️ Token d\\'authentification manquant. Exécutez d\\'abord POST /auth/login');",
+					"    }",
+					"}"
+				],
+				"type": "text/javascript"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 1. Authentification",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"    ",
+									"    // Sauvegarder le token globalement",
+									"    pm.globals.set('auth_token', jsonData.data.token);",
+									"    console.log('✅ Token sauvegardé:', jsonData.data.token.substring(0, 20) + '...');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@govtrack.gov\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Me (Profil utilisateur)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Supprimer le token après déconnexion",
+									"pm.globals.unset('auth_token');",
+									"console.log('✅ Token supprimé - Déconnecté');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏢 2. Types d'Entités",
+			"item": [
+				{
+					"name": "List Types Entités",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/type-entites",
+							"host": ["{{base_url}}"],
+							"path": ["type-entites"]
+						}
+					}
+				},
+				{
+					"name": "Create Type Entité (🔒 manage_entities)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Bureau\",\n    \"description\": \"Bureau départemental\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/type-entites",
+							"host": ["{{base_url}}"],
+							"path": ["type-entites"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏛️ 3. Entités",
+			"item": [
+				{
+					"name": "List Entités",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites",
+							"host": ["{{base_url}}"],
+							"path": ["entites"]
+						}
+					}
+				},
+				{
+					"name": "Organigramme Complet",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/entites/organigramme",
+							"host": ["{{base_url}}"],
+							"path": ["entites", "organigramme"]
+						}
+					}
+				},
+				{
+					"name": "Create Entité (🔒 manage_entities)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Service Communication\",\n    \"type_entite_id\": 2,\n    \"parent_id\": 1,\n    \"description\": \"Service de communication et relations publiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/entites",
+							"host": ["{{base_url}}"],
+							"path": ["entites"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💼 4. Postes",
+			"item": [
+				{
+					"name": "List Postes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/postes",
+							"host": ["{{base_url}}"],
+							"path": ["postes"]
+						}
+					}
+				},
+				{
+					"name": "Create Poste (🔒 manage_users)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Chef de Projet Senior\",\n    \"description\": \"Responsable de la gestion de projets stratégiques\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/postes",
+							"host": ["{{base_url}}"],
+							"path": ["postes"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 5. Utilisateurs",
+			"item": [
+				{
+					"name": "List Utilisateurs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "Show Utilisateur Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Utilisateur (🔒 manage_users)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"matricule\": \"TECH001\",\n    \"nom\": \"Sow\",\n    \"prenom\": \"Moussa\",\n    \"email\": \"moussa.sow@govtrack.gov\",\n    \"telephone\": \"+221 77 123 45 67\",\n    \"adresse\": \"Dakar, Sénégal\",\n    \"password\": \"password123\",\n    \"statut\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": ["{{base_url}}"],
+							"path": ["users"]
+						}
+					}
+				},
+				{
+					"name": "Affecter Utilisateur (🔒 manage_users)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"poste_id\": 2,\n    \"entite_id\": 3,\n    \"date_debut\": \"2025-01-15\",\n    \"terminer_affectation_precedente\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/1/affecter",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1", "affecter"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🛡️ 6. Rôles & Permissions",
+			"item": [
+				{
+					"name": "List Rôles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/roles",
+							"host": ["{{base_url}}"],
+							"path": ["roles"]
+						}
+					}
+				},
+				{
+					"name": "List Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/permissions",
+							"host": ["{{base_url}}"],
+							"path": ["permissions"]
+						}
+					}
+				},
+				{
+					"name": "Assign Role to User (🔒 manage_users)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/1/assign-role",
+							"host": ["{{base_url}}"],
+							"path": ["users", "1", "assign-role"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

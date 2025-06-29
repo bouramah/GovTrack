@@ -22,31 +22,31 @@ class UserController extends Controller
     public function index(): JsonResponse
     {
         $users = User::with(['roles', 'affectations.poste', 'affectations.entite'])
-                    ->orderBy('nom')
-                    ->get()
-                    ->map(function ($user) {
-                        $affectationActuelle = $user->affectations()
-                            ->where('statut', true)
-                            ->with(['poste', 'entite'])
-                            ->first();
+            ->orderBy('nom')
+            ->get()
+            ->map(function ($user) {
+                $affectationActuelle = $user->affectations()
+                    ->where('statut', true)
+                    ->with(['poste', 'entite'])
+                    ->first();
 
-                        return [
-                            'id' => $user->id,
-                            'matricule' => $user->matricule,
-                            'nom' => $user->nom,
-                            'prenom' => $user->prenom,
-                            'email' => $user->email,
-                            'telephone' => $user->telephone,
-                            'statut' => $user->statut,
-                            'roles' => $user->roles->pluck('nom'),
-                            'affectation_actuelle' => $affectationActuelle ? [
-                                'poste' => $affectationActuelle->poste->nom,
-                                'entite' => $affectationActuelle->entite->nom,
-                                'date_debut' => $affectationActuelle->date_debut,
-                            ] : null,
-                            'date_creation' => $user->date_creation,
-                        ];
-                    });
+                return [
+                    'id' => $user->id,
+                    'matricule' => $user->matricule,
+                    'nom' => $user->nom,
+                    'prenom' => $user->prenom,
+                    'email' => $user->email,
+                    'telephone' => $user->telephone,
+                    'statut' => $user->statut,
+                    'roles' => $user->roles->pluck('nom'),
+                    'affectation_actuelle' => $affectationActuelle ? [
+                        'poste' => $affectationActuelle->poste->nom,
+                        'entite' => $affectationActuelle->entite->nom,
+                        'date_debut' => $affectationActuelle->date_debut,
+                    ] : null,
+                    'date_creation' => $user->date_creation,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -84,7 +84,7 @@ class UserController extends Controller
             'statut' => $validated['statut'] ?? true,
             'date_creation' => $now,
             'date_modification' => $now,
-            'creer_par' => 'api_user', // TODO: Remplacer par l'utilisateur authentifié
+            'creer_par' => $request->user()->email,
         ]);
 
         // Ne pas retourner le mot de passe
@@ -103,11 +103,11 @@ class UserController extends Controller
     public function show(string $id): JsonResponse
     {
         $user = User::with([
-                    'roles.permissions',
-                    'affectations.poste',
-                    'affectations.entite.typeEntite',
-                    'entitesDigees.entite'
-                ])->findOrFail($id);
+            'roles.permissions',
+            'affectations.poste',
+            'affectations.entite.typeEntite',
+            'entitesDigees.entite'
+        ])->findOrFail($id);
 
         $response = [
             'id' => $user->id,
@@ -128,36 +128,36 @@ class UserController extends Controller
                 ];
             }),
             'affectation_actuelle' => $user->affectations()
-                                          ->where('statut', true)
-                                          ->with(['poste', 'entite.typeEntite'])
-                                          ->first(),
+                ->where('statut', true)
+                ->with(['poste', 'entite.typeEntite'])
+                ->first(),
             'historique_affectations' => $user->affectations()
-                                             ->where('statut', false)
-                                             ->with(['poste', 'entite'])
-                                             ->orderBy('date_fin', 'desc')
-                                             ->get()
-                                             ->map(function ($affectation) {
-                                                 return [
-                                                     'poste' => $affectation->poste->nom,
-                                                     'entite' => $affectation->entite->nom,
-                                                     'date_debut' => $affectation->date_debut,
-                                                     'date_fin' => $affectation->date_fin,
-                                                 ];
-                                             }),
+                ->where('statut', false)
+                ->with(['poste', 'entite'])
+                ->orderBy('date_fin', 'desc')
+                ->get()
+                ->map(function ($affectation) {
+                    return [
+                        'poste' => $affectation->poste->nom,
+                        'entite' => $affectation->entite->nom,
+                        'date_debut' => $affectation->date_debut,
+                        'date_fin' => $affectation->date_fin,
+                    ];
+                }),
             'entites_dirigees' => $user->entitesDigees()
-                                      ->whereNull('date_fin')
-                                      ->with('entite.typeEntite')
-                                      ->get()
-                                      ->map(function ($direction) {
-                                          return [
-                                              'entite' => [
-                                                  'id' => $direction->entite->id,
-                                                  'nom' => $direction->entite->nom,
-                                                  'type' => $direction->entite->typeEntite->nom,
-                                              ],
-                                              'date_debut' => $direction->date_debut,
-                                          ];
-                                      }),
+                ->whereNull('date_fin')
+                ->with('entite.typeEntite')
+                ->get()
+                ->map(function ($direction) {
+                    return [
+                        'entite' => [
+                            'id' => $direction->entite->id,
+                            'nom' => $direction->entite->nom,
+                            'type' => $direction->entite->typeEntite->nom,
+                        ],
+                        'date_debut' => $direction->date_debut,
+                    ];
+                }),
             'statistiques' => [
                 'total_affectations' => $user->affectations->count(),
                 'entites_dirigees_actuellement' => $user->entitesDigees()->whereNull('date_fin')->count(),
@@ -213,7 +213,7 @@ class UserController extends Controller
             'adresse' => $validated['adresse'] ?? $user->adresse,
             'statut' => $validated['statut'] ?? $user->statut,
             'date_modification' => Carbon::now(),
-            'modifier_par' => 'api_user', // TODO: Remplacer par l'utilisateur authentifié
+            'modifier_par' => $request->user()->email,
         ];
 
         // Mettre à jour le mot de passe seulement s'il est fourni
@@ -270,28 +270,28 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $affectations = $user->affectations()
-                            ->with(['poste', 'entite.typeEntite'])
-                            ->orderBy('date_debut', 'desc')
-                            ->get()
-                            ->map(function ($affectation) {
-                                return [
-                                    'id' => $affectation->id,
-                                    'poste' => [
-                                        'id' => $affectation->poste->id,
-                                        'nom' => $affectation->poste->nom,
-                                        'description' => $affectation->poste->description,
-                                    ],
-                                    'entite' => [
-                                        'id' => $affectation->entite->id,
-                                        'nom' => $affectation->entite->nom,
-                                        'type' => $affectation->entite->typeEntite->nom,
-                                    ],
-                                    'statut' => $affectation->statut,
-                                    'date_debut' => $affectation->date_debut,
-                                    'date_fin' => $affectation->date_fin,
-                                    'date_creation' => $affectation->date_creation,
-                                ];
-                            });
+            ->with(['poste', 'entite.typeEntite'])
+            ->orderBy('date_debut', 'desc')
+            ->get()
+            ->map(function ($affectation) {
+                return [
+                    'id' => $affectation->id,
+                    'poste' => [
+                        'id' => $affectation->poste->id,
+                        'nom' => $affectation->poste->nom,
+                        'description' => $affectation->poste->description,
+                    ],
+                    'entite' => [
+                        'id' => $affectation->entite->id,
+                        'nom' => $affectation->entite->nom,
+                        'type' => $affectation->entite->typeEntite->nom,
+                    ],
+                    'statut' => $affectation->statut,
+                    'date_debut' => $affectation->date_debut,
+                    'date_fin' => $affectation->date_fin,
+                    'date_creation' => $affectation->date_creation,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -355,7 +355,7 @@ class UserController extends Controller
             'date_debut' => Carbon::parse($validated['date_debut']),
             'date_creation' => $now,
             'date_modification' => $now,
-            'creer_par' => 'api_user',
+            'creer_par' => $request->user()->email,
         ]);
 
         $nouvelleAffectation->load(['poste', 'entite']);

@@ -8,11 +8,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -85,5 +86,58 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'utilisateur_role', 'user_id', 'role_id')
                     ->withPivot('date_creation');
+    }
+
+    /**
+     * Vérifier si l'utilisateur a une permission spécifique
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permissionName) {
+                $query->where('nom', $permissionName);
+            })
+            ->exists();
+    }
+
+    /**
+     * Vérifier si l'utilisateur a un rôle spécifique
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('nom', $roleName)->exists();
+    }
+
+    /**
+     * Obtenir toutes les permissions de l'utilisateur
+     */
+    public function getAllPermissions()
+    {
+        return Permission::whereHas('roles.users', function ($query) {
+            $query->where('user_id', $this->id);
+        })->get();
+    }
+
+    /**
+     * Vérifier si l'utilisateur est chef d'une entité spécifique
+     */
+    public function isChefOf(int $entiteId): bool
+    {
+        return $this->entitesDigees()
+            ->where('entite_id', $entiteId)
+            ->whereNull('date_fin')
+            ->exists();
+    }
+
+    /**
+     * Obtenir l'affectation actuelle de l'utilisateur
+     */
+    public function affectationActuelle()
+    {
+        return $this->affectations()
+            ->with(['poste', 'entite'])
+            ->where('statut', true)
+            ->whereNull('date_fin')
+            ->first();
     }
 }
