@@ -307,33 +307,28 @@ class ProjetController extends Controller
 
             // Validation spécifique selon le changement de statut
             if ($validated['nouveau_statut'] === Projet::STATUT_DEMANDE_CLOTURE) {
-                if (empty($validated['justificatif_path'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Un justificatif est obligatoire pour demander la clôture'
-                    ], 422);
-                }
-
-                // Vérifier que le justificatif existe en tant que pièce jointe
-                $justificatifExiste = PieceJointeProjet::where('projet_id', $id)
-                    ->where('fichier_path', $validated['justificatif_path'])
+                // Vérifier qu'il y a au moins un justificatif (pièce jointe marquée comme justificatif)
+                $aUnJustificatif = PieceJointeProjet::where('projet_id', $id)
                     ->where('est_justificatif', true)
                     ->exists();
 
-                if (!$justificatifExiste) {
+                if (!$aUnJustificatif) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Le justificatif spécifié doit être un fichier valide marqué comme justificatif'
+                        'message' => 'Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture'
                     ], 422);
                 }
             }
 
             // Utiliser la méthode du modèle pour changer le statut
+            $justificatifPath = isset($validated['justificatif_path']) ? $validated['justificatif_path'] : null;
+            $commentaire = isset($validated['commentaire']) ? $validated['commentaire'] : null;
+
             $projet->changerStatut(
                 $validated['nouveau_statut'],
                 $request->user()->id,
-                $validated['commentaire'],
-                $validated['justificatif_path']
+                $commentaire,
+                $justificatifPath
             );
 
             // Mettre à jour les dates réelles selon le statut
@@ -385,7 +380,7 @@ class ProjetController extends Controller
             $query = Projet::query();
 
             // Si ce n'est pas un admin, limiter aux projets de l'utilisateur
-            if (!$user->hasPermission('view_all_instructions')) {
+            if (!$user->hasPermission('manage_projects')) {
                 $query->where(function ($q) use ($user) {
                     $q->where('porteur_id', $user->id)
                       ->orWhere('donneur_ordre_id', $user->id)
@@ -395,25 +390,30 @@ class ProjetController extends Controller
                 });
             }
 
+            // Calculer les statistiques
+            $totalProjets = $query->count();
+
             $stats = [
-                'total_projets' => $query->count(),
+                'total_projets' => $totalProjets,
                 'projets_par_statut' => [],
-                'projets_en_retard' => $query->enRetard()->count(),
+                'projets_en_retard' => (clone $query)->enRetard()->count(),
                 'niveau_execution_moyen' => round($query->avg('niveau_execution') ?? 0),
-                'projets_recents' => $query->orderBy('date_creation', 'desc')
+                'projets_recents' => (clone $query)->orderBy('date_creation', 'desc')
                     ->with(['typeProjet', 'porteur'])
                     ->take(5)
                     ->get(),
             ];
 
-            // Répartition par statut
+            // Répartition par statut avec requêtes séparées
             foreach (Projet::STATUTS as $statut => $libelle) {
-                $count = (clone $query)->where('statut', $statut)->count();
+                $queryStatut = clone $query;
+                $count = $queryStatut->where('statut', $statut)->count();
+
                 $stats['projets_par_statut'][$statut] = [
                     'libelle' => $libelle,
                     'count' => $count,
-                    'pourcentage' => $stats['total_projets'] > 0
-                        ? round(($count / $stats['total_projets']) * 100, 1)
+                    'pourcentage' => $totalProjets > 0
+                        ? round(($count / $totalProjets) * 100, 1)
                         : 0
                 ];
             }
