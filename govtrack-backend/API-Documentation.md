@@ -1,279 +1,522 @@
 # 🚀 GovTrack API - Documentation Complète
 
-## 📋 Vue d'ensemble
+## 🎯 Vue d'ensemble
 
-L'API GovTrack Partie 1 est une API REST complète pour la gestion des utilisateurs, entités organisationnelles, postes, rôles et permissions avec **authentification sécurisée**. Cette documentation présente tous les endpoints disponibles avec des exemples d'utilisation.
+L'API GovTrack est un système complet de gestion et de suivi d'instructions/recommandations gouvernementales. Elle combine la gestion des utilisateurs (Partie 1) avec la gestion des projets, tâches, discussions et pièces jointes (Partie 2).
 
-## 🔐 Authentification & Sécurité
+### 🏗️ Architecture
 
-### 🛡️ Système d'authentification
-L'API utilise **Laravel Sanctum** pour l'authentification avec tokens personnels. Toutes les routes (sauf login) sont protégées par authentification.
+- **Framework**: Laravel 11 avec authentification Sanctum
+- **Base de données**: MySQL avec 16 tables relationnelles
+- **Sécurité**: Authentification Bearer token + système de permissions granulaires
+- **Format**: API REST avec réponses JSON standardisées
 
-### 🔑 Endpoints d'authentification
+### 🔗 URLs de base
 
-#### **Connexion utilisateur**
+- **Local**: `http://127.0.0.1:8000/api/v1`
+- **Production**: `https://api.govtrack.gov/v1`
+
+---
+
+## 🔐 Authentification
+
+### Obtenir un token d'accès
+
 ```http
-POST /api/v1/auth/login
-```
+POST /auth/login
+Content-Type: application/json
 
-**Payload :**
-```json
 {
     "email": "admin@govtrack.gov",
-    "password": "password"
+    "password": "password123"
 }
 ```
 
-**Réponse succès :**
+**Réponse:**
 ```json
 {
-    "message": "Connexion réussie",
     "success": true,
-    "data": {
-        "user": {
-            "id": 1,
-            "matricule": "ADM001",
-            "nom": "Admin",
-            "prenom": "Super",
-            "email": "admin@govtrack.gov",
-            "affectation_actuelle": {
-                "poste": "Directeur Général",
-                "entite": "Direction des Systèmes d'Information",
-                "date_debut": "2024-12-29"
-            },
-            "entites_dirigees": [
-                {
-                    "entite_id": 1,
-                    "entite_nom": "Direction des Systèmes d'Information",
-                    "date_debut": "2024-12-29"
-                }
-            ],
-            "roles": [
-                {
-                    "id": 1,
-                    "nom": "Administrateur",
-                    "description": "Administrateur système",
-                    "permissions": ["create_instruction", "edit_instruction", "validate_instruction", "view_all_instructions", "manage_users", "manage_entities"]
-                }
-            ],
-            "permissions": ["create_instruction", "edit_instruction", "validate_instruction", "view_all_instructions", "manage_users", "manage_entities"]
-        },
-        "token": "2|abc123def456..."
+    "message": "Connexion réussie",
+    "access_token": "1|laravel_sanctum_token...",
+    "token_type": "Bearer",
+    "user": {
+        "id": 1,
+        "matricule": "ADMIN001",
+        "nom": "Administrateur",
+        "prenom": "Système",
+        "email": "admin@govtrack.gov"
     }
 }
 ```
 
-#### **Profil utilisateur connecté**
+### Utilisation du token
+
+Tous les endpoints (sauf login) nécessitent l'en-tête d'autorisation:
+
 ```http
-GET /api/v1/auth/me
+Authorization: Bearer {access_token}
+```
+
+### Déconnexion
+
+```http
+POST /auth/logout
 Authorization: Bearer {token}
 ```
 
-#### **Déconnexion**
+---
+
+## 📋 Partie 2: Gestion des Instructions/Recommandations
+
+### 🏷️ Types de Projets (SLA)
+
+Les types de projets définissent les SLA (Service Level Agreement) automatiques.
+
+#### Créer un type de projet
+
 ```http
-POST /api/v1/auth/logout
+POST /type-projets
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "nom": "Instruction Urgente",
+    "description": "Instructions nécessitant une réponse rapide",
+    "duree_previsionnelle_jours": 7,
+    "description_sla": "Délai de 7 jours pour les instructions urgentes"
+}
+```
+
+#### Lister les types de projets
+
+```http
+GET /type-projets
 Authorization: Bearer {token}
 ```
 
-#### **Déconnexion de tous les appareils**
+#### Voir un type de projet
+
 ```http
-POST /api/v1/auth/logout-all
+GET /type-projets/{id}
 Authorization: Bearer {token}
 ```
 
-#### **Rafraîchir le token**
+#### Statistiques d'un type de projet
+
 ```http
-POST /api/v1/auth/refresh
+GET /type-projets/{id}/statistiques
 Authorization: Bearer {token}
 ```
 
-### 🔒 Système de permissions
+**Réponse:**
+```json
+{
+    "success": true,
+    "data": {
+        "total_projets": 15,
+        "projets_en_retard": 3,
+        "duree_moyenne_realisation": 8.5,
+        "taux_respect_sla": 87.5
+    }
+}
+```
 
-#### **Permissions disponibles :**
-- `manage_users` : Gestion des utilisateurs, postes, rôles
-- `manage_entities` : Gestion des entités et types d'entités
-- `create_instruction` : Créer des instructions (Partie 2)
-- `edit_instruction` : Modifier des instructions (Partie 2)
-- `validate_instruction` : Valider des instructions (Partie 2)
-- `view_all_instructions` : Voir toutes les instructions (Partie 2)
+---
 
-#### **Protection par endpoint :**
-- **Lecture (GET)** : Accessible à tous les utilisateurs authentifiés
-- **Création/Modification/Suppression** : Nécessite permissions spécifiques
+### 📊 Projets (Instructions/Recommandations)
 
-### 📝 Utilisation des tokens
+#### Créer un projet avec SLA automatique
 
-Tous les appels API (sauf login) doivent inclure le header :
 ```http
-Authorization: Bearer {votre_token}
-```
+POST /projets
+Authorization: Bearer {token}
+Content-Type: application/json
 
-## 🔧 Configuration
-
-### Prérequis
-- Laravel 12 avec Sanctum installé
-- Base de données MySQL configurée
-- Serveur web démarré : `php artisan serve`
-
-### Base URL
-```
-http://localhost:8000/api/v1
-```
-
-### Headers requis
-```
-Accept: application/json
-Content-Type: application/json (pour POST/PUT)
-Authorization: Bearer {token} (pour routes protégées)
-```
-
-## 📦 Import de la Collection Postman
-
-1. **Ouvrir Postman**
-2. **Cliquer sur "Import"**
-3. **Sélectionner le fichier :** `GovTrack-API-Collection.postman_collection.json`
-4. **La collection sera automatiquement importée** avec tous les endpoints
-
-## 👥 Comptes de test disponibles
-
-| Email | Rôle | Mot de passe | Permissions |
-|-------|------|--------------|-------------|
-| `admin@govtrack.gov` | Administrateur | `password` | Toutes (6) |
-| `amadou.diop@govtrack.gov` | Directeur | `password` | 4 permissions |
-| `fatou.fall@govtrack.gov` | Développeur | `password` | 2 permissions |
-
-## 📚 Endpoints par Catégorie
-
-### 🏢 Type Entités
-Gestion des types d'entités organisationnelles (Direction, Service, Division)
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/type-entites` | Lister tous les types |
-| `POST` | `/type-entites` | Créer un nouveau type |
-| `GET` | `/type-entites/{id}` | Voir un type spécifique |
-| `PUT` | `/type-entites/{id}` | Modifier un type |
-| `DELETE` | `/type-entites/{id}` | Supprimer un type |
-
-**Exemple création :**
-```json
 {
-    "nom": "Bureau",
-    "description": "Bureau départemental"
+    "titre": "Digitalisation des Processus",
+    "description": "Mise en place d'un système de digitalisation des processus administratifs",
+    "type_projet_id": 1,
+    "porteur_id": 2,
+    "donneur_ordre_id": 1,
+    "date_debut_previsionnelle": "2025-01-15"
 }
 ```
 
-### 🏛️ Entités
-Gestion des entités avec hiérarchie parent/enfant
+> **💡 SLA Automatique**: La `date_fin_previsionnelle` sera calculée automatiquement en ajoutant la `duree_previsionnelle_jours` du type de projet à la date de début.
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/entites` | Lister toutes les entités |
-| `POST` | `/entites` | Créer une nouvelle entité |
-| `GET` | `/entites/{id}` | Voir une entité détaillée |
-| `PUT` | `/entites/{id}` | Modifier une entité |
-| `DELETE` | `/entites/{id}` | Supprimer une entité |
-| `GET` | `/entites/{id}/enfants` | 🌳 Obtenir entités enfants |
-| `GET` | `/entites/{id}/hierarchy` | 🌳 Hiérarchie complète |
-| `GET` | `/entites/organigramme` | 📊 Organigramme complet organisation |
-| `GET` | `/entites/chefs-actuels` | 👑 Liste tous les chefs actuels |
-| `POST` | `/entites/{id}/affecter-chef` | 👑 Affecter chef à entité |
-| `POST` | `/entites/{id}/terminer-mandat-chef` | 👑 Terminer mandat chef |
-| `GET` | `/entites/{id}/historique-chefs` | 👑 Historique des chefs |
+#### Créer un projet avec dates personnalisées
 
-**Exemple création avec parent :**
-```json
+```http
+POST /projets
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-    "nom": "Service Communication",
-    "type_entite_id": 2,
-    "parent_id": 1,
-    "description": "Service de communication et relations publiques"
+    "titre": "Formation du Personnel",
+    "description": "Programme de formation complet",
+    "type_projet_id": 1,
+    "porteur_id": 2,
+    "donneur_ordre_id": 1,
+    "date_debut_previsionnelle": "2025-01-20",
+    "date_fin_previsionnelle": "2025-03-15",
+    "justification_modification_dates": "Délai étendu nécessaire pour coordonner avec tous les départements"
 }
 ```
 
-**Exemple affectation chef :**
+> **⚠️ Justification Obligatoire**: Lorsque vous spécifiez des dates personnalisées qui diffèrent du SLA, une justification est obligatoire.
+
+#### Lister les projets
+
+```http
+GET /projets?per_page=10&sort_by=date_creation&sort_order=desc&statut=en_cours
+Authorization: Bearer {token}
+```
+
+**Paramètres de filtrage:**
+- `per_page`: Nombre d'éléments par page (défaut: 15)
+- `sort_by`: Champ de tri (`date_creation`, `titre`, `niveau_execution`)
+- `sort_order`: Ordre (`asc`, `desc`)
+- `statut`: Filtrer par statut
+- `type_projet_id`: Filtrer par type de projet
+- `porteur_id`: Filtrer par porteur
+
+#### Tableau de bord des projets
+
+```http
+GET /projets/tableau-bord
+Authorization: Bearer {token}
+```
+
+**Réponse:**
 ```json
 {
-    "user_id": 3,
-    "date_debut": "2025-01-01",
-    "terminer_mandat_precedent": true
+    "success": true,
+    "data": {
+        "statistiques_generales": {
+            "total_projets": 45,
+            "projets_en_cours": 18,
+            "projets_termines": 22,
+            "projets_en_retard": 5
+        },
+        "repartition_par_statut": {
+            "a_faire": 8,
+            "en_cours": 18,
+            "termines": 22,
+            "en_retard": 5
+        },
+        "projets_urgents": [
+            {
+                "id": 12,
+                "titre": "Mise à jour Sécurité",
+                "jours_restants": 2,
+                "niveau_execution": 75
+            }
+        ],
+        "performance_sla": {
+            "taux_respect": 85.5,
+            "duree_moyenne": 12.3
+        }
+    }
 }
 ```
 
-**Exemple terminer mandat chef :**
-```json
+#### Changer le statut d'un projet
+
+```http
+POST /projets/{id}/changer-statut
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-    "date_fin": "2025-06-30",
-    "raison": "Fin de mandat temporaire"
+    "nouveau_statut": "en_cours",
+    "commentaire": "Démarrage officiel du projet après validation des ressources"
 }
 ```
 
-#### Endpoint Spécialisé - Organigramme
+**Statuts disponibles:**
+- `a_faire`: À faire
+- `en_cours`: En cours
+- `demande_de_cloture`: Demande de clôture (nécessite justificatif)
+- `termine`: Terminé
+- `annule`: Annulé
 
-**`GET /entites/organigramme`** retourne la structure hiérarchique complète de l'organisation avec :
-- 📊 **Structure récursive** : entités racines → enfants → descendants
-- 👤 **Chef actuel** pour chaque entité (nom, contact, durée mandat)
-- 👥 **Effectifs détaillés** (nombre + liste employés avec postes)
-- 📈 **Statistiques** (niveau hiérarchique, descendants, présence chef)
-- 🔢 **Métriques globales** (totaux, profondeur max)
+> **🔒 Validation Justificatifs**: Pour passer au statut `demande_de_cloture`, le projet doit avoir au moins une pièce jointe marquée comme justificatif (`est_justificatif: true`).
 
-**Parfait pour :**
-- Interface graphique d'organigramme
-- Tableaux de bord direction
-- Visualisations hiérarchiques
-- Rapports organisationnels
+#### Modifier un projet
 
-### 💼 Postes
-Gestion des postes (sans lien direct aux entités)
+```http
+PUT /projets/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/postes` | Lister tous les postes |
-| `POST` | `/postes` | Créer un nouveau poste |
-| `GET` | `/postes/{id}` | Voir un poste détaillé |
-| `PUT` | `/postes/{id}` | Modifier un poste |
-| `DELETE` | `/postes/{id}` | Supprimer un poste |
-
-**Exemple création :**
-```json
 {
-    "nom": "Chef de Projet Senior",
-    "description": "Responsable de la gestion de projets stratégiques"
+    "titre": "Digitalisation des Processus - Phase 1",
+    "description": "Première phase de la digitalisation",
+    "niveau_execution": 45
 }
 ```
 
-### 👥 Utilisateurs
-Gestion complète des utilisateurs avec affectations et rôles
+---
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/users` | Lister tous les utilisateurs |
-| `POST` | `/users` | Créer un nouvel utilisateur |
-| `GET` | `/users/{id}` | Voir un utilisateur détaillé |
-| `PUT` | `/users/{id}` | Modifier un utilisateur |
-| `DELETE` | `/users/{id}` | Supprimer un utilisateur |
-| `GET` | `/users/{id}/affectations` | 📋 Historique affectations |
-| `POST` | `/users/{id}/affecter` | 📋 Affecter à un poste |
-| `POST` | `/users/{id}/terminer-affectation` | 📋 Terminer affectation |
-| `POST` | `/users/{id}/assign-role` | 🛡️ Assigner un rôle |
-| `DELETE` | `/users/{userId}/roles/{roleId}` | 🛡️ Retirer un rôle |
+### ✅ Tâches
 
-**Exemple création utilisateur :**
+#### Créer une tâche
+
+```http
+POST /taches
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "titre": "Analyse des Besoins",
+    "description": "Analyser les besoins spécifiques de chaque département",
+    "projet_id": 1,
+    "responsable_id": 3,
+    "date_debut_previsionnelle": "2025-01-15",
+    "date_fin_previsionnelle": "2025-01-20"
+}
+```
+
+#### Lister les tâches
+
+```http
+GET /taches?projet_id=1&responsable_id=3&statut=en_cours
+Authorization: Bearer {token}
+```
+
+#### Mes tâches assignées
+
+```http
+GET /taches/mes-taches
+Authorization: Bearer {token}
+```
+
+#### Changer le statut d'une tâche
+
+```http
+POST /taches/{id}/changer-statut
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "nouveau_statut": "termine",
+    "commentaire": "Analyse terminée avec succès",
+    "niveau_execution": 100
+}
+```
+
+> **🔐 Validation Porteur**: Seul le porteur du projet peut terminer une tâche (passer au statut `termine`).
+
+> **🔒 Justificatifs Tâches**: Pour certains statuts critiques, des justificatifs peuvent être requis via les pièces jointes.
+
+---
+
+### 📎 Pièces Jointes et Justificatifs
+
+#### Upload d'une pièce jointe (Projet)
+
+```http
+POST /projets/{id}/pieces-jointes
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+fichier: [FILE]
+description: "Document de spécifications techniques"
+est_justificatif: false
+```
+
+#### Upload d'un justificatif obligatoire
+
+```http
+POST /projets/{id}/pieces-jointes
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+fichier: [FILE]
+description: "Justificatif de clôture du projet"
+est_justificatif: true
+```
+
+> **📄 Formats supportés**: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
+> **📏 Taille maximum**: 10 MB par fichier
+
+#### Lister les pièces jointes
+
+```http
+GET /projets/{id}/pieces-jointes
+Authorization: Bearer {token}
+```
+
+#### Télécharger une pièce jointe
+
+```http
+GET /projets/{projet_id}/pieces-jointes/{id}/download
+Authorization: Bearer {token}
+```
+
+#### Statistiques des pièces jointes
+
+```http
+GET /projets/{id}/pieces-jointes/statistiques
+Authorization: Bearer {token}
+```
+
+**Réponse:**
 ```json
 {
-    "matricule": "TECH001",
-    "nom": "Sow",
-    "prenom": "Moussa",
-    "email": "moussa.sow@govtrack.gov",
-    "telephone": "+221 77 123 45 67",
+    "success": true,
+    "data": {
+        "total_fichiers": 12,
+        "total_justificatifs": 3,
+        "taille_totale_mo": 45.6,
+        "types_documents": {
+            "PDF": 8,
+            "DOCX": 3,
+            "XLSX": 1
+        }
+    }
+}
+```
+
+#### Pièces jointes pour les tâches
+
+Les mêmes endpoints sont disponibles pour les tâches en remplaçant `/projets/{id}` par `/taches/{id}`.
+
+---
+
+### 💬 Discussions Collaboratives
+
+#### Poster un message principal
+
+```http
+POST /projets/{id}/discussions
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "message": "Début du projet de digitalisation. Merci de partager vos idées et commentaires."
+}
+```
+
+#### Répondre à un message
+
+```http
+POST /projets/{id}/discussions
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "message": "Excellente initiative ! Je suggère de commencer par une phase pilote.",
+    "parent_id": 1
+}
+```
+
+#### Lister les discussions
+
+```http
+GET /projets/{id}/discussions?per_page=20
+Authorization: Bearer {token}
+```
+
+**Réponse hiérarchique:**
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "message": "Message principal",
+            "auteur": {
+                "nom": "Diallo",
+                "prenom": "Amadou"
+            },
+            "date_creation": "2025-01-15T10:30:00Z",
+            "reponses": [
+                {
+                    "id": 2,
+                    "message": "Réponse au message",
+                    "auteur": {
+                        "nom": "Fall",
+                        "prenom": "Fatou"
+                    },
+                    "date_creation": "2025-01-15T11:15:00Z"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Modifier un message
+
+```http
+PUT /projets/{projet_id}/discussions/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "message": "Message modifié avec mise à jour"
+}
+```
+
+> **🔐 Autorisation**: Seul l'auteur du message peut le modifier ou le supprimer.
+
+#### Supprimer un message
+
+```http
+DELETE /projets/{projet_id}/discussions/{id}
+Authorization: Bearer {token}
+```
+
+#### Statistiques des discussions
+
+```http
+GET /projets/{id}/discussions/statistiques
+Authorization: Bearer {token}
+```
+
+#### Discussions pour les tâches
+
+Les mêmes endpoints sont disponibles pour les tâches: `/taches/{id}/discussions`
+
+---
+
+## 👥 Partie 1: Gestion des Utilisateurs
+
+### Utilisateurs
+
+#### Lister les utilisateurs
+
+```http
+GET /users?per_page=20&search=diallo
+Authorization: Bearer {token}
+```
+
+#### Créer un utilisateur
+
+```http
+POST /users
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "matricule": "EMP001",
+    "nom": "Diallo",
+    "prenom": "Mamadou",
+    "email": "mamadou.diallo@govtrack.gov",
+    "telephone": "+221771234567",
     "adresse": "Dakar, Sénégal",
-    "password": "password123",
     "statut": true
 }
 ```
 
-**Exemple affectation :**
-```json
+#### Affecter un utilisateur
+
+```http
+POST /users/{id}/affecter
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
     "poste_id": 2,
     "entite_id": 3,
@@ -282,143 +525,253 @@ Gestion complète des utilisateurs avec affectations et rôles
 }
 ```
 
-**Exemple terminer affectation :**
-```json
+### Entités et Hiérarchie
+
+#### Lister les entités
+
+```http
+GET /entites
+Authorization: Bearer {token}
+```
+
+#### Organigramme complet
+
+```http
+GET /entites/organigramme
+Authorization: Bearer {token}
+```
+
+#### Créer une entité
+
+```http
+POST /entites
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-    "date_fin": "2024-12-29",
-    "raison": "Mutation vers une autre direction"
+    "nom": "Service Communication",
+    "type_entite_id": 2,
+    "parent_id": 1,
+    "description": "Service de communication et relations publiques"
 }
 ```
 
-### 🛡️ Rôles
-Gestion des rôles et de leurs permissions
+---
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/roles` | Lister tous les rôles |
-| `POST` | `/roles` | Créer un nouveau rôle |
-| `GET` | `/roles/{id}` | Voir un rôle détaillé |
-| `PUT` | `/roles/{id}` | Modifier un rôle |
-| `DELETE` | `/roles/{id}` | Supprimer un rôle |
-| `GET` | `/roles/{id}/available-permissions` | 🔐 Permissions disponibles |
-| `POST` | `/roles/{id}/assign-permission` | 🔐 Assigner permission |
-| `DELETE` | `/roles/{roleId}/permissions/{permissionId}` | 🔐 Retirer permission |
+## 🔒 Système de Permissions
 
-**Exemple création avec permissions :**
-```json
+### Permissions disponibles
+
+- `manage_users`: Gestion complète des utilisateurs
+- `manage_entities`: Gestion des entités et types d'entités
+- `manage_roles`: Gestion des rôles et permissions
+- `manage_projects`: Gestion complète des projets
+- `manage_tasks`: Gestion des tâches
+- `manage_discussions`: Modération des discussions
+
+### Attribuer un rôle
+
+```http
+POST /users/{id}/assign-role
+Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-    "nom": "Superviseur",
-    "description": "Rôle de supervision et contrôle",
-    "permissions": [1, 2, 3]
+    "role_id": 2
 }
 ```
 
-### 🔐 Permissions
-Gestion des permissions et traçabilité
+---
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| `GET` | `/permissions` | Lister toutes les permissions |
-| `POST` | `/permissions` | Créer une nouvelle permission |
-| `GET` | `/permissions/{id}` | Voir une permission détaillée |
-| `PUT` | `/permissions/{id}` | Modifier une permission |
-| `DELETE` | `/permissions/{id}` | Supprimer une permission |
-| `GET` | `/permissions/{id}/users` | 👥 Utilisateurs ayant cette permission |
-| `GET` | `/permissions/{id}/available-roles` | 🛡️ Rôles disponibles |
+## 📊 Fonctionnalités Avancées
 
-**Exemple création :**
-```json
-{
-    "nom": "export_reports",
-    "description": "Exporter les rapports et statistiques"
-}
+### 🎯 Équipe Projet Automatique
+
+Le système maintient automatiquement l'équipe d'un projet:
+- **Porteur du projet**: Automatiquement dans l'équipe
+- **Responsables de tâches**: Rejoignent l'équipe dès qu'ils sont assignés
+- **Participants actifs**: Utilisateurs qui postent dans les discussions
+
+### 🕒 Calcul Automatique du Niveau d'Exécution
+
+Le niveau d'exécution d'un projet se met à jour automatiquement:
+```
+Niveau Projet = Moyenne pondérée des niveaux des tâches
 ```
 
-## 🧪 Tests Spéciaux
+### 📈 SLA et Alertes
 
-La collection inclut une section "Tests Spéciaux" pour tester la validation et gestion d'erreurs :
+- **Calcul automatique** des dates prévisionnelles selon le type de projet
+- **Détection des retards** avec alertes dans le tableau de bord
+- **Suivi des performances** avec métriques de respect des SLA
 
-- **Test création entité avec parent** ✅
-- **Test affectation avec conflit** ❌ (doit échouer)
-- **Test double assignation de rôle** ❌ (doit échouer) 
-- **Test suppression entité avec enfants** ❌ (doit échouer)
-- **Test données utilisateur existant** ❌ (doit échouer)
+### 🔍 Historique et Traçabilité
 
-## 📊 Réponses JSON Standard
+Tous les changements sont enregistrés:
+- **Changements de statut** avec horodatage et commentaires
+- **Modifications des affectations** avec historique complet
+- **Actions utilisateur** avec logs d'audit
 
-### Succès
-```json
-{
-    "success": true,
-    "data": { /* données */ },
-    "message": "Opération réussie"
-}
-```
+---
 
-### Erreur
+## 🚨 Gestion d'Erreurs
+
+### Codes de statut HTTP
+
+- `200`: Succès
+- `201`: Créé avec succès
+- `400`: Erreur de validation
+- `401`: Non authentifié
+- `403`: Non autorisé (permissions insuffisantes)
+- `404`: Ressource non trouvée
+- `422`: Erreur de validation métier
+- `500`: Erreur serveur interne
+
+### Format de réponse d'erreur
+
 ```json
 {
     "success": false,
     "message": "Description de l'erreur",
-    "errors": { /* détails validation */ }
+    "errors": {
+        "champ": ["Détail de l'erreur de validation"]
+    }
 }
 ```
 
-## 🔍 Fonctionnalités Avancées
+### Erreurs spécifiques
 
-### 🌳 Hiérarchie d'Entités
-- Navigation parent/enfant
-- Prévention des cycles 
-- Visualisation complète de l'arbre
+#### Justificatifs manquants
 
-### 👑 Gestion des Chefs d'Entités
-- Affectation/terminaison des mandats de chef
-- Historique complet des dirigeants
-- Suivi des durées de mandat
-- Vue d'ensemble de toutes les directions
+```json
+{
+    "success": false,
+    "message": "Justificatif obligatoire pour demander la clôture",
+    "code": "JUSTIFICATIF_REQUIRED"
+}
+```
 
-### 📋 Gestion des Affectations
-- Historique complet des postes
-- Gestion automatique des transitions
-- Validation des conflits
+#### Permissions insuffisantes
 
-### 🛡️ Système de Permissions
-- Rôles multiples par utilisateur
-- Permissions granulaires
-- Traçabilité des assignations
-
-### 🔐 Validations Robustes
-- Unicité des matricules/emails
-- Intégrité référentielle
-- Vérifications métier
-
-## 🚀 Ordre de Test Recommandé
-
-1. **Type Entités** - Créer Direction, Service, Division
-2. **Entités** - Créer hiérarchie organisationnelle
-3. **Postes** - Créer postes disponibles
-4. **Permissions** - Créer permissions nécessaires
-5. **Rôles** - Créer rôles avec permissions
-6. **Utilisateurs** - Créer utilisateurs
-7. **Affectations** - Affecter utilisateurs aux postes
-8. **Assignation rôles** - Donner droits aux utilisateurs
-
-## ⚠️ Notes Importantes
-
-- **Serveur requis** : `php artisan serve` doit être actif
-- **Base de données** : Migrations et seeders exécutés
-- **Validation** : Tous les champs requis doivent être fournis
-- **Références** : IDs d'entités existantes pour les relations
-- **Sécurité** : Éviter suppression d'éléments avec dépendances
-
-## 🎯 Prochaines Étapes
-
-1. **Authentification JWT/Sanctum** pour sécuriser l'API
-2. **Partie 2 - Instructions/Recommandations** selon spécifications
-3. **Interface Web React** pour administration
-4. **Notifications par email**
-5. **Rapports et tableaux de bord**
+```json
+{
+    "success": false,
+    "message": "Permission 'manage_projects' requise pour cette action",
+    "code": "INSUFFICIENT_PERMISSIONS"
+}
+```
 
 ---
 
-**✨ Votre API GovTrack est maintenant opérationnelle avec toutes les fonctionnalités de gestion des utilisateurs !** 🎉 
+## 🧪 Tests et Validation
+
+### Script de test automatisé
+
+Un script bash complet est fourni:
+
+```bash
+./test-api-partie2.sh
+```
+
+Ce script teste:
+- ✅ Authentification
+- ✅ Types de projets avec SLA
+- ✅ Création de projets
+- ✅ Gestion des tâches
+- ✅ Upload de pièces jointes
+- ✅ Justificatifs obligatoires
+- ✅ Discussions collaboratives
+- ✅ Logiques métier avancées
+
+### Collection Postman
+
+Importez `GovTrack-API-Secured.postman_collection.json` pour tester tous les endpoints avec des exemples pré-configurés.
+
+---
+
+## 📋 Exemples d'Usage Complets
+
+### Workflow typique: Création et suivi d'un projet
+
+1. **Créer un type de projet**
+2. **Créer le projet** (SLA automatique)
+3. **Ajouter des tâches**
+4. **Uploader des documents**
+5. **Suivre via discussions**
+6. **Marquer les jalons**
+7. **Clôturer avec justificatifs**
+
+### Cas d'usage: Instruction urgente
+
+```bash
+# 1. Créer type urgent (3 jours)
+POST /type-projets {"duree_previsionnelle_jours": 3}
+
+# 2. Créer l'instruction
+POST /projets {"type_projet_id": 1, "titre": "Sécurité Urgente"}
+
+# 3. Assigner tâches
+POST /taches {"projet_id": 1, "responsable_id": 2}
+
+# 4. Suivre quotidiennement
+GET /projets/tableau-bord
+
+# 5. Uploader justificatifs
+POST /projets/1/pieces-jointes {"est_justificatif": true}
+
+# 6. Clôturer
+POST /projets/1/changer-statut {"nouveau_statut": "demande_de_cloture"}
+```
+
+---
+
+## 🔧 Configuration et Déploiement
+
+### Variables d'environnement
+
+```env
+# API
+APP_URL=https://api.govtrack.gov
+API_VERSION=v1
+
+# Stockage des fichiers
+FILESYSTEM_DISK=public
+MAX_FILE_SIZE=10240  # 10MB
+
+# Base de données
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=govtrack_db
+
+# Authentification
+SANCTUM_EXPIRATION=1440  # 24 heures
+```
+
+### Commandes artisan utiles
+
+```bash
+# Migrations
+php artisan migrate --seed
+
+# Permissions et cache
+php artisan permission:cache-reset
+php artisan config:cache
+
+# Stockage
+php artisan storage:link
+```
+
+---
+
+## 📞 Support et Contact
+
+- **Documentation technique**: Consultez ce fichier
+- **Collection Postman**: Importez pour tester
+- **Script de test**: `./test-api-partie2.sh`
+- **Logs d'erreur**: `storage/logs/laravel.log`
+
+---
+
+**Version**: 2.0  
+**Dernière mise à jour**: Janvier 2025  
+**Statut**: Production Ready ✅

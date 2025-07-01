@@ -140,4 +140,129 @@ class User extends Authenticatable
             ->whereNull('date_fin')
             ->first();
     }
+
+    // === RELATIONS PARTIE 2 - PROJETS ET INSTRUCTIONS ===
+
+    /**
+     * Projets dont l'utilisateur est porteur
+     */
+    public function projetsPortes(): HasMany
+    {
+        return $this->hasMany(Projet::class, 'porteur_id');
+    }
+
+    /**
+     * Projets dont l'utilisateur est donneur d'ordre
+     */
+    public function projetsDonnes(): HasMany
+    {
+        return $this->hasMany(Projet::class, 'donneur_ordre_id');
+    }
+
+    /**
+     * Tâches assignées à l'utilisateur
+     */
+    public function tachesAssignees(): HasMany
+    {
+        return $this->hasMany(Tache::class, 'responsable_id');
+    }
+
+    /**
+     * Historique des changements de statuts de projets effectués par l'utilisateur
+     */
+    public function changementsStatutProjets(): HasMany
+    {
+        return $this->hasMany(ProjetHistoriqueStatut::class, 'user_id');
+    }
+
+    /**
+     * Pièces jointes ajoutées par l'utilisateur sur les projets
+     */
+    public function piecesJointesProjets(): HasMany
+    {
+        return $this->hasMany(PieceJointeProjet::class, 'user_id');
+    }
+
+    /**
+     * Pièces jointes ajoutées par l'utilisateur sur les tâches
+     */
+    public function piecesJointesTaches(): HasMany
+    {
+        return $this->hasMany(PieceJointeTache::class, 'user_id');
+    }
+
+    /**
+     * Messages de discussion sur les projets
+     */
+    public function discussionsProjets(): HasMany
+    {
+        return $this->hasMany(DiscussionProjet::class, 'user_id');
+    }
+
+    /**
+     * Messages de discussion sur les tâches
+     */
+    public function discussionsTaches(): HasMany
+    {
+        return $this->hasMany(DiscussionTache::class, 'user_id');
+    }
+
+    /**
+     * Obtenir tous les projets où l'utilisateur est impliqué (porteur, donneur d'ordre ou tâches)
+     */
+    public function projetsImpliques()
+    {
+        $projetIds = collect();
+
+        // Projets portés
+        $projetIds = $projetIds->merge($this->projetsPortes()->pluck('id'));
+
+        // Projets donnés
+        $projetIds = $projetIds->merge($this->projetsDonnes()->pluck('id'));
+
+        // Projets via tâches assignées
+        $projetIds = $projetIds->merge(
+            $this->tachesAssignees()->with('projet')->get()->pluck('projet.id')
+        );
+
+        return Projet::whereIn('id', $projetIds->unique())->get();
+    }
+
+    /**
+     * Obtenir l'équipe complète d'un projet (tous les utilisateurs impliqués)
+     * Implémente la logique : "quiconque ayant fait une tâche dans le projet rejoint l'équipe projet"
+     */
+    public static function equipeProjet($projetId)
+    {
+        $userIds = collect();
+
+        $projet = Projet::with(['porteur', 'donneurOrdre', 'taches.responsable'])->findOrFail($projetId);
+
+        // Porteur du projet
+        if ($projet->porteur_id) {
+            $userIds->push($projet->porteur_id);
+        }
+
+        // Donneur d'ordre
+        if ($projet->donneur_ordre_id) {
+            $userIds->push($projet->donneur_ordre_id);
+        }
+
+        // Responsables des tâches (= équipe automatique)
+        foreach ($projet->taches as $tache) {
+            if ($tache->responsable_id) {
+                $userIds->push($tache->responsable_id);
+            }
+        }
+
+        return User::whereIn('id', $userIds->unique())->get();
+    }
+
+    /**
+     * Vérifier si l'utilisateur fait partie de l'équipe d'un projet
+     */
+    public function estDansEquipeProjet($projetId): bool
+    {
+        return $this->projetsImpliques()->contains('id', $projetId);
+    }
 }
