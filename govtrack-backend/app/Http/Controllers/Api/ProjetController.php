@@ -305,6 +305,50 @@ class ProjetController extends Controller
                 'justificatif_path' => 'nullable|string',
             ]);
 
+            // Vérifier la logique du changement de statut
+            $estMiseAJourCommentaire = false;
+            if ($validated['nouveau_statut'] === $projet->statut) {
+                // Même statut : vérifier si c'est pour mettre à jour le commentaire
+                $commentaireActuel = $validated['commentaire'] ?? '';
+
+                // Récupérer le dernier commentaire de l'historique
+                $dernierHistorique = $projet->historiqueStatuts()
+                    ->where('nouveau_statut', $projet->statut)
+                    ->orderBy('date_changement', 'desc')
+                    ->first();
+
+                $dernierCommentaire = $dernierHistorique ? ($dernierHistorique->commentaire ?? '') : '';
+
+                // Cas où aucun commentaire n'est fourni
+                if (empty($commentaireActuel)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le projet a déjà le statut "' . Projet::STATUTS[$projet->statut] . '". Pour mettre à jour, veuillez fournir un commentaire différent.',
+                        'current_status' => [
+                            'statut' => $projet->statut,
+                            'libelle' => Projet::STATUTS[$projet->statut],
+                            'dernier_commentaire' => $dernierCommentaire
+                        ]
+                    ], 422);
+                }
+
+                // Cas où le commentaire est identique au dernier
+                if ($commentaireActuel === $dernierCommentaire) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le projet a déjà le statut "' . Projet::STATUTS[$projet->statut] . '" avec ce même commentaire. Aucun changement nécessaire.',
+                        'current_status' => [
+                            'statut' => $projet->statut,
+                            'libelle' => Projet::STATUTS[$projet->statut],
+                            'dernier_commentaire' => $dernierCommentaire
+                        ]
+                    ], 422);
+                }
+
+                // Si on arrive ici, c'est un nouveau commentaire pour le même statut
+                $estMiseAJourCommentaire = true;
+            }
+
             // Validation spécifique selon le changement de statut
             if ($validated['nouveau_statut'] === Projet::STATUT_DEMANDE_CLOTURE) {
                 // Vérifier qu'il y a au moins un justificatif (pièce jointe marquée comme justificatif)
@@ -347,9 +391,14 @@ class ProjetController extends Controller
 
             $projet->load(['historiqueStatuts.user']);
 
+            // Message de succès adapté selon le type d'opération
+            $message = $estMiseAJourCommentaire
+                ? 'Commentaire du statut "' . Projet::STATUTS[$projet->statut] . '" mis à jour avec succès'
+                : 'Statut du projet modifié avec succès';
+
             return response()->json([
                 'success' => true,
-                'message' => 'Statut du projet modifié avec succès',
+                'message' => $message,
                 'data' => $projet
             ]);
 
