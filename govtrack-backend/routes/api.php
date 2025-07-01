@@ -148,6 +148,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Gestion des statuts de tâches
     Route::post('taches/{id}/changer-statut', [TacheController::class, 'changerStatut'])->middleware('permission:edit_instruction');
+    Route::get('taches/{id}/historique-statuts', [TacheController::class, 'historiqueStatuts']); // Lecture libre
 
     // =================================================================
     // DISCUSSIONS - COLLABORATION SUR PROJETS ET TÂCHES

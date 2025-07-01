@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tache;
+use App\Models\TacheHistoriqueStatut;
 use App\Models\Projet;
 use App\Models\User;
 use App\Models\PieceJointeTache;
@@ -134,7 +135,8 @@ class TacheController extends Controller
                 'projet.typeProjet',
                 'responsable',
                 'piecesJointes.user',
-                'discussions.user'
+                'discussions.user',
+                'historiqueStatuts.user'
             ])->findOrFail($id);
 
             return response()->json([
@@ -251,8 +253,41 @@ class TacheController extends Controller
                 'justificatif_path' => 'nullable|string',
             ]);
 
+            // Logique de validation similaire aux projets
+            $nouveauStatut = $validated['nouveau_statut'];
+            $commentaire = $validated['commentaire'] ?? null;
+
+            // Récupérer le dernier historique pour comparer les commentaires
+            $dernierHistorique = $tache->historiqueStatuts()->first();
+
+            if ($nouveauStatut === $tache->statut) {
+                if (empty($commentaire)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La tâche a déjà le statut "' . Tache::STATUTS[$tache->statut] . '". Aucun changement nécessaire.',
+                        'current_status' => [
+                            'statut' => $tache->statut,
+                            'libelle' => Tache::STATUTS[$tache->statut]
+                        ]
+                    ], 422);
+                }
+
+                // Vérifier si le commentaire est différent du dernier historique
+                if ($dernierHistorique && $dernierHistorique->commentaire === $commentaire) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La tâche a déjà le statut "' . Tache::STATUTS[$tache->statut] . '" avec le même commentaire. Aucun changement nécessaire.',
+                        'current_status' => [
+                            'statut' => $tache->statut,
+                            'libelle' => Tache::STATUTS[$tache->statut],
+                            'commentaire' => $commentaire
+                        ]
+                    ], 422);
+                }
+            }
+
             // Validation spécifique selon le changement de statut
-            if ($validated['nouveau_statut'] === Tache::STATUT_DEMANDE_CLOTURE) {
+            if ($nouveauStatut === Tache::STATUT_DEMANDE_CLOTURE) {
                 if (empty($validated['justificatif_path'])) {
                     return response()->json([
                         'success' => false,
@@ -275,7 +310,7 @@ class TacheController extends Controller
             }
 
             // Validation pour le passage au statut "terminé"
-            if ($validated['nouveau_statut'] === Tache::STATUT_TERMINE) {
+            if ($nouveauStatut === Tache::STATUT_TERMINE) {
                 $projet = $tache->projet;
 
                 // Seul le porteur du projet peut terminer une tâche
@@ -287,18 +322,30 @@ class TacheController extends Controller
                 }
             }
 
+            // Enregistrer dans l'historique
+            $ancienStatut = $tache->statut; // Sauvegarder avant mise à jour
+            $historiqueStatut = new \App\Models\TacheHistoriqueStatut();
+            $historiqueStatut->tache_id = $tache->id;
+            $historiqueStatut->user_id = $request->user()->id;
+            $historiqueStatut->ancien_statut = $ancienStatut;
+            $historiqueStatut->nouveau_statut = $nouveauStatut;
+            $historiqueStatut->commentaire = $commentaire;
+            $historiqueStatut->justificatif_path = $validated['justificatif_path'] ?? null;
+            $historiqueStatut->date_changement = now();
+            $historiqueStatut->save();
+
             $updates = [
-                'statut' => $validated['nouveau_statut'],
+                'statut' => $nouveauStatut,
                 'date_modification' => now(),
                 'modifier_par' => $request->user()->email,
             ];
 
             // Mettre à jour les dates réelles selon le statut
-            if ($validated['nouveau_statut'] === Tache::STATUT_EN_COURS && !$tache->date_debut_reelle) {
+            if ($nouveauStatut === Tache::STATUT_EN_COURS && !$tache->date_debut_reelle) {
                 $updates['date_debut_reelle'] = now()->toDateString();
             }
 
-            if ($validated['nouveau_statut'] === Tache::STATUT_TERMINE) {
+            if ($nouveauStatut === Tache::STATUT_TERMINE) {
                 if (!$tache->date_fin_reelle) {
                     $updates['date_fin_reelle'] = now()->toDateString();
                 }
@@ -314,10 +361,15 @@ class TacheController extends Controller
             // Mettre à jour le niveau du projet parent
             $tache->mettreAJourNiveauProjet();
 
+            // Message adaptatif
+            $message = ($nouveauStatut === $ancienStatut && !empty($commentaire))
+                ? 'Commentaire ajouté avec succès pour la tâche'
+                : 'Statut de la tâche modifié avec succès';
+
             return response()->json([
                 'success' => true,
-                'message' => 'Statut de la tâche modifié avec succès',
-                'data' => $tache->fresh()
+                'message' => $message,
+                'data' => $tache->fresh(['historiqueStatuts.user'])
             ]);
 
         } catch (ValidationException $e) {
@@ -371,6 +423,39 @@ class TacheController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des tâches',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtenir l'historique des statuts d'une tâche
+     */
+    public function historiqueStatuts(int $id): JsonResponse
+    {
+        try {
+            $tache = Tache::findOrFail($id);
+
+            $historique = $tache->historiqueStatuts()
+                ->with('user:id,nom,prenom,email')
+                ->orderBy('date_changement', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $historique,
+                'tache' => [
+                    'id' => $tache->id,
+                    'titre' => $tache->titre,
+                    'statut_actuel' => $tache->statut,
+                    'statut_libelle' => $tache->statut_libelle,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'historique',
                 'error' => $e->getMessage()
             ], 500);
         }

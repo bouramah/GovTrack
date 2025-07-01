@@ -99,6 +99,14 @@ class Tache extends Model
     }
 
     /**
+     * Relation avec l'historique des statuts
+     */
+    public function historiqueStatuts(): HasMany
+    {
+        return $this->hasMany(TacheHistoriqueStatut::class, 'tache_id')->orderBy('date_changement', 'desc');
+    }
+
+    /**
      * Scope par statut
      */
     public function scopeByStatut($query, $statut)
