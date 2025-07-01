@@ -112,6 +112,9 @@ class UserManagementSeeder extends Seeder
             ['nom' => 'view_all_instructions', 'description' => 'Voir toutes les instructions'],
             ['nom' => 'manage_users', 'description' => 'Gérer les utilisateurs'],
             ['nom' => 'manage_entities', 'description' => 'Gérer les entités'],
+            ['nom' => 'view_my_projects', 'description' => 'Voir mes projets (où je suis responsable/porteur ou ai des tâches)'],
+            ['nom' => 'view_all_projects', 'description' => 'Voir tous les projets avec filtres complets'],
+            ['nom' => 'view_my_entity_projects', 'description' => 'Voir les projets de mon entité'],
         ];
 
         foreach ($permissions as $permission) {
@@ -151,10 +154,28 @@ class UserManagementSeeder extends Seeder
 
         // Attribution des permissions aux rôles
         $allPermissions = Permission::all();
+
+        // Admin : toutes les permissions
         $roleAdmin->permissions()->attach($allPermissions->pluck('id'), ['date_creation' => $now]);
 
-        $roleDirecteur->permissions()->attach([1, 2, 3, 4], ['date_creation' => $now]);
-        $roleEmployee->permissions()->attach([1, 2], ['date_creation' => $now]);
+        // Directeur : permissions d'entité (peut voir les projets de son entité + créer/modifier)
+        $directeurPermissions = Permission::whereIn('nom', [
+            'create_instruction',
+            'edit_instruction',
+            'validate_instruction',
+            'view_all_instructions',
+            'view_my_entity_projects',  // Nouveau : voir projets de son entité
+            'view_my_projects'          // Fallback : voir ses propres projets
+        ])->pluck('id');
+        $roleDirecteur->permissions()->attach($directeurPermissions, ['date_creation' => $now]);
+
+        // Employé : permissions de base (ses projets + créer/modifier)
+        $employeePermissions = Permission::whereIn('nom', [
+            'create_instruction',
+            'edit_instruction',
+            'view_my_projects'          // Nouveau : voir seulement ses projets
+        ])->pluck('id');
+        $roleEmployee->permissions()->attach($employeePermissions, ['date_creation' => $now]);
 
         // Création des utilisateurs
         $adminUser = User::create([

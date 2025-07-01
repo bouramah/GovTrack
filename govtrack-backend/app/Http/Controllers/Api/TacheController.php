@@ -136,7 +136,9 @@ class TacheController extends Controller
                 'responsable',
                 'piecesJointes.user',
                 'discussions.user',
-                'historiqueStatuts.user'
+                'historiqueStatuts.user',
+                'projet.porteur',
+                'responsable'
             ])->findOrFail($id);
 
             return response()->json([
@@ -244,7 +246,7 @@ class TacheController extends Controller
     public function changerStatut(Request $request, int $id): JsonResponse
     {
         try {
-            $tache = Tache::findOrFail($id);
+            $tache = Tache::with(['projet.porteur', 'responsable'])->findOrFail($id);
 
             $validated = $request->validate([
                 'nouveau_statut' => 'required|in:' . implode(',', array_keys(Tache::STATUTS)),
@@ -253,8 +255,35 @@ class TacheController extends Controller
                 'justificatif_path' => 'nullable|string',
             ]);
 
-            // Logique de validation similaire aux projets
             $nouveauStatut = $validated['nouveau_statut'];
+            $currentUserId = $request->user()->id;
+
+            // VALIDATION DES PERMISSIONS POUR CHANGER LE STATUT
+            // Récupérer les IDs des personnes autorisées
+            $responsableTacheId = $tache->responsable_id;
+            $porteurProjetId = $tache->projet->porteur_id;
+
+            // Pour tous les statuts sauf "terminé" : responsable de la tâche OU porteur du projet
+            if ($nouveauStatut !== Tache::STATUT_TERMINE) {
+                if ($currentUserId !== $responsableTacheId && $currentUserId !== $porteurProjetId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Seuls le responsable de la tâche ou le porteur du projet peuvent modifier ce statut',
+                        'permissions' => [
+                            'responsable_tache' => [
+                                'id' => $tache->responsable->id ?? null,
+                                'nom' => $tache->responsable ? $tache->responsable->nom . ' ' . $tache->responsable->prenom : 'Non défini'
+                            ],
+                            'porteur_projet' => [
+                                'id' => $tache->projet->porteur->id ?? null,
+                                'nom' => $tache->projet->porteur ? $tache->projet->porteur->nom . ' ' . $tache->projet->porteur->prenom : 'Non défini'
+                            ]
+                        ]
+                    ], 403);
+                }
+            }
+
+            // Logique de validation similaire aux projets
             $commentaire = $validated['commentaire'] ?? null;
 
             // Récupérer le dernier historique pour comparer les commentaires

@@ -20,19 +20,90 @@ class ProjetController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
             $query = Projet::with(['typeProjet', 'porteur', 'donneurOrdre']);
 
-            // Filtres
+            // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES PROJETS
+
+            if ($user->hasPermission('view_all_projects')) {
+                // 🔓 NIVEAU 1 : VIEW ALL PROJECTS - Accès complet à tous les projets
+                // L'utilisateur peut voir tous les projets et utiliser tous les filtres
+                // Aucune restriction sur la requête
+
+            } elseif ($user->hasPermission('view_my_entity_projects')) {
+                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité
+                // Récupérer l'entité actuelle de l'utilisateur
+                $affectationActuelle = $user->affectations()->where('statut', true)->first();
+
+                if ($affectationActuelle) {
+                    $entiteId = $affectationActuelle->service_id;
+
+                    // Récupérer tous les utilisateurs de cette entité (actuels et passés)
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                        ->distinct()
+                        ->pluck('user_id');
+
+                    // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
+                    // OU projets ayant des tâches assignées à des membres de l'entité
+                    $query->where(function ($q) use ($utilisateursEntite) {
+                        $q->whereIn('porteur_id', $utilisateursEntite)
+                          ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
+                          ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
+                              $tq->whereIn('responsable_id', $utilisateursEntite);
+                          });
+                    });
+                } else {
+                    // Si pas d'affectation d'entité, fallback vers ses projets personnels
+                    $query->where(function ($q) use ($user) {
+                        $q->where('porteur_id', $user->id)
+                          ->orWhere('donneur_ordre_id', $user->id)
+                          ->orWhereHas('taches', function ($tq) use ($user) {
+                              $tq->where('responsable_id', $user->id);
+                          });
+                    });
+                }
+
+            } elseif ($user->hasPermission('view_my_projects')) {
+                // 👤 NIVEAU 3 : VIEW MY PROJECTS - Seulement ses projets
+                // Projets où l'utilisateur est porteur, donneur d'ordre, ou a des tâches
+                $query->where(function ($q) use ($user) {
+                    $q->where('porteur_id', $user->id)
+                      ->orWhere('donneur_ordre_id', $user->id)
+                      ->orWhereHas('taches', function ($tq) use ($user) {
+                          $tq->where('responsable_id', $user->id);
+                      });
+                });
+
+            } else {
+                // ❌ AUCUNE PERMISSION - Accès refusé
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions nécessaires pour consulter les projets',
+                    'permissions_required' => [
+                        'view_my_projects' => 'Voir mes projets personnels',
+                        'view_my_entity_projects' => 'Voir les projets de mon entité',
+                        'view_all_projects' => 'Voir tous les projets (administrateur)'
+                    ]
+                ], 403);
+            }
+
+            // Filtres standard (disponibles selon les permissions)
             if ($request->filled('statut')) {
                 $query->byStatut($request->statut);
             }
 
             if ($request->filled('porteur_id')) {
-                $query->byPorteur($request->porteur_id);
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byPorteur($request->porteur_id);
+                }
             }
 
             if ($request->filled('donneur_ordre_id')) {
-                $query->byDonneurOrdre($request->donneur_ordre_id);
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byDonneurOrdre($request->donneur_ordre_id);
+                }
             }
 
             if ($request->filled('type_projet_id')) {
@@ -76,6 +147,15 @@ class ProjetController extends Controller
                 return $projet;
             });
 
+            // Ajouter les informations de permissions dans la réponse
+            $permissionsInfo = [
+                'level' => $user->hasPermission('view_all_projects') ? 'all_projects' :
+                          ($user->hasPermission('view_my_entity_projects') ? 'entity_projects' : 'my_projects'),
+                'can_filter_by_user' => $user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects'),
+                'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à tous les projets' :
+                               ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité' : 'Vos projets personnels')
+            ];
+
             return response()->json([
                 'success' => true,
                 'data' => $projets->items(),
@@ -84,7 +164,8 @@ class ProjetController extends Controller
                     'last_page' => $projets->lastPage(),
                     'per_page' => $projets->perPage(),
                     'total' => $projets->total(),
-                ]
+                ],
+                'permissions' => $permissionsInfo
             ]);
 
         } catch (\Exception $e) {
@@ -229,6 +310,39 @@ class ProjetController extends Controller
                 'justification_modification_dates' => 'nullable|string',
                 'niveau_execution' => 'sometimes|integer|min:0|max:100',
             ]);
+
+            // RÈGLES MÉTIER POUR LE NIVEAU D'EXÉCUTION
+            if (isset($validated['niveau_execution'])) {
+                // Règle 1 : On ne peut modifier le niveau d'exécution que si le statut est "en_cours"
+                if ($projet->statut !== Projet::STATUT_EN_COURS) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le niveau d\'exécution ne peut être modifié que lorsque le projet est en cours',
+                        'current_status' => [
+                            'statut' => $projet->statut,
+                            'libelle' => Projet::STATUTS[$projet->statut] ?? $projet->statut
+                        ]
+                    ], 422);
+                }
+
+                // Règle 2 : Impossible de mettre à 100% manuellement
+                if ($validated['niveau_execution'] == 100) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Impossible de définir le niveau d\'exécution à 100% manuellement. Le niveau passe automatiquement à 100% quand le projet est terminé.',
+                        'niveau_actuel' => $projet->niveau_execution
+                    ], 422);
+                }
+
+                // Règle 3 : Empêcher la régression (optionnel - peut être commenté si pas souhaité)
+                if ($validated['niveau_execution'] < $projet->niveau_execution) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le niveau d\'exécution ne peut pas être diminué (de ' . $projet->niveau_execution . '% à ' . $validated['niveau_execution'] . '%)',
+                        'niveau_actuel' => $projet->niveau_execution
+                    ], 422);
+                }
+            }
 
             $projet->update([
                 ...$validated,
@@ -428,8 +542,44 @@ class ProjetController extends Controller
             // Base query selon les permissions de l'utilisateur
             $query = Projet::query();
 
-            // Si ce n'est pas un admin, limiter aux projets de l'utilisateur
-            if (!$user->hasPermission('manage_projects')) {
+            // SYSTÈME DE PERMISSIONS POUR LE TABLEAU DE BORD
+
+            if ($user->hasPermission('view_all_projects')) {
+                // 🔓 NIVEAU 1 : VIEW ALL PROJECTS - Tous les projets
+                // Aucune restriction sur la requête
+
+            } elseif ($user->hasPermission('view_my_entity_projects')) {
+                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité
+                $affectationActuelle = $user->affectations()->where('statut', true)->first();
+
+                if ($affectationActuelle) {
+                    $entiteId = $affectationActuelle->service_id;
+
+                    // Récupérer tous les utilisateurs de cette entité
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                        ->distinct()
+                        ->pluck('user_id');
+
+                    $query->where(function ($q) use ($utilisateursEntite) {
+                        $q->whereIn('porteur_id', $utilisateursEntite)
+                          ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
+                          ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
+                              $tq->whereIn('responsable_id', $utilisateursEntite);
+                          });
+                    });
+                } else {
+                    // Fallback vers ses projets personnels
+                    $query->where(function ($q) use ($user) {
+                        $q->where('porteur_id', $user->id)
+                          ->orWhere('donneur_ordre_id', $user->id)
+                          ->orWhereHas('taches', function ($tq) use ($user) {
+                              $tq->where('responsable_id', $user->id);
+                          });
+                    });
+                }
+
+            } elseif ($user->hasPermission('view_my_projects')) {
+                // 👤 NIVEAU 3 : VIEW MY PROJECTS - Seulement ses projets
                 $query->where(function ($q) use ($user) {
                     $q->where('porteur_id', $user->id)
                       ->orWhere('donneur_ordre_id', $user->id)
@@ -437,6 +587,18 @@ class ProjetController extends Controller
                           $tq->where('responsable_id', $user->id);
                       });
                 });
+
+            } else {
+                // ❌ AUCUNE PERMISSION - Accès refusé
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions nécessaires pour consulter le tableau de bord',
+                    'permissions_required' => [
+                        'view_my_projects' => 'Voir mes projets personnels',
+                        'view_my_entity_projects' => 'Voir les projets de mon entité',
+                        'view_all_projects' => 'Voir tous les projets (administrateur)'
+                    ]
+                ], 403);
             }
 
             // Calculer les statistiques
@@ -451,6 +613,14 @@ class ProjetController extends Controller
                     ->with(['typeProjet', 'porteur'])
                     ->take(5)
                     ->get(),
+                'permissions_info' => [
+                    'level' => $user->hasPermission('view_all_projects') ? 'all_projects' :
+                              ($user->hasPermission('view_my_entity_projects') ? 'entity_projects' : 'my_projects'),
+                    'description' => $user->hasPermission('view_all_projects') ? 'Tableau de bord global' :
+                                   ($user->hasPermission('view_my_entity_projects') ? 'Tableau de bord de votre entité' : 'Votre tableau de bord personnel'),
+                    'scope' => $user->hasPermission('view_all_projects') ? 'Tous les projets' :
+                              ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité' : 'Vos projets')
+                ]
             ];
 
             // Répartition par statut avec requêtes séparées
@@ -476,6 +646,117 @@ class ProjetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la génération du tableau de bord',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mettre à jour uniquement le niveau d'exécution d'un projet
+     */
+    public function mettreAJourNiveauExecution(Request $request, int $id): JsonResponse
+    {
+        try {
+            $projet = Projet::findOrFail($id);
+
+            $validated = $request->validate([
+                'niveau_execution' => 'required|integer|min:0|max:100',
+                'commentaire' => 'nullable|string|max:500',
+            ]);
+
+            // RÈGLES MÉTIER POUR LE NIVEAU D'EXÉCUTION
+
+            // Règle 1 : On ne peut modifier le niveau d'exécution que si le statut est "en_cours"
+            if ($projet->statut !== Projet::STATUT_EN_COURS) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le niveau d\'exécution ne peut être modifié que lorsque le projet est en cours',
+                    'current_status' => [
+                        'statut' => $projet->statut,
+                        'libelle' => Projet::STATUTS[$projet->statut] ?? $projet->statut,
+                        'niveau_actuel' => $projet->niveau_execution
+                    ]
+                ], 422);
+            }
+
+            // Règle 2 : Impossible de mettre à 100% manuellement
+            if ($validated['niveau_execution'] == 100) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de définir le niveau d\'exécution à 100% manuellement. Le niveau passe automatiquement à 100% quand le projet est terminé.',
+                    'niveau_actuel' => $projet->niveau_execution,
+                    'niveau_max_autorise' => 99
+                ], 422);
+            }
+
+            // Règle 3 : Empêcher la régression
+            if ($validated['niveau_execution'] < $projet->niveau_execution) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le niveau d\'exécution ne peut pas être diminué (actuellement à ' . $projet->niveau_execution . '%, tentative de passage à ' . $validated['niveau_execution'] . '%)',
+                    'niveau_actuel' => $projet->niveau_execution,
+                    'niveau_minimum' => $projet->niveau_execution
+                ], 422);
+            }
+
+            // Règle 4 : Empêcher les changements redondants (même niveau sans commentaire)
+            if ($validated['niveau_execution'] == $projet->niveau_execution && empty($validated['commentaire'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le projet a déjà un niveau d\'exécution de ' . $projet->niveau_execution . '%. Pour confirmer ce niveau, veuillez ajouter un commentaire.',
+                    'niveau_actuel' => $projet->niveau_execution
+                ], 422);
+            }
+
+            // Mettre à jour le niveau d'exécution
+            $ancienNiveau = $projet->niveau_execution;
+            $projet->update([
+                'niveau_execution' => $validated['niveau_execution'],
+                'date_modification' => now(),
+                'modifier_par' => $request->user()->email,
+            ]);
+
+            // Créer une entrée d'historique si le niveau a vraiment changé ou s'il y a un commentaire
+            if ($validated['niveau_execution'] != $ancienNiveau || !empty($validated['commentaire'])) {
+                $commentaireHistorique = $validated['commentaire'] ?? 'Mise à jour du niveau d\'exécution';
+
+                $projet->historiqueStatuts()->create([
+                    'ancien_statut' => $projet->statut,
+                    'nouveau_statut' => $projet->statut,
+                    'user_id' => $request->user()->id,
+                    'commentaire' => "Niveau d'exécution: {$ancienNiveau}% → {$validated['niveau_execution']}%. {$commentaireHistorique}",
+                    'date_changement' => now(),
+                ]);
+            }
+
+            $projet->load(['typeProjet', 'porteur', 'donneurOrdre']);
+
+            // Message adapté selon le type de mise à jour
+            $message = $validated['niveau_execution'] == $ancienNiveau
+                ? 'Commentaire ajouté avec succès pour le niveau d\'exécution'
+                : 'Niveau d\'exécution mis à jour avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'projet' => $projet,
+                    'ancien_niveau' => $ancienNiveau,
+                    'nouveau_niveau' => $validated['niveau_execution'],
+                    'progression' => $validated['niveau_execution'] - $ancienNiveau
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du niveau d\'exécution',
                 'error' => $e->getMessage()
             ], 500);
         }

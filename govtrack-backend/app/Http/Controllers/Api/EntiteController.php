@@ -558,6 +558,230 @@ class EntiteController extends Controller
     }
 
     /**
+     * Récupérer tous les utilisateurs d'une entité avec filtres avancés
+     */
+    public function utilisateurs(Request $request, string $id): JsonResponse
+    {
+        try {
+            $entite = Entite::with(['typeEntite'])->findOrFail($id);
+
+            // Paramètres de filtrage
+            $includeHistorique = $request->boolean('include_historique', false);
+            $statut = $request->get('statut', 'actuel'); // actuel, historique, tous
+            $role = $request->get('role', 'tous'); // chef, employe, tous
+            $perPage = $request->get('per_page', null); // Pour pagination optionnelle
+
+            // Chef actuel
+            $chefActuel = $entite->chefs()
+                ->whereNull('date_fin')
+                ->with('user')
+                ->first();
+
+            // Historique des chefs (si demandé)
+            $historiqueChefs = [];
+            if ($includeHistorique || $statut === 'historique' || $statut === 'tous') {
+                $historiqueChefs = $entite->chefs()
+                    ->whereNotNull('date_fin')
+                    ->with('user')
+                    ->orderBy('date_fin', 'desc')
+                    ->get()
+                    ->map(function ($chef) {
+                        return [
+                            'user' => [
+                                'id' => $chef->user->id,
+                                'matricule' => $chef->user->matricule,
+                                'nom' => $chef->user->nom,
+                                'prenom' => $chef->user->prenom,
+                                'email' => $chef->user->email,
+                                'telephone' => $chef->user->telephone,
+                            ],
+                            'type' => 'chef',
+                            'date_debut' => $chef->date_debut,
+                            'date_fin' => $chef->date_fin,
+                            'est_actuel' => false
+                        ];
+                    });
+            }
+
+            // Employés actuels
+            $utilisateursActuels = [];
+            if ($statut === 'actuel' || $statut === 'tous') {
+                $affectationsActuelles = $entite->affectations()
+                    ->where('statut', true)
+                    ->with(['user.roles', 'poste'])
+                    ->get();
+
+                $utilisateursActuels = $affectationsActuelles->map(function ($affectation) {
+                    return [
+                        'user' => [
+                            'id' => $affectation->user->id,
+                            'matricule' => $affectation->user->matricule,
+                            'nom' => $affectation->user->nom,
+                            'prenom' => $affectation->user->prenom,
+                            'email' => $affectation->user->email,
+                            'telephone' => $affectation->user->telephone,
+                            'statut' => $affectation->user->statut,
+                            'roles' => $affectation->user->roles->pluck('nom'),
+                        ],
+                        'poste' => [
+                            'id' => $affectation->poste->id,
+                            'nom' => $affectation->poste->nom,
+                            'description' => $affectation->poste->description,
+                        ],
+                        'type' => 'employe',
+                        'date_debut' => $affectation->date_debut,
+                        'date_fin' => null,
+                        'est_actuel' => true
+                    ];
+                });
+            }
+
+            // Historique des employés (si demandé)
+            $historiqueUtilisateurs = [];
+            if ($includeHistorique || $statut === 'historique' || $statut === 'tous') {
+                $affectationsPassees = $entite->affectations()
+                    ->where('statut', false)
+                    ->with(['user.roles', 'poste'])
+                    ->orderBy('date_fin', 'desc')
+                    ->get();
+
+                $historiqueUtilisateurs = $affectationsPassees->map(function ($affectation) {
+                    return [
+                        'user' => [
+                            'id' => $affectation->user->id,
+                            'matricule' => $affectation->user->matricule,
+                            'nom' => $affectation->user->nom,
+                            'prenom' => $affectation->user->prenom,
+                            'email' => $affectation->user->email,
+                            'telephone' => $affectation->user->telephone,
+                            'statut' => $affectation->user->statut,
+                            'roles' => $affectation->user->roles->pluck('nom'),
+                        ],
+                        'poste' => [
+                            'id' => $affectation->poste->id,
+                            'nom' => $affectation->poste->nom,
+                            'description' => $affectation->poste->description,
+                        ],
+                        'type' => 'employe',
+                        'date_debut' => $affectation->date_debut,
+                        'date_fin' => $affectation->date_fin,
+                        'est_actuel' => false
+                    ];
+                });
+            }
+
+            // Filtrage par rôle
+            $utilisateursFiltres = collect();
+
+            if ($role === 'chef' || $role === 'tous') {
+                if ($chefActuel && ($statut === 'actuel' || $statut === 'tous')) {
+                    $utilisateursFiltres->push([
+                        'user' => [
+                            'id' => $chefActuel->user->id,
+                            'matricule' => $chefActuel->user->matricule,
+                            'nom' => $chefActuel->user->nom,
+                            'prenom' => $chefActuel->user->prenom,
+                            'email' => $chefActuel->user->email,
+                            'telephone' => $chefActuel->user->telephone,
+                            'statut' => $chefActuel->user->statut,
+                            'roles' => $chefActuel->user->roles->pluck('nom') ?? [],
+                        ],
+                        'poste' => null,
+                        'type' => 'chef',
+                        'date_debut' => $chefActuel->date_debut,
+                        'date_fin' => null,
+                        'est_actuel' => true
+                    ]);
+                }
+                if ($statut === 'historique' || $statut === 'tous') {
+                    $utilisateursFiltres = $utilisateursFiltres->merge($historiqueChefs);
+                }
+            }
+
+            if ($role === 'employe' || $role === 'tous') {
+                if ($statut === 'actuel' || $statut === 'tous') {
+                    $utilisateursFiltres = $utilisateursFiltres->merge($utilisateursActuels);
+                }
+                if ($statut === 'historique' || $statut === 'tous') {
+                    $utilisateursFiltres = $utilisateursFiltres->merge($historiqueUtilisateurs);
+                }
+            }
+
+            // Tri par nom
+            $utilisateursFiltres = $utilisateursFiltres->sortBy(function ($item) {
+                return $item['user']['nom'] . ' ' . $item['user']['prenom'];
+            })->values();
+
+            // Pagination optionnelle
+            $response = [
+                'entite' => [
+                    'id' => $entite->id,
+                    'nom' => $entite->nom,
+                    'description' => $entite->description,
+                    'type_entite' => $entite->typeEntite->nom,
+                ],
+                'filtres_appliques' => [
+                    'statut' => $statut,
+                    'role' => $role,
+                    'include_historique' => $includeHistorique,
+                ],
+                'chef_actuel' => $chefActuel ? [
+                    'user' => [
+                        'id' => $chefActuel->user->id,
+                        'matricule' => $chefActuel->user->matricule,
+                        'nom' => $chefActuel->user->nom,
+                        'prenom' => $chefActuel->user->prenom,
+                        'email' => $chefActuel->user->email,
+                    ],
+                    'date_debut' => $chefActuel->date_debut,
+                ] : null,
+                'utilisateurs' => $utilisateursFiltres,
+                'statistiques' => [
+                    'total_utilisateurs' => $utilisateursFiltres->count(),
+                    'employes_actuels' => $utilisateursActuels->count(),
+                    'employes_historique' => $historiqueUtilisateurs->count(),
+                    'chefs_historique' => $historiqueChefs->count(),
+                    'a_chef_actuel' => $chefActuel !== null,
+                    'repartition_par_type' => [
+                        'chefs' => $utilisateursFiltres->where('type', 'chef')->count(),
+                        'employes' => $utilisateursFiltres->where('type', 'employe')->count(),
+                    ],
+                    'repartition_par_statut' => [
+                        'actuels' => $utilisateursFiltres->where('est_actuel', true)->count(),
+                        'historique' => $utilisateursFiltres->where('est_actuel', false)->count(),
+                    ],
+                ],
+            ];
+
+            // Pagination si demandée
+            if ($perPage) {
+                $page = $request->get('page', 1);
+                $utilisateursPage = $utilisateursFiltres->forPage($page, $perPage);
+                $response['utilisateurs'] = $utilisateursPage->values();
+                $response['pagination'] = [
+                    'current_page' => (int) $page,
+                    'per_page' => (int) $perPage,
+                    'total' => $utilisateursFiltres->count(),
+                    'last_page' => ceil($utilisateursFiltres->count() / $perPage),
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Utilisateurs de l\'entité récupérés avec succès',
+                'data' => $response
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des utilisateurs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Helper method to check if setting a parent would create a cycle
      */
     private function wouldCreateCycle(int $entityId, int $parentId): bool

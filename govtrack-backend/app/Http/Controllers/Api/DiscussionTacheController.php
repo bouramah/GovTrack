@@ -67,7 +67,7 @@ class DiscussionTacheController extends Controller
             ]);
 
             // Si c'est une réponse, vérifier que le message parent appartient à la même tâche
-            if ($validated['parent_id']) {
+            if (!empty($validated['parent_id'])) {
                 $messageParent = DiscussionTache::findOrFail($validated['parent_id']);
                 if ($messageParent->tache_id !== $tacheId) {
                     return response()->json([
@@ -80,7 +80,7 @@ class DiscussionTacheController extends Controller
             $discussion = DiscussionTache::create([
                 'tache_id' => $tacheId,
                 'user_id' => $request->user()->id,
-                'parent_id' => $validated['parent_id'],
+                'parent_id' => $validated['parent_id'] ?? null,
                 'message' => $validated['message'],
                 'est_modifie' => false,
                 'date_creation' => now(),

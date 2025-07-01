@@ -67,7 +67,7 @@ class DiscussionProjetController extends Controller
             ]);
 
             // Si c'est une réponse, vérifier que le message parent appartient au même projet
-            if ($validated['parent_id']) {
+            if (!empty($validated['parent_id'])) {
                 $messageParent = DiscussionProjet::findOrFail($validated['parent_id']);
                 if ($messageParent->projet_id !== $projetId) {
                     return response()->json([
@@ -80,7 +80,7 @@ class DiscussionProjetController extends Controller
             $discussion = DiscussionProjet::create([
                 'projet_id' => $projetId,
                 'user_id' => $request->user()->id,
-                'parent_id' => $validated['parent_id'],
+                'parent_id' => $validated['parent_id'] ?? null,
                 'message' => $validated['message'],
                 'est_modifie' => false,
                 'date_creation' => now(),

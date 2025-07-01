@@ -73,6 +73,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('entites/{id}/terminer-mandat-chef', [EntiteController::class, 'terminerMandatChef'])->middleware('permission:manage_entities');
     Route::get('entites/{id}/historique-chefs', [EntiteController::class, 'historiqueChefs']); // Lecture libre
 
+    // Gestion des utilisateurs d'entités
+    Route::get('entites/{id}/utilisateurs', [EntiteController::class, 'utilisateurs']); // Lecture libre avec filtres avancés
+
     // Postes
     Route::get('postes', [PosteController::class, 'index']); // Lecture libre
     Route::get('postes/{id}', [PosteController::class, 'show']); // Lecture libre
@@ -124,17 +127,20 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('type-projets/{id}', [TypeProjetController::class, 'destroy'])->middleware('permission:manage_entities');
 
     // Projets (Instructions/Recommandations) - routes spéciales d'abord
-    Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord']); // Lecture selon permissions
+    Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
 
     // Projets - CRUD
-    Route::get('projets', [ProjetController::class, 'index']); // Lecture selon permissions
-    Route::get('projets/{id}', [ProjetController::class, 'show']); // Lecture selon permissions
+    Route::get('projets', [ProjetController::class, 'index']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
+    Route::get('projets/{id}', [ProjetController::class, 'show']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
     Route::post('projets', [ProjetController::class, 'store'])->middleware('permission:create_instruction');
     Route::put('projets/{id}', [ProjetController::class, 'update'])->middleware('permission:edit_instruction');
     Route::delete('projets/{id}', [ProjetController::class, 'destroy'])->middleware('permission:edit_instruction');
 
     // Gestion des statuts de projets
     Route::post('projets/{id}/changer-statut', [ProjetController::class, 'changerStatut'])->middleware('permission:edit_instruction');
+
+    // Gestion du niveau d'exécution de projets
+    Route::post('projets/{id}/niveau-execution', [ProjetController::class, 'mettreAJourNiveauExecution'])->middleware('permission:edit_instruction');
 
     // Tâches - routes spéciales d'abord
     Route::get('taches/mes-taches', [TacheController::class, 'mesTaches']); // Tâches de l'utilisateur connecté
