@@ -1,192 +1,293 @@
-# 🏛️ GovTrack Backend - API Laravel
+# 🏛️ GovTrack - API de Gestion Gouvernementale
 
-## 📋 Description
-API Laravel pour le système de gestion et suivi d'instructions et recommandations gouvernementales. Ce projet permet de suivre l'exécution des directives données lors de conseils de cabinet ou autres instances décisionnelles.
+> **Système complet de gestion d'instructions et recommandations gouvernementales**
 
-## 🚀 Fonctionnalités principales
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
+![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)
+![PHP](https://img.shields.io/badge/PHP-8.2+-purple.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-### ✅ Partie 1 - Gestion des utilisateurs (Implémentée)
-- **Gestion des entités organisationnelles** avec hiérarchie
-- **Gestion des types d'entités** (Direction, Service, Division)
-- **Gestion des postes et affectations**
-- **Système complet de rôles et permissions**
-- **Historique des affectations et responsabilités**
-- **API REST complète** pour toutes les entités
+## 🎯 **Vue d'Ensemble**
 
-### 🔄 Prochaines parties
-- **Partie 2** : Gestion des instructions et recommandations
-- **Partie 3** : Tableaux de bord et notifications
+GovTrack est une API REST robuste développée avec Laravel pour la gestion complète des instructions et recommandations gouvernementales. Elle offre un système de permissions granulaire, une traçabilité complète et une validation métier avancée.
 
-## 🛠️ Technologies utilisées
-- **Framework** : Laravel 12
-- **Base de données** : MySQL
-- **Authentification** : Laravel Sanctum
-- **API** : RESTful API avec ressources
+### ⭐ **Fonctionnalités Clés**
 
-## 📦 Installation
-
-### Prérequis
-- PHP >= 8.2
-- Composer
-- MySQL
-- Node.js (pour le frontend React à venir)
-
-### Étapes d'installation
-
-1. **Cloner le repository**
-```bash
-git clone <repository-url>
-cd govtrack-backend
-```
-
-2. **Installer les dépendances**
-```bash
-composer install
-```
-
-3. **Configuration de l'environnement**
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-4. **Configuration de la base de données**
-Modifier le fichier `.env` :
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=govtrack_db
-DB_USERNAME=root
-DB_PASSWORD=votre_mot_de_passe
-```
-
-5. **Créer la base de données**
-```sql
-CREATE DATABASE govtrack_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-6. **Exécuter les migrations et seeders**
-```bash
-php artisan migrate
-php artisan db:seed
-```
-
-7. **Lancer le serveur de développement**
-```bash
-php artisan serve
-```
-
-## 📊 Structure de la base de données
-
-### Tables principales
-- **users** : Utilisateurs avec informations étendues
-- **type_entites** : Types d'entités organisationnelles
-- **entites** : Entités avec hiérarchie
-- **postes** : Postes disponibles
-- **roles** : Rôles système
-- **permissions** : Permissions granulaires
-
-### Tables de liaison et historiques
-- **utilisateur_entite_histories** : Historique des affectations
-- **entite_chef_histories** : Historique des responsables
-- **role_permission** : Liaison rôles-permissions
-- **utilisateur_role** : Liaison utilisateurs-rôles
-
-## 🔌 API Endpoints
-
-Toutes les routes sont préfixées par `/api/v1`
-
-### Types d'entité
-- `GET /api/v1/type-entites` - Liste des types
-- `POST /api/v1/type-entites` - Créer un type
-- `GET /api/v1/type-entites/{id}` - Détails d'un type
-- `PUT /api/v1/type-entites/{id}` - Modifier un type
-- `DELETE /api/v1/type-entites/{id}` - Supprimer un type
-
-### Entités
-- `GET /api/v1/entites` - Liste des entités
-- `POST /api/v1/entites` - Créer une entité
-- `GET /api/v1/entites/{id}` - Détails d'une entité
-- `PUT /api/v1/entites/{id}` - Modifier une entité
-- `DELETE /api/v1/entites/{id}` - Supprimer une entité
-- `GET /api/v1/entites/{id}/enfants` - Entités enfants
-- `GET /api/v1/entites/{id}/hierarchy` - Hiérarchie complète
-
-### Utilisateurs
-- `GET /api/v1/users` - Liste des utilisateurs
-- `POST /api/v1/users` - Créer un utilisateur
-- `GET /api/v1/users/{id}` - Détails d'un utilisateur
-- `PUT /api/v1/users/{id}` - Modifier un utilisateur
-- `DELETE /api/v1/users/{id}` - Supprimer un utilisateur
-- `GET /api/v1/users/{id}/affectations` - Affectations d'un utilisateur
-- `POST /api/v1/users/{id}/affecter` - Affecter un utilisateur
-- `POST /api/v1/users/{id}/roles` - Assigner un rôle
-- `DELETE /api/v1/users/{id}/roles/{roleId}` - Retirer un rôle
-
-### Rôles et Permissions
-- Routes CRUD complètes pour rôles et permissions
-- Gestion des associations rôles-permissions
-
-## 👥 Utilisateurs de test
-
-Après avoir exécuté les seeders, vous aurez accès aux comptes suivants :
-
-| Email | Mot de passe | Rôle | Description |
-|-------|--------------|------|-------------|
-| admin@govtrack.gov | password | Administrateur | Accès complet au système |
-| amadou.diop@govtrack.gov | password | Directeur | Directeur DSI |
-| fatou.fall@govtrack.gov | password | Employé | Développeur |
-
-## 🔐 Authentification
-
-L'API utilise Laravel Sanctum pour l'authentification. Pour accéder aux endpoints protégés :
-
-1. **Connexion** : `POST /api/login`
-2. **Utiliser le token** dans l'en-tête : `Authorization: Bearer {token}`
-3. **Déconnexion** : `POST /api/logout`
-
-## 🧪 Tests
-
-```bash
-# Exécuter tous les tests
-php artisan test
-
-# Tests avec couverture
-php artisan test --coverage
-```
-
-## 📁 Organisation du code
-
-```
-app/
-├── Http/Controllers/Api/     # Contrôleurs API
-├── Models/                   # Modèles Eloquent
-database/
-├── migrations/               # Migrations de base de données
-├── seeders/                  # Seeders de données
-routes/
-├── api.php                   # Routes API
-```
-
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
-3. Commit les changements (`git commit -am 'Ajouter nouvelle fonctionnalité'`)
-4. Push vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
-5. Créer une Pull Request
-
-## 📝 Licence
-
-Ce projet est sous licence [MIT](LICENSE).
-
-## 📞 Support
-
-Pour toute question ou problème :
-- Créer une issue sur GitHub
-- Contacter l'équipe de développement
+- 🔐 **Système de permissions à 3 niveaux** (Admin/Directeur/Employé)
+- 📊 **Tableau de bord intelligent** adapté aux permissions
+- ✅ **Gestion complète des projets et tâches** avec SLA automatique
+- 🏢 **Organisation hiérarchique** des entités et utilisateurs
+- 💬 **Collaboration** via discussions et pièces jointes
+- 📈 **Traçabilité complète** avec historiques détaillés
+- 🚀 **API sécurisée** avec validation métier robuste
 
 ---
 
-**Développé avec ❤️ pour l'amélioration de la gouvernance publique**
+## 🏗️ **Architecture du Projet**
+
+### **Structure en 3 Parties**
+
+```
+📁 GovTrack/
+├── 🔐 Partie 1: Gestion des Utilisateurs
+│   ├── Authentification sécurisée
+│   ├── Gestion des entités/organisations
+│   ├── Système de rôles et permissions
+│   └── Hiérarchie organisationnelle
+│
+├── 📊 Partie 2: Gestion des Projets  
+│   ├── Projets avec SLA automatique
+│   ├── Tâches et sous-tâches
+│   ├── Système de permissions à 3 niveaux
+│   └── Validation métier avancée
+│
+└── 💬 Partie 3: Collaboration
+    ├── Discussions structurées
+    ├── Pièces jointes sécurisées
+    ├── Historiques et audit
+    └── Notifications (à venir)
+```
+
+### **Innovation : Système de Permissions Granulaire**
+
+| Niveau | Rôle | Accès | Description |
+|--------|------|-------|-------------|
+| 🌐 **Global** | Admin | `view_all_projects` | Tous les projets + filtres complets |
+| 🏢 **Entité** | Directeur | `view_my_entity_projects` | Projets de son entité |
+| 👤 **Personnel** | Employé | `view_my_projects` | Ses projets uniquement |
+
+---
+
+## 🚀 **Installation & Configuration**
+
+### **Prérequis**
+- PHP 8.2+
+- Composer
+- MySQL/PostgreSQL
+- Laravel 11.x
+
+### **Installation**
+
+```bash
+# 1. Cloner le projet
+git clone https://github.com/votre-org/govtrack.git
+cd govtrack/govtrack-backend
+
+# 2. Installer les dépendances
+composer install
+
+# 3. Configuration environnement
+cp .env.example .env
+php artisan key:generate
+
+# 4. Configuration base de données
+# Modifier .env avec vos paramètres DB
+
+# 5. Migrations et données initiales
+php artisan migrate
+php artisan db:seed --class=UserManagementSeeder
+php artisan db:seed --class=Partie2Seeder
+php artisan db:seed --class=ProjectPermissionsSeeder
+
+# 6. Lancement du serveur
+php artisan serve
+```
+
+### **Comptes de Test Créés**
+
+```bash
+# 🔑 Administrateur (toutes permissions)
+Email: admin@govtrack.gov
+Mot de passe: password
+Permissions: view_all_projects, manage_users, manage_entities
+
+# 🏢 Directeur d'Entité (DSI)
+Email: amadou.diop@govtrack.gov  
+Mot de passe: password
+Permissions: view_my_entity_projects, view_my_projects
+
+# 👤 Employé
+Email: fatou.fall@govtrack.gov
+Mot de passe: password
+Permissions: view_my_projects
+```
+
+---
+
+## 📋 **Guide d'Utilisation**
+
+### **1. Authentification**
+
+```bash
+# Connexion
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@govtrack.gov","password":"password"}'
+```
+
+### **2. Test des Permissions**
+
+```bash
+# Liste des projets (varie selon le niveau d'accès)
+curl -X GET http://127.0.0.1:8000/api/v1/projets \
+  -H "Authorization: Bearer TOKEN"
+
+# Réponse avec infos de permissions
+{
+  "data": [...],
+  "permissions": {
+    "level": "all_projects",
+    "can_filter_by_user": true,
+    "description": "Accès complet à tous les projets"
+  }
+}
+```
+
+---
+
+## 🔥 **Nouveautés v2.0**
+
+### ⭐ **Système de Permissions à 3 Niveaux**
+- **Innovation majeure** : Filtrage intelligent selon l'entité d'affectation
+- **Fallback graceful** : Accès personnel si pas d'entité affectée
+- **Informations incluses** : Chaque réponse indique le niveau d'accès
+
+### ⭐ **Endpoint Niveau d'Exécution Dédié**
+```bash
+POST /api/v1/projets/{id}/niveau-execution
+{
+  "niveau_execution": 45,
+  "commentaire": "Avancement significatif"
+}
+```
+
+### ⭐ **Endpoint Utilisateurs par Entité**
+```bash
+GET /api/v1/entites/{id}/utilisateurs
+?statut=actuel&role=chef&include_historique=true
+```
+
+---
+
+## �� **Documentation & Tests**
+
+### **Collection Postman Complète**
+- **70+ endpoints** documentés et testés
+- **Tests automatiques** pour validation
+- **Variables d'environnement** configurées
+- **Scénarios complets** pour chaque permission
+
+```bash
+# Import dans Postman
+Fichier: GovTrack-API-Complete.postman_collection.json
+```
+
+### **Documentation API**
+- **Guide complet** : `API-Documentation.md`
+- **Endpoints détaillés** avec exemples
+- **Architecture** et règles métier
+
+---
+
+## 🧪 **Tests et Validation**
+
+### **Comptes de Test**
+
+| Niveau | Email | Mot de passe | Permissions |
+|--------|-------|--------------|-------------|
+| 🔑 **Admin** | admin@govtrack.gov | password | Accès complet |
+| 🏢 **Directeur** | amadou.diop@govtrack.gov | password | Projets d'entité |
+| 👤 **Employé** | fatou.fall@govtrack.gov | password | Projets personnels |
+
+### **Tests avec Postman**
+
+1. **Importer** la collection `GovTrack-API-Complete.postman_collection.json`
+2. **Se connecter** avec un des comptes test
+3. **Tester** les différents niveaux de permissions
+4. **Valider** les règles métier
+
+---
+
+## 🗃️ **Base de Données**
+
+### **Migrations Principales**
+
+```bash
+# Structure organisationnelle
+create_type_entites_table.php
+create_entites_table.php
+create_postes_table.php
+
+# Gestion des utilisateurs
+modify_users_table.php
+create_roles_table.php
+create_permissions_table.php
+
+# Gestion des projets
+create_type_projets_table.php
+create_projets_table.php
+create_taches_table.php
+
+# Historiques et audit
+create_projet_historique_statuts_table.php
+create_tache_historique_statuts_table.php
+```
+
+### **Seeders de Données**
+
+```bash
+# Données de base
+php artisan db:seed --class=UserManagementSeeder      # Utilisateurs et structure
+php artisan db:seed --class=Partie2Seeder             # Projets et tâches
+php artisan db:seed --class=ProjectPermissionsSeeder  # Nouvelles permissions
+```
+
+---
+
+## 🔐 **Sécurité & Performance**
+
+### **Sécurité**
+- **Laravel Sanctum** pour les tokens API
+- **Middleware** de vérification des permissions
+- **Validation** des entrées utilisateur
+- **Audit complet** des actions
+
+### **Performance**
+- **Eager Loading** pour éviter les requêtes N+1
+- **Pagination** sur toutes les listes
+- **Index** sur les colonnes critiques
+- **Cache** des permissions utilisateur
+
+---
+
+## 📈 **Statut du Projet**
+
+✅ **Partie 1** : Gestion des utilisateurs - **TERMINÉE**  
+✅ **Partie 2** : Gestion des projets - **TERMINÉE**  
+✅ **Partie 3** : Collaboration - **TERMINÉE**  
+🚀 **Version 2.0** : Système de permissions avancé - **DÉPLOYÉE**
+
+---
+
+## 📞 **Informations Techniques**
+
+### **Technologies**
+- **Backend** : Laravel 11.x + PHP 8.2+
+- **Base de données** : MySQL/PostgreSQL
+- **Authentification** : Laravel Sanctum
+- **API** : REST avec validation complète
+
+### **Standards**
+- **PSR-12** pour le style de code
+- **Tests** unitaires et d'intégration
+- **Documentation** complète
+
+---
+
+## 📄 **Licence**
+
+Ce projet est sous licence MIT.
+
+---
+
+*GovTrack v2.0 - Une solution complète et professionnelle pour la gestion gouvernementale moderne.*

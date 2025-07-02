@@ -1,0 +1,189 @@
+{
+	"info": {
+		"name": "👥 Gestion des Utilisateurs (Partie 1)",
+		"description": "Endpoints pour la gestion des utilisateurs, entités, rôles et permissions"
+	},
+	"item": [
+		{
+			"name": "🏢 Entités",
+			"item": [
+				{
+					"name": "Lister toutes les entités",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/entites",
+						"description": "Récupérer la liste complète des entités avec leurs hiérarchies"
+					}
+				},
+				{
+					"name": "Voir une entité spécifique",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/entites/1",
+						"description": "Détails d'une entité avec employés actuels et chef"
+					}
+				},
+				{
+					"name": "Organigramme complet",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/entites/organigramme",
+						"description": "Structure hiérarchique complète de l'organisation"
+					}
+				},
+				{
+					"name": "Utilisateurs d'une entité",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/entites/1/utilisateurs?statut=actuel&role=tous&include_historique=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["entites", "1", "utilisateurs"],
+							"query": [
+								{"key": "statut", "value": "actuel", "description": "actuel | historique | tous"},
+								{"key": "role", "value": "tous", "description": "chef | employe | tous"},
+								{"key": "include_historique", "value": "false", "description": "Inclure l'historique des affectations"}
+							]
+						},
+						"description": "Récupérer tous les utilisateurs d'une entité avec filtres avancés"
+					}
+				},
+				{
+					"name": "Créer une entité",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Nouveau Service\",\n  \"type_entite_id\": 2,\n  \"parent_id\": 1,\n  \"description\": \"Description du nouveau service\"\n}"
+						},
+						"url": "{{baseUrl}}/entites",
+						"description": "Créer une nouvelle entité (permission: manage_entities)"
+					}
+				},
+				{
+					"name": "Affecter un chef d'entité",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 2,\n  \"date_debut\": \"2025-01-15\",\n  \"commentaire\": \"Nomination nouveau chef de service\"\n}"
+						},
+						"url": "{{baseUrl}}/entites/1/affecter-chef",
+						"description": "Affecter ou changer le chef d'une entité"
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 Utilisateurs",
+			"item": [
+				{
+					"name": "Lister tous les utilisateurs",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/users?statut=actif&entite_id=1&page=1&per_page=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{"key": "statut", "value": "actif", "description": "actif | inactif | tous"},
+								{"key": "entite_id", "value": "1", "description": "Filtrer par entité"},
+								{"key": "page", "value": "1"},
+								{"key": "per_page", "value": "10"}
+							]
+						},
+						"description": "Liste paginée des utilisateurs avec filtres"
+					}
+				},
+				{
+					"name": "Créer un utilisateur",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"matricule\": \"EMP004\",\n  \"nom\": \"Seck\",\n  \"prenom\": \"Moussa\",\n  \"email\": \"moussa.seck@govtrack.gov\",\n  \"telephone\": \"+221 77 456 78 90\",\n  \"adresse\": \"Dakar, Sénégal\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "{{baseUrl}}/users",
+						"description": "Créer un nouvel utilisateur (permission: manage_users)"
+					}
+				},
+				{
+					"name": "Affecter un utilisateur à une entité",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"poste_id\": 2,\n  \"service_id\": 1,\n  \"date_debut\": \"2025-01-15\",\n  \"commentaire\": \"Nouvelle affectation\"\n}"
+						},
+						"url": "{{baseUrl}}/users/3/affecter",
+						"description": "Affecter un utilisateur à un poste dans une entité"
+					}
+				},
+				{
+					"name": "Assigner un rôle à un utilisateur",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role_id\": 2\n}"
+						},
+						"url": "{{baseUrl}}/users/3/assign-role",
+						"description": "Assigner un rôle à un utilisateur"
+					}
+				}
+			]
+		},
+		{
+			"name": "🎭 Rôles & Permissions",
+			"item": [
+				{
+					"name": "Lister tous les rôles",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/roles",
+						"description": "Liste complète des rôles avec leurs permissions"
+					}
+				},
+				{
+					"name": "Lister toutes les permissions",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/permissions",
+						"description": "Liste complète des permissions disponibles"
+					}
+				},
+				{
+					"name": "Créer un nouveau rôle",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Chef de Projet\",\n  \"description\": \"Responsable de la gestion des projets\"\n}"
+						},
+						"url": "{{baseUrl}}/roles",
+						"description": "Créer un nouveau rôle (permission: manage_users)"
+					}
+				},
+				{
+					"name": "Assigner une permission à un rôle",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"permission_id\": 7\n}"
+						},
+						"url": "{{baseUrl}}/roles/4/assign-permission",
+						"description": "Assigner une permission à un rôle existant"
+					}
+				}
+			]
+		}
+	]
+}

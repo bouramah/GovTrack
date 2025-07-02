@@ -1,0 +1,458 @@
+{
+  "info": {
+    "_postman_id": "govtrack-complete-v2",
+    "name": "GovTrack API - Collection Complète v2.0",
+    "description": "🏛️ **API GovTrack** - Système complet de gestion d'instructions gouvernementales\n\n## 🔐 Permissions (3 Niveaux)\n- **Admin** (`view_all_projects`) : Tous les projets + filtres complets\n- **Directeur** (`view_my_entity_projects`) : Projets de son entité\n- **Employé** (`view_my_projects`) : Ses projets personnels\n\n## 🚀 Guide\n1. Login via Auth section\n2. Token auto-stocké\n3. Testez différents niveaux\n\n## ✅ Fonctionnalités\n- 70+ endpoints sécurisés\n- Permissions granulaires\n- Validation métier complète\n- Tests automatiques",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 AUTHENTIFICATION",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Admin login success\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(data.success).to.be.true;",
+                  "    pm.globals.set(\"access_token\", data.data.token);",
+                  "    console.log(\"🔑 Admin token stored\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@govtrack.gov\",\"password\":\"password\"}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "🔓 Connexion administrateur - Accès complet"
+          }
+        },
+        {
+          "name": "Login Directeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"amadou.diop@govtrack.gov\",\"password\":\"password\"}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "🏢 Directeur d'entité - Projets de son entité"
+          }
+        },
+        {
+          "name": "Login Employé",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"fatou.fall@govtrack.gov\",\"password\":\"password\"}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "👤 Employé - Projets personnels uniquement"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me",
+            "description": "📋 Info utilisateur connecté"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "🚪 Déconnexion"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 PROJETS & DASHBOARD",
+      "item": [
+        {
+          "name": "Tableau de Bord",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projets/tableau-bord",
+            "description": "📈 Dashboard intelligent selon permissions - Nouvelles infos de permissions"
+          }
+        },
+        {
+          "name": "Lister Projets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/projets?page=1&per_page=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "statut",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "porteur_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Admin/Directeur seulement"
+                }
+              ]
+            },
+            "description": "📋 Liste avec filtrage selon permissions (NOUVEAU SYSTÈME)"
+          }
+        },
+        {
+          "name": "Créer Projet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Test API - Nouveau Projet\",\n  \"description\": \"Projet test via Postman\",\n  \"type_projet_id\": 1,\n  \"porteur_id\": 2,\n  \"donneur_ordre_id\": 1,\n  \"date_debut_previsionnelle\": \"2025-02-01\",\n  \"date_fin_previsionnelle\": \"2025-03-01\"\n}"
+            },
+            "url": "{{baseUrl}}/projets",
+            "description": "➕ Créer avec validation SLA automatique"
+          }
+        },
+        {
+          "name": "Changer Statut Projet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nouveau_statut\": \"en_cours\",\n  \"commentaire\": \"Démarrage du projet\"\n}"
+            },
+            "url": "{{baseUrl}}/projets/{{project_id}}/changer-statut",
+            "description": "🔄 Transitions validées avec historique"
+          }
+        },
+        {
+          "name": "Niveau Exécution (NOUVEAU)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"niveau_execution\": 45,\n  \"commentaire\": \"Avancement significatif\"\n}"
+            },
+            "url": "{{baseUrl}}/projets/{{project_id}}/niveau-execution",
+            "description": "📊 NOUVEAU: Endpoint dédié niveau exécution"
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ TÂCHES",
+      "item": [
+        {
+          "name": "Lister Tâches",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/taches?projet_id={{project_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "taches"
+              ],
+              "query": [
+                {
+                  "key": "projet_id",
+                  "value": "{{project_id}}"
+                }
+              ]
+            },
+            "description": "📋 Tâches selon permissions projets"
+          }
+        },
+        {
+          "name": "Mes Tâches",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/taches/mes-taches",
+            "description": "👤 Tâches personnelles utilisateur"
+          }
+        },
+        {
+          "name": "Créer Tâche",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Test API - Nouvelle Tâche\",\n  \"description\": \"Tâche test via Postman\",\n  \"projet_id\": {{project_id}},\n  \"responsable_id\": 3,\n  \"priorite\": \"moyenne\",\n  \"date_debut_previsionnelle\": \"2025-02-05\",\n  \"date_fin_previsionnelle\": \"2025-02-10\"\n}"
+            },
+            "url": "{{baseUrl}}/taches",
+            "description": "➕ Créer nouvelle tâche"
+          }
+        },
+        {
+          "name": "Changer Statut Tâche",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nouveau_statut\": \"en_cours\",\n  \"niveau_execution\": 25,\n  \"commentaire\": \"Démarrage tâche\"\n}"
+            },
+            "url": "{{baseUrl}}/taches/{{task_id}}/changer-statut",
+            "description": "🔄 Permissions: responsable OU porteur projet"
+          }
+        },
+        {
+          "name": "Historique Statuts (NOUVEAU)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/taches/{{task_id}}/historique-statuts",
+            "description": "📋 NOUVEAU: Historique complet tâches"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 GESTION UTILISATEURS",
+      "item": [
+        {
+          "name": "Lister Entités",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/entites",
+            "description": "🏢 Toutes les entités"
+          }
+        },
+        {
+          "name": "Utilisateurs Entité (NOUVEAU)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/entites/1/utilisateurs?statut=actuel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entites",
+                "1",
+                "utilisateurs"
+              ],
+              "query": [
+                {
+                  "key": "statut",
+                  "value": "actuel"
+                }
+              ]
+            },
+            "description": "👥 NOUVEAU: Endpoint avec filtres avancés"
+          }
+        },
+        {
+          "name": "Lister Utilisateurs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users",
+            "description": "👥 Tous les utilisateurs"
+          }
+        },
+        {
+          "name": "Lister Rôles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/roles",
+            "description": "🎭 Tous les rôles"
+          }
+        },
+        {
+          "name": "Lister Permissions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/permissions",
+            "description": "🔐 Toutes les permissions (3 nouvelles)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 DISCUSSIONS & FICHIERS",
+      "item": [
+        {
+          "name": "Discussions Projet",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projets/{{project_id}}/discussions",
+            "description": "💬 Messages du projet"
+          }
+        },
+        {
+          "name": "Poster Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Test message via API\",\n  \"parent_id\": null\n}"
+            },
+            "url": "{{baseUrl}}/projets/{{project_id}}/discussions",
+            "description": "💬 Nouveau message"
+          }
+        },
+        {
+          "name": "Fichiers Projet",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projets/{{project_id}}/pieces-jointes",
+            "description": "📎 Documents projet"
+          }
+        },
+        {
+          "name": "Discussions Tâche",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/taches/{{task_id}}/discussions",
+            "description": "💬 Messages tâche"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 RÉFÉRENTIELS",
+      "item": [
+        {
+          "name": "Types de Projets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/type-projets",
+            "description": "📊 Types avec SLA"
+          }
+        },
+        {
+          "name": "Types d'Entités",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/type-entites",
+            "description": "🏢 Types organisationnels"
+          }
+        },
+        {
+          "name": "Postes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/postes",
+            "description": "💼 Tous les postes"
+          }
+        }
+      ]
+    }
+  ]
+}
