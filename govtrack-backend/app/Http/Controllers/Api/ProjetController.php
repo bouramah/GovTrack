@@ -547,8 +547,24 @@ class ProjetController extends Controller
                 if (!$aUnJustificatif) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture'
+                        'message' => 'Erreur de validation',
+                        'errors' => [
+                            'nouveau_statut' => ['Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture']
+                        ]
                     ], 422);
+                }
+            }
+
+            // Vérification de permission pour terminer un projet
+            if ($validated['nouveau_statut'] === Projet::STATUT_TERMINE) {
+                if (!$request->user()->hasPermission('terminate_project')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Permission insuffisante',
+                        'errors' => [
+                            'nouveau_statut' => ['Vous n\'avez pas la permission de terminer un projet.']
+                        ]
+                    ], 403);
                 }
             }
 

@@ -108,6 +108,7 @@ class UserManagementSeeder extends Seeder
         $permissions = [
             ['nom' => 'create_instruction', 'description' => 'Créer une instruction'],
             ['nom' => 'edit_instruction', 'description' => 'Modifier une instruction'],
+            ['nom' => 'terminate_project', 'description' => 'Terminer un projet (changer le statut à terminé)'],
             ['nom' => 'validate_instruction', 'description' => 'Valider une instruction'],
             ['nom' => 'view_all_instructions', 'description' => 'Voir toutes les instructions'],
             ['nom' => 'manage_users', 'description' => 'Gérer les utilisateurs'],
@@ -162,6 +163,7 @@ class UserManagementSeeder extends Seeder
         $directeurPermissions = Permission::whereIn('nom', [
             'create_instruction',
             'edit_instruction',
+            'terminate_project',        // Peut terminer les projets de son entité
             'validate_instruction',
             'view_all_instructions',
             'view_my_entity_projects',  // Nouveau : voir projets de son entité
@@ -174,6 +176,7 @@ class UserManagementSeeder extends Seeder
             'create_instruction',
             'edit_instruction',
             'view_my_projects'          // Nouveau : voir seulement ses projets
+            // Note : Les employés n'ont PAS la permission terminate_project
         ])->pluck('id');
         $roleEmployee->permissions()->attach($employeePermissions, ['date_creation' => $now]);
 

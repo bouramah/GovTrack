@@ -56,6 +56,14 @@ GovTrack est une API REST robuste développée avec Laravel pour la gestion comp
 | 🏢 **Entité** | Directeur | `view_my_entity_projects` | Projets de son entité |
 | 👤 **Personnel** | Employé | `view_my_projects` | Ses projets uniquement |
 
+### **Permissions de Terminaison de Projets**
+
+| Rôle | Permission | Description |
+|------|------------|-------------|
+| 🔓 **Admin** | `terminate_project` | Peut terminer tous les projets |
+| 🏢 **Directeur** | `terminate_project` | Peut terminer les projets de son entité |
+| 👤 **Employé** | ❌ Aucune | Ne peut pas terminer les projets |
+
 ---
 
 ## 🚀 **Installation & Configuration**

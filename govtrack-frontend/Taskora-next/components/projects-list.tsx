@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
 import { apiClient, Project as ApiProject, PaginatedResponse, ProjectFilters, ProjectPermissions } from "@/lib/api";
 import { ProjectViewDetailsModal } from "./project-view-details-modal";
 import { ProjectTimelineModal } from "./project-timeline-modal";
-import { ProjectStatusModal } from "./project-status-modal";
+import ProjectStatusChangeModal from "@/components/Shared/ProjectStatusChangeModal";
 import { ProjectArchiveModal } from "./project-archive-modal";
 import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
@@ -65,10 +65,7 @@ export default function ProjectsList({
   const [selectedProject, setSelectedProject] = useState<ApiProject | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [statusAction, setStatusAction] = useState<
-    "complete" | "hold" | "change"
-  >("change");
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -175,42 +172,15 @@ export default function ProjectsList({
     });
   };
 
-  const handleStatusChange = (
-    project: ApiProject,
-    action: "complete" | "hold" | "change"
-  ) => {
+  const handleStatusChange = (project: ApiProject) => {
     setSelectedProject(project);
-    setStatusAction(action);
-    setStatusModalOpen(true);
+    setStatusChangeModalOpen(true);
   };
 
-  const handleUpdateStatus = async (
-    status: string,
-    note: string
-  ) => {
-    if (!selectedProject) return;
-
-    try {
-      await apiClient.changeProjectStatut(selectedProject.id, {
-        nouveau_statut: status,
-        commentaire: note,
-      });
-
-      toast({
-        title: "Statut mis à jour",
-        description: "Le statut du projet a été modifié avec succès",
-      });
-
-      // Recharger les projets
-      loadProjects(pagination.current_page);
-      setStatusModalOpen(false);
-    } catch (err: any) {
-      toast({
-        title: "Erreur",
-        description: err.message || "Impossible de modifier le statut",
-        variant: "destructive",
-      });
-    }
+  const handleStatusChanged = () => {
+    loadProjects(pagination.current_page);
+    setStatusChangeModalOpen(false);
+    setSelectedProject(null);
   };
 
   const handleArchiveProject = (project: ApiProject) => {
@@ -509,6 +479,16 @@ export default function ProjectsList({
         onSuccess={handleExecutionLevelUpdated}
       />
 
+      <ProjectStatusChangeModal
+        isOpen={statusChangeModalOpen}
+        onClose={() => {
+          setStatusChangeModalOpen(false);
+          setSelectedProject(null);
+        }}
+        project={selectedProject}
+        onSuccess={handleStatusChanged}
+      />
+
       {/* Modals existants temporairement désactivés pour éviter les conflits de types */}
       {/* TODO: Corriger les interfaces des modals existants */}
     </>
@@ -521,10 +501,7 @@ interface ProjectCardProps {
   onViewDetails: (project: ApiProject) => void;
   onViewTimeline: (project: ApiProject) => void;
   onToggleStar: (project: ApiProject) => void;
-  onStatusChange: (
-    project: ApiProject,
-    action: "complete" | "hold" | "change"
-  ) => void;
+  onStatusChange: (project: ApiProject) => void;
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
@@ -663,10 +640,7 @@ interface ProjectRowProps {
   onViewDetails: (project: ApiProject) => void;
   onViewTimeline: (project: ApiProject) => void;
   onToggleStar: (project: ApiProject) => void;
-  onStatusChange: (
-    project: ApiProject,
-    action: "complete" | "hold" | "change"
-  ) => void;
+  onStatusChange: (project: ApiProject) => void;
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
@@ -765,10 +739,7 @@ interface ProjectActionsProps {
   onViewDetails: (project: ApiProject) => void;
   onViewTimeline: (project: ApiProject) => void;
   onToggleStar: (project: ApiProject) => void;
-  onStatusChange: (
-    project: ApiProject,
-    action: "complete" | "hold" | "change"
-  ) => void;
+  onStatusChange: (project: ApiProject) => void;
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
@@ -817,25 +788,9 @@ function ProjectActions({
           Voir timeline
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => onStatusChange(project, "change")}> 
+        <DropdownMenuItem onClick={() => onStatusChange(project)}> 
           <Settings className="h-4 w-4 mr-2" />
           Changer statut
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onStatusChange(project, "complete")}> 
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Marquer terminé
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onStatusChange(project, "hold")}> 
-          <PauseCircle className="h-4 w-4 mr-2" />
-          Mettre en attente
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={() => onArchive(project)}
-          className="text-red-600 focus:text-red-600"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Archiver
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

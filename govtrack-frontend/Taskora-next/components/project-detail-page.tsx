@@ -38,6 +38,7 @@ import { apiClient, Project } from "@/lib/api";
 import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
 import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
+import ProjectStatusChangeModal from "@/components/Shared/ProjectStatusChangeModal";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -53,6 +54,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [executionLevelModalOpen, setExecutionLevelModalOpen] = useState(false);
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -217,16 +219,19 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Star className="h-4 w-4 mr-2" />
-                Marquer comme favori
-              </Button>
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={() => setEditModalOpen(true)}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier le projet
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setStatusChangeModalOpen(true)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Changer statut
               </Button>
               <Button 
                 variant="destructive"
@@ -744,6 +749,13 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
       <ProjectExecutionLevelModal
         isOpen={executionLevelModalOpen}
         onClose={() => setExecutionLevelModalOpen(false)}
+        project={project}
+        onSuccess={handleProjectUpdate}
+      />
+
+      <ProjectStatusChangeModal
+        isOpen={statusChangeModalOpen}
+        onClose={() => setStatusChangeModalOpen(false)}
         project={project}
         onSuccess={handleProjectUpdate}
       />

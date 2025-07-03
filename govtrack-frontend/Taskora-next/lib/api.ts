@@ -1487,22 +1487,32 @@ class ApiClient {
     }
   }
 
-  async changeProjectStatut(id: number, data: ProjectStatutChangeRequest): Promise<Project> {
-    const formData = new FormData();
-    formData.append('nouveau_statut', data.nouveau_statut);
-    if (data.commentaire) formData.append('commentaire', data.commentaire);
-    if (data.justificatif) formData.append('justificatif', data.justificatif);
-
-    const response: AxiosResponse<ApiResponse<Project>> = 
-      await this.client.post(`/v1/projets/${id}/changer-statut`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-    
-    if (response.data.success && response.data.data) {
-      return response.data.data;
+  async changeProjectStatut(
+    projectId: number,
+    data: {
+      nouveau_statut: 'a_faire' | 'en_cours' | 'bloque' | 'demande_de_cloture' | 'termine';
+      commentaire?: string;
+      justificatif_path?: string;
     }
-    
-    throw new Error(response.data.message || 'Erreur de changement de statut');
+  ): Promise<ApiResponse<Project>> {
+    try {
+      const response = await this.client.post(`/v1/projets/${projectId}/changer-statut`, data);
+      return response.data;
+    } catch (error: any) {
+      // Si c'est une erreur de validation (422), on la relance avec les détails
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const validationError = new Error('Erreur de validation');
+        (validationError as any).response = error.response;
+        throw validationError;
+      }
+      // Pour les autres erreurs, on préserve la réponse complète
+      if (error.response?.data) {
+        const apiError = new Error(error.response.data.message || 'Erreur lors du changement de statut');
+        (apiError as any).response = error.response;
+        throw apiError;
+      }
+      throw error;
+    }
   }
 
   async updateProjectExecutionLevel(id: number, data: ProjectExecutionLevelRequest): Promise<Project> {
