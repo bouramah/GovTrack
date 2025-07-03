@@ -15,37 +15,65 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $roles = Role::with(['permissions', 'users'])
-                    ->orderBy('nom')
-                    ->get()
-                    ->map(function ($role) {
-                        return [
-                            'id' => $role->id,
-                            'nom' => $role->nom,
-                            'description' => $role->description,
-                            'nombre_permissions' => $role->permissions->count(),
-                            'permissions' => $role->permissions->pluck('nom'),
-                            'nombre_utilisateurs' => $role->users->count(),
-                            'utilisateurs' => $role->users->map(function ($user) {
-                                return [
-                                    'id' => $user->id,
-                                    'nom' => $user->nom,
-                                    'prenom' => $user->prenom,
-                                    'matricule' => $user->matricule,
-                                ];
-                            }),
-                            'date_creation' => $role->date_creation,
-                            'creer_par' => $role->creer_par,
-                        ];
-                    });
+        try {
+            $query = Role::with(['permissions', 'users']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $roles,
-            'message' => 'Rôles récupérés avec succès'
-        ]);
+            // Filtrage par nom
+            if ($request->filled('nom')) {
+                $query->where('nom', 'like', '%' . $request->nom . '%');
+            }
+
+            // Tri
+            $sortBy = $request->get('sort_by', 'nom');
+            $sortOrder = $request->get('sort_order', 'asc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $roles = $query->paginate($perPage);
+
+            $data = $roles->getCollection()->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'nom' => $role->nom,
+                    'description' => $role->description,
+                    'nombre_permissions' => $role->permissions->count(),
+                    'permissions' => $role->permissions->pluck('nom'),
+                    'nombre_utilisateurs' => $role->users->count(),
+                    'utilisateurs' => $role->users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'nom' => $user->nom,
+                            'prenom' => $user->prenom,
+                            'matricule' => $user->matricule,
+                        ];
+                    }),
+                    'date_creation' => $role->date_creation,
+                    'creer_par' => $role->creer_par,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $roles->currentPage(),
+                    'last_page' => $roles->lastPage(),
+                    'per_page' => $roles->perPage(),
+                    'total' => $roles->total(),
+                ],
+                'message' => 'Rôles récupérés avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des rôles',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

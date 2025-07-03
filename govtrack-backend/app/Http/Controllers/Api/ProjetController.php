@@ -144,6 +144,7 @@ class ProjetController extends Controller
             $projets->getCollection()->transform(function ($projet) {
                 $projet->statut_libelle = $projet->statut_libelle;
                 $projet->est_en_retard = $projet->est_en_retard;
+                $projet->taches_count = $projet->taches()->count();
                 return $projet;
             });
 

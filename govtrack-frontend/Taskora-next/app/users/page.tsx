@@ -78,6 +78,7 @@ import {
   UserCheck,
   Minus
 } from 'lucide-react';
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { apiClient, User, UserDetailed, Role, Entite, Poste } from '@/lib/api';
 import {
   Pagination,
@@ -200,9 +201,9 @@ export default function UsersPage() {
       setUsers(usersResponse.data || []);
       setTotalPages(usersResponse.pagination?.last_page || 1);
       setTotalUsers(usersResponse.pagination?.total || 0);
-      setRoles(rolesData);
-      setEntites(entitesData);
-      setPostes(postesData);
+      setRoles(rolesData.data || []);
+      setEntites(entitesData.data || []);
+      setPostes(postesData.data || []);
     } catch (error) {
       console.error('Erreur de chargement:', error);
       toast({
@@ -400,7 +401,7 @@ export default function UsersPage() {
       ]);
       
       setUserRoles(userDetailsResponse.roles || []);
-      setAvailableRoles(allRolesResponse);
+      setAvailableRoles(allRolesResponse.data || []);
     } catch (error: any) {
       toast({
         title: "❌ Erreur",
@@ -652,9 +653,10 @@ export default function UsersPage() {
         description: "Utilisateur supprimé avec succès"
       });
     } catch (error: any) {
+      console.error('Erreur suppression utilisateur:', error);
       toast({
         title: "❌ Erreur",
-        description: error.message || "Erreur de suppression de l'utilisateur",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -688,11 +690,11 @@ export default function UsersPage() {
     });
   };
 
-  // Calculs de statistiques basés sur le total (pas seulement la page actuelle)
-  const activeUsers = Math.round((totalUsers * 0.85)); // Estimation
-  const inactiveUsers = totalUsers - activeUsers;
-  const usersWithRoles = Math.round((totalUsers * 0.70)); // Estimation
-  const usersWithAffectations = Math.round((totalUsers * 0.60)); // Estimation
+  // Calculs de statistiques basés sur les données réelles
+  const activeUsers = users.filter(user => user.statut).length;
+  const inactiveUsers = users.filter(user => !user.statut).length;
+  const usersWithRoles = users.filter(user => user.roles && user.roles.length > 0).length;
+  const usersWithAffectations = users.filter(user => user.affectation_actuelle).length;
 
   if (loading) {
     return (
@@ -886,7 +888,7 @@ export default function UsersPage() {
                 <CardContent>
                   <div className="text-3xl font-bold">{activeUsers}</div>
                   <p className="text-xs text-green-100 mt-1">
-                    {Math.round((activeUsers / totalUsers) * 100)}% du total
+                    {totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}% du total
                   </p>
                 </CardContent>
               </Card>
@@ -899,7 +901,7 @@ export default function UsersPage() {
                 <CardContent>
                   <div className="text-3xl font-bold">{inactiveUsers}</div>
                   <p className="text-xs text-red-100 mt-1">
-                    {Math.round((inactiveUsers / totalUsers) * 100)}% du total
+                    {totalUsers > 0 ? Math.round((inactiveUsers / totalUsers) * 100) : 0}% du total
                   </p>
                 </CardContent>
               </Card>
@@ -912,7 +914,7 @@ export default function UsersPage() {
                 <CardContent>
                   <div className="text-3xl font-bold">{usersWithRoles}</div>
                   <p className="text-xs text-purple-100 mt-1">
-                    {Math.round((usersWithRoles / totalUsers) * 100)}% assignés
+                    {totalUsers > 0 ? Math.round((usersWithRoles / totalUsers) * 100) : 0}% assignés
                   </p>
                 </CardContent>
               </Card>
@@ -925,7 +927,7 @@ export default function UsersPage() {
                 <CardContent>
                   <div className="text-3xl font-bold">{usersWithAffectations}</div>
                   <p className="text-xs text-orange-100 mt-1">
-                    {Math.round((usersWithAffectations / totalUsers) * 100)}% affectés
+                    {totalUsers > 0 ? Math.round((usersWithAffectations / totalUsers) * 100) : 0}% affectés
                   </p>
                 </CardContent>
               </Card>
@@ -1669,40 +1671,36 @@ export default function UsersPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="affectation-entite">Entité *</Label>
-                  <Select 
-                    value={affectationFormData.entite_id} 
+                  <Combobox
+                    options={entites.map((entite) => ({
+                      value: entite.id.toString(),
+                      label: entite.nom,
+                      description: `Type: ${entite.type_entite.nom}`,
+                      searchTerms: `${entite.nom} ${entite.type_entite.nom}`
+                    }))}
+                    value={affectationFormData.entite_id}
                     onValueChange={(value) => setAffectationFormData({...affectationFormData, entite_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une entité" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {entites.map((entite) => (
-                        <SelectItem key={entite.id} value={entite.id.toString()}>
-                          {entite.nom} ({entite.type_entite.nom})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Sélectionner une entité"
+                    searchPlaceholder="Rechercher par nom d'entité..."
+                    emptyMessage="Aucune entité trouvée"
+                  />
                 </div>
 
                 <div>
                   <Label htmlFor="affectation-poste">Poste *</Label>
-                  <Select 
-                    value={affectationFormData.poste_id} 
+                  <Combobox
+                    options={postes.map((poste) => ({
+                      value: poste.id.toString(),
+                      label: poste.nom,
+                      description: poste.description || "Aucune description",
+                      searchTerms: `${poste.nom} ${poste.description || ''}`
+                    }))}
+                    value={affectationFormData.poste_id}
                     onValueChange={(value) => setAffectationFormData({...affectationFormData, poste_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un poste" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {postes.map((poste) => (
-                        <SelectItem key={poste.id} value={poste.id.toString()}>
-                          {poste.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Sélectionner un poste"
+                    searchPlaceholder="Rechercher par nom de poste..."
+                    emptyMessage="Aucun poste trouvé"
+                  />
                 </div>
 
                 <div>

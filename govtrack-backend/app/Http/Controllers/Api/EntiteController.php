@@ -16,55 +16,88 @@ class EntiteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $entites = Entite::with(['typeEntite', 'parent', 'enfants', 'affectations' => function($query) {
-                             $query->where('statut', true);
-                         }, 'affectations.user', 'chefs' => function($query) {
-                             $query->whereNull('date_fin');
-                         }, 'chefs.user'])
-                         ->orderBy('nom')
-                         ->get()
-                         ->map(function ($entite) {
-                             // Chef actuel
-                             $chefActuel = $entite->chefs->first();
+        try {
+            $query = Entite::with(['typeEntite', 'parent', 'enfants', 'affectations' => function($query) {
+                                 $query->where('statut', true);
+                             }, 'affectations.user', 'chefs' => function($query) {
+                                 $query->whereNull('date_fin');
+                             }, 'chefs.user']);
 
-                             return [
-                                 'id' => $entite->id,
-                                 'nom' => $entite->nom,
-                                 'description' => $entite->description,
-                                 'type_entite' => $entite->typeEntite,
-                                 'parent' => $entite->parent ? [
-                                     'id' => $entite->parent->id,
-                                     'nom' => $entite->parent->nom
-                                 ] : null,
-                                 'nombre_enfants' => $entite->enfants->count(),
-                                 'chef_actuel' => $chefActuel ? [
-                                     'id' => $chefActuel->user->id,
-                                     'nom' => $chefActuel->user->nom,
-                                     'prenom' => $chefActuel->user->prenom,
-                                     'matricule' => $chefActuel->user->matricule,
-                                 ] : null,
-                                 'employes_actuels' => $entite->affectations->map(function ($affectation) {
-                                     return [
-                                         'user' => [
-                                             'id' => $affectation->user->id,
-                                             'nom' => $affectation->user->nom,
-                                             'prenom' => $affectation->user->prenom,
-                                             'matricule' => $affectation->user->matricule,
-                                         ],
-                                     ];
-                                 }),
-                                 'date_creation' => $entite->date_creation,
-                                 'creer_par' => $entite->creer_par,
-                             ];
-                         });
+            // Filtrage par nom
+            if ($request->filled('nom')) {
+                $query->where('nom', 'like', '%' . $request->nom . '%');
+            }
 
-        return response()->json([
-            'success' => true,
-            'data' => $entites,
-            'message' => 'Entités récupérées avec succès'
-        ]);
+            // Filtrage par type d'entité
+            if ($request->filled('type_entite_id')) {
+                $query->where('type_entite_id', $request->type_entite_id);
+            }
+
+            // Tri
+            $sortBy = $request->get('sort_by', 'nom');
+            $sortOrder = $request->get('sort_order', 'asc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $entites = $query->paginate($perPage);
+
+            $data = $entites->getCollection()->map(function ($entite) {
+                // Chef actuel
+                $chefActuel = $entite->chefs->first();
+
+                return [
+                    'id' => $entite->id,
+                    'nom' => $entite->nom,
+                    'description' => $entite->description,
+                    'type_entite' => $entite->typeEntite,
+                    'parent' => $entite->parent ? [
+                        'id' => $entite->parent->id,
+                        'nom' => $entite->parent->nom
+                    ] : null,
+                    'nombre_enfants' => $entite->enfants->count(),
+                    'chef_actuel' => $chefActuel ? [
+                        'id' => $chefActuel->user->id,
+                        'nom' => $chefActuel->user->nom,
+                        'prenom' => $chefActuel->user->prenom,
+                        'matricule' => $chefActuel->user->matricule,
+                    ] : null,
+                    'employes_actuels' => $entite->affectations->map(function ($affectation) {
+                        return [
+                            'user' => [
+                                'id' => $affectation->user->id,
+                                'nom' => $affectation->user->nom,
+                                'prenom' => $affectation->user->prenom,
+                                'matricule' => $affectation->user->matricule,
+                            ],
+                        ];
+                    }),
+                    'date_creation' => $entite->date_creation,
+                    'creer_par' => $entite->creer_par,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $entites->currentPage(),
+                    'last_page' => $entites->lastPage(),
+                    'per_page' => $entites->perPage(),
+                    'total' => $entites->total(),
+                ],
+                'message' => 'Entités récupérées avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des entités',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

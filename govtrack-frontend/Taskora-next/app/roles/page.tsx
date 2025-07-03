@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Sidebar } from '@/components/sidebar';
 import Topbar from '@/components/Shared/Topbar';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -33,7 +35,11 @@ import {
   Crown,
   CheckCircle,
   XCircle,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ChevronFirst,
+  ChevronLast
 } from "lucide-react";
 import { apiClient, Role, Permission, User } from "@/lib/api";
 
@@ -67,6 +73,22 @@ export default function RolesPermissionsPage() {
   const [activeTab, setActiveTab] = useState("roles");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTermPermissions, setSearchTermPermissions] = useState("");
+  
+  // Valeurs debounced pour éviter les appels API trop fréquents
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+  const debouncedSearchTermPermissions = useDebounce(searchTermPermissions, 1000);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+  
+  // États pour la pagination des permissions
+  const [currentPagePermissions, setCurrentPagePermissions] = useState(1);
+  const [totalPagesPermissions, setTotalPagesPermissions] = useState(1);
+  const [totalItemsPermissions, setTotalItemsPermissions] = useState(0);
+  const [itemsPerPagePermissions, setItemsPerPagePermissions] = useState(15);
 
   // États des modales pour les rôles
   const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
@@ -110,19 +132,76 @@ export default function RolesPermissionsPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, currentPagePermissions, itemsPerPagePermissions, debouncedSearchTermPermissions]);
+
+  // Gestionnaires de pagination pour les rôles
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset à la première page
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset à la première page lors de la recherche
+  };
+
+  // Gestionnaires de pagination pour les permissions
+  const handlePageChangePermissions = (page: number) => {
+    setCurrentPagePermissions(page);
+  };
+
+  const handleItemsPerPageChangePermissions = (newItemsPerPage: number) => {
+    setItemsPerPagePermissions(newItemsPerPage);
+    setCurrentPagePermissions(1); // Reset à la première page
+  };
+
+  const handleSearchPermissions = (value: string) => {
+    setSearchTermPermissions(value);
+    setCurrentPagePermissions(1); // Reset à la première page lors de la recherche
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [rolesData, permissionsData, usersData] = await Promise.all([
-        apiClient.getRoles(),
-        apiClient.getPermissions(),
+      
+      // Paramètres pour l'API rôles
+      const roleParams = {
+        nom: debouncedSearchTerm || undefined,
+        page: currentPage,
+        per_page: itemsPerPage,
+        sort_by: 'nom',
+        sort_order: 'asc' as const
+      };
+
+      // Paramètres pour l'API permissions
+      const permissionParams = {
+        nom: debouncedSearchTermPermissions || undefined,
+        page: currentPagePermissions,
+        per_page: itemsPerPagePermissions,
+        sort_by: 'nom',
+        sort_order: 'asc' as const
+      };
+
+      const [rolesResponse, permissionsResponse, usersData] = await Promise.all([
+        apiClient.getRoles(roleParams),
+        apiClient.getPermissions(permissionParams),
         apiClient.getUsersDetailed()
       ]);
 
-      setRoles(rolesData);
-      setPermissions(permissionsData);
+      setRoles(rolesResponse.data || []);
+      setTotalPages(rolesResponse.pagination?.last_page || 1);
+      setTotalItems(rolesResponse.pagination?.total || 0);
+      
+      setPermissions(permissionsResponse.data || []);
+      setTotalPagesPermissions(permissionsResponse.pagination?.last_page || 1);
+      setTotalItemsPermissions(permissionsResponse.pagination?.total || 0);
+      
+
+      
       setUsers(usersData.data || []);
     } catch (error) {
       console.error("Erreur de chargement:", error);
@@ -491,62 +570,62 @@ export default function RolesPermissionsPage() {
           <div className="max-w-7xl mx-auto">
             {/* En-tête */}
             <div className="flex justify-between items-center mb-6">
-              <div>
+        <div>
                 <h1 className="text-3xl font-bold text-gray-900">Rôles & Permissions</h1>
                 <p className="text-gray-600">Gérer le système de contrôle d'accès basé sur les rôles (RBAC)</p>
-              </div>
-            </div>
+        </div>
+      </div>
 
             {/* Statistiques */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Rôles</CardTitle>
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{roles.length}</div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Rôles</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{roles.length}</div>
                   <p className="text-xs text-muted-foreground">rôles configurés</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Permissions</CardTitle>
-                  <Key className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{permissions.length}</div>
+            <Key className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{permissions.length}</div>
                   <p className="text-xs text-muted-foreground">permissions disponibles</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Utilisateurs avec Rôles</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {users.filter(u => u.roles && u.roles.length > 0).length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">ont des rôles assignés</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Rôles Actifs</CardTitle>
-                  <Settings className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {roles.filter(r => (r.nombre_utilisateurs || 0) > 0).length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">avec utilisateurs</p>
-                </CardContent>
-              </Card>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Utilisateurs avec Rôles</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.roles && u.roles.length > 0).length}
             </div>
+                  <p className="text-xs text-muted-foreground">ont des rôles assignés</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rôles Actifs</CardTitle>
+            <Settings className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+                    {roles.filter(r => (r.nombre_utilisateurs || 0) > 0).length}
+            </div>
+                  <p className="text-xs text-muted-foreground">avec utilisateurs</p>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
                 <TabsTrigger value="roles">
                   <Shield className="h-4 w-4 mr-2" />
                   Rôles
@@ -559,11 +638,11 @@ export default function RolesPermissionsPage() {
                   <Users className="h-4 w-4 mr-2" />
                   Vue d'ensemble
                 </TabsTrigger>
-              </TabsList>
+        </TabsList>
 
               {/* Onglet Rôles */}
-              <TabsContent value="roles" className="space-y-4">
-                <Card>
+        <TabsContent value="roles" className="space-y-4">
+          <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5" />
@@ -573,8 +652,8 @@ export default function RolesPermissionsPage() {
                       <Plus className="h-4 w-4 mr-2" />
                       Nouveau Rôle
                     </Button>
-                  </CardHeader>
-                  <CardContent>
+            </CardHeader>
+            <CardContent>
                     {/* Recherche */}
                     <div className="mb-4">
                       <div className="relative">
@@ -582,11 +661,11 @@ export default function RolesPermissionsPage() {
                         <Input
                           placeholder="Rechercher un rôle..."
                           value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onChange={(e) => handleSearch(e.target.value)}
                           className="pl-9"
                         />
-                      </div>
-                    </div>
+                        </div>
+                        </div>
 
                     {/* Liste des rôles */}
                     <div className="space-y-4">
@@ -599,10 +678,10 @@ export default function RolesPermissionsPage() {
                                   <h3 className="font-semibold text-lg">{role.nom}</h3>
                                   <Badge variant={(role.nombre_utilisateurs || 0) > 0 ? "default" : "secondary"}>
                                     {role.nombre_utilisateurs || 0} utilisateurs
-                                  </Badge>
+                          </Badge>
                                   <Badge variant="outline">
                                     {role.nombre_permissions || 0} permissions
-                                  </Badge>
+                          </Badge>
                                 </div>
                                 
                                 {role.description && (
@@ -655,7 +734,7 @@ export default function RolesPermissionsPage() {
                     </div>
                     
                     {filteredRoles.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground">
                         <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                         <p>
                           {searchTerm 
@@ -675,13 +754,101 @@ export default function RolesPermissionsPage() {
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
+                    {/* Pagination des rôles */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>
+                            Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems} rôles
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Select value={itemsPerPage.toString()} onValueChange={(value) => handleItemsPerPageChange(parseInt(value))}>
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="15">15</SelectItem>
+                              <SelectItem value="25">25</SelectItem>
+                              <SelectItem value="50">50</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChange(1)}
+                              disabled={currentPage === 1}
+                            >
+                              <ChevronFirst className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              disabled={currentPage === 1}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum;
+                                if (totalPages <= 5) {
+                                  pageNum = i + 1;
+                                } else if (currentPage <= 3) {
+                                  pageNum = i + 1;
+                                } else if (currentPage >= totalPages - 2) {
+                                  pageNum = totalPages - 4 + i;
+                                } else {
+                                  pageNum = currentPage - 2 + i;
+                                }
+                                
+                                return (
+                                  <Button
+                                    key={pageNum}
+                                    variant={currentPage === pageNum ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className="w-8 h-8"
+                                  >
+                                    {pageNum}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChange(totalPages)}
+                              disabled={currentPage === totalPages}
+                            >
+                              <ChevronLast className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
               {/* Onglet Permissions */}
-              <TabsContent value="permissions" className="space-y-4">
-                <Card>
+        <TabsContent value="permissions" className="space-y-4">
+          <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <Key className="h-5 w-5" />
@@ -691,8 +858,8 @@ export default function RolesPermissionsPage() {
                       <Plus className="h-4 w-4 mr-2" />
                       Nouvelle Permission
                     </Button>
-                  </CardHeader>
-                  <CardContent>
+            </CardHeader>
+            <CardContent>
                     {/* Recherche */}
                     <div className="mb-4">
                       <div className="relative">
@@ -700,10 +867,10 @@ export default function RolesPermissionsPage() {
                         <Input
                           placeholder="Rechercher une permission..."
                           value={searchTermPermissions}
-                          onChange={(e) => setSearchTermPermissions(e.target.value)}
+                          onChange={(e) => handleSearchPermissions(e.target.value)}
                           className="pl-9"
                         />
-                      </div>
+                        </div>
                     </div>
 
                     {/* Liste des permissions */}
@@ -715,10 +882,10 @@ export default function RolesPermissionsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h3 className="font-semibold text-lg">{permission.nom}</h3>
-                                  <Badge variant="outline">
+                        <Badge variant="outline">
                                     {permission.roles?.length || 0} rôles
-                                  </Badge>
-                                </div>
+                        </Badge>
+                        </div>
                                 
                                 {permission.description && (
                                   <p className="text-sm text-muted-foreground mb-2">
@@ -774,7 +941,7 @@ export default function RolesPermissionsPage() {
                     </div>
                     
                     {filteredPermissions.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground">
                         <Key className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                         <p>
                           {searchTermPermissions 
@@ -794,22 +961,110 @@ export default function RolesPermissionsPage() {
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
+                    {/* Pagination des permissions */}
+                    {totalPagesPermissions > 1 && (
+                      <div className="flex items-center justify-between mt-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>
+                            Affichage de {((currentPagePermissions - 1) * itemsPerPagePermissions) + 1} à {Math.min(currentPagePermissions * itemsPerPagePermissions, totalItemsPermissions)} sur {totalItemsPermissions} permissions
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Select value={itemsPerPagePermissions.toString()} onValueChange={(value) => handleItemsPerPageChangePermissions(parseInt(value))}>
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="15">15</SelectItem>
+                              <SelectItem value="25">25</SelectItem>
+                              <SelectItem value="50">50</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChangePermissions(1)}
+                              disabled={currentPagePermissions === 1}
+                            >
+                              <ChevronFirst className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChangePermissions(currentPagePermissions - 1)}
+                              disabled={currentPagePermissions === 1}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: Math.min(5, totalPagesPermissions) }, (_, i) => {
+                                let pageNum;
+                                if (totalPagesPermissions <= 5) {
+                                  pageNum = i + 1;
+                                } else if (currentPagePermissions <= 3) {
+                                  pageNum = i + 1;
+                                } else if (currentPagePermissions >= totalPagesPermissions - 2) {
+                                  pageNum = totalPagesPermissions - 4 + i;
+                                } else {
+                                  pageNum = currentPagePermissions - 2 + i;
+                                }
+                                
+                                return (
+                                  <Button
+                                    key={pageNum}
+                                    variant={currentPagePermissions === pageNum ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => handlePageChangePermissions(pageNum)}
+                                    className="w-8 h-8"
+                                  >
+                                    {pageNum}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChangePermissions(currentPagePermissions + 1)}
+                              disabled={currentPagePermissions === totalPagesPermissions}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChangePermissions(totalPagesPermissions)}
+                              disabled={currentPagePermissions === totalPagesPermissions}
+                            >
+                              <ChevronLast className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
               {/* Onglet Vue d'ensemble */}
               <TabsContent value="overview" className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Rôles les plus utilisés */}
-                  <Card>
-                    <CardHeader>
+          <Card>
+            <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Crown className="h-5 w-5" />
                         Rôles les plus utilisés
                       </CardTitle>
-                    </CardHeader>
-                    <CardContent>
+            </CardHeader>
+            <CardContent>
                       <div className="space-y-4">
                         {roles
                           .sort((a, b) => (b.nombre_utilisateurs || 0) - (a.nombre_utilisateurs || 0))
@@ -956,15 +1211,15 @@ export default function RolesPermissionsPage() {
                 {selectedRole && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                        <div>
                         <Label className="text-sm font-medium text-muted-foreground">Nom</Label>
                         <p className="text-lg font-semibold">{selectedRole.nom}</p>
-                      </div>
+                          </div>
                       <div>
                         <Label className="text-sm font-medium text-muted-foreground">Utilisateurs</Label>
                         <p className="text-lg font-semibold">{selectedRole.statistiques?.total_utilisateurs || 0}</p>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                     
                     {selectedRole.description && (
                       <div>
@@ -982,7 +1237,7 @@ export default function RolesPermissionsPage() {
                           <div key={permission.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                             <Key className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">{permission.nom}</span>
-                          </div>
+                        </div>
                         )) || <p className="text-muted-foreground">Aucune permission assignée</p>}
                       </div>
                     </div>
@@ -999,11 +1254,11 @@ export default function RolesPermissionsPage() {
                               <span className="font-medium">{user.prenom} {user.nom}</span>
                               <span className="text-sm text-muted-foreground">({user.matricule})</span>
                             </div>
-                          ))
-                        ) : (
+                            ))
+                          ) : (
                           <p className="text-muted-foreground">Aucun utilisateur assigné à ce rôle</p>
-                        )}
-                      </div>
+                          )}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -1385,11 +1640,11 @@ export default function RolesPermissionsPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                       <p>Aucun utilisateur n'a cette permission</p>
-                    </div>
-                  )}
+                </div>
+              )}
                 </div>
                 <DialogFooter>
                   <Button onClick={() => setShowPermissionUsersModal(false)}>Fermer</Button>

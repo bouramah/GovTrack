@@ -112,20 +112,63 @@ export interface Project {
   date_debut_reelle?: string;
   date_fin_reelle?: string;
   est_en_retard: boolean;
+  justification_modification_dates?: string;
+  taches_count: number;
   type_projet: {
     id: number;
     nom: string;
+    description?: string;
   };
   porteur: {
     id: number;
     nom: string;
     prenom: string;
+    matricule: string;
+    email: string;
   };
   donneur_ordre: {
     id: number;
     nom: string;
     prenom: string;
+    matricule: string;
+    email: string;
   };
+  taches?: Task[];
+  pieces_jointes?: any[];
+  discussions?: any[];
+  historique_statuts?: any[];
+  date_creation: string;
+  date_modification?: string;
+  creer_par: string;
+  modifier_par?: string;
+}
+
+export interface ProjectCreateRequest {
+  titre: string;
+  description: string;
+  type_projet_id: number;
+  porteur_id: number;
+  donneur_ordre_id: number;
+  date_debut_previsionnelle: string;
+  date_fin_previsionnelle?: string;
+  justification_modification_dates?: string;
+}
+
+export interface ProjectUpdateRequest {
+  titre?: string;
+  description?: string;
+  type_projet_id?: number;
+  porteur_id?: number;
+  donneur_ordre_id?: number;
+  date_debut_previsionnelle?: string;
+  date_fin_previsionnelle?: string;
+  justification_modification_dates?: string;
+}
+
+export interface ProjectStatutChangeRequest {
+  nouveau_statut: string;
+  commentaire?: string;
+  justificatif?: File;
 }
 
 export interface Task {
@@ -290,6 +333,53 @@ export interface EntiteChefHistory {
   date_modification?: string;
   creer_par: string;
   modifier_par?: string;
+}
+
+// ========================================
+// INTERFACES GESTION DES PROJETS
+// ========================================
+
+export interface TypeProjet {
+  id: number;
+  nom: string;
+  description?: string;
+  duree_previsionnelle_jours: number;
+  description_sla?: string;
+  duree_formattee?: string;
+  projets_count?: number;
+  projets?: Project[];
+  statistiques?: TypeProjetStatistiques;
+  date_creation: string;
+  date_modification?: string;
+  creer_par: string;
+  modifier_par?: string;
+}
+
+export interface TypeProjetStatistiques {
+  total_projets: number;
+  projets_par_statut: {
+    [key: string]: {
+      libelle: string;
+      count: number;
+    };
+  };
+  niveau_execution_moyen: number;
+  projets_en_retard: number;
+  duree_moyenne_reelle?: number;
+}
+
+export interface TypeProjetCreateRequest {
+  nom: string;
+  description?: string;
+  duree_previsionnelle_jours: number;
+  description_sla?: string;
+}
+
+export interface TypeProjetUpdateRequest {
+  nom: string;
+  description?: string;
+  duree_previsionnelle_jours: number;
+  description_sla?: string;
 }
 
 // Configuration du client API avec Axios
@@ -571,12 +661,19 @@ class ApiClient {
   // GESTION DES ENTITÉS
   // ========================================
 
-  async getEntitesDetailed(): Promise<Entite[]> {
-    const response: AxiosResponse<ApiResponse<Entite[]>> = 
-      await this.client.get('/v1/entites');
+  async getEntitesDetailed(params?: {
+    nom?: string;
+    type_entite_id?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<Entite>> {
+    const response: AxiosResponse<PaginatedResponse<Entite>> = 
+      await this.client.get('/v1/entites', { params });
     
     if (response.data.success && response.data.data) {
-      return response.data.data;
+      return response.data;
     }
     
     throw new Error(response.data.message || 'Erreur de récupération des entités');
@@ -735,12 +832,18 @@ class ApiClient {
   // GESTION DES POSTES
   // ========================================
 
-  async getPostes(): Promise<Poste[]> {
-    const response: AxiosResponse<ApiResponse<Poste[]>> = 
-      await this.client.get('/v1/postes');
+  async getPostes(params?: {
+    nom?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<Poste>> {
+    const response: AxiosResponse<PaginatedResponse<Poste>> = 
+      await this.client.get('/v1/postes', { params });
     
     if (response.data.success && response.data.data) {
-      return response.data.data;
+      return response.data;
     }
     
     throw new Error(response.data.message || 'Erreur de récupération des postes');
@@ -936,12 +1039,18 @@ class ApiClient {
   // GESTION DES RÔLES
   // ========================================
 
-  async getRoles(): Promise<Role[]> {
-    const response: AxiosResponse<ApiResponse<Role[]>> = 
-      await this.client.get('/v1/roles');
+  async getRoles(params?: {
+    nom?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<Role>> {
+    const response: AxiosResponse<PaginatedResponse<Role>> = 
+      await this.client.get('/v1/roles', { params });
     
     if (response.data.success && response.data.data) {
-      return response.data.data;
+      return response.data;
     }
     
     throw new Error(response.data.message || 'Erreur de récupération des rôles');
@@ -1035,12 +1144,18 @@ class ApiClient {
   // GESTION DES PERMISSIONS
   // ========================================
 
-  async getPermissions(): Promise<Permission[]> {
-    const response: AxiosResponse<ApiResponse<Permission[]>> = 
-      await this.client.get('/v1/permissions');
+  async getPermissions(params?: {
+    nom?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<Permission>> {
+    const response: AxiosResponse<PaginatedResponse<Permission>> = 
+      await this.client.get('/v1/permissions', { params });
     
     if (response.data.success && response.data.data) {
-      return response.data.data;
+      return response.data;
     }
     
     throw new Error(response.data.message || 'Erreur de récupération des permissions');
@@ -1122,6 +1237,199 @@ class ApiClient {
     }
     
     throw new Error(response.data.message || 'Erreur de récupération des rôles disponibles');
+  }
+
+  // ========================================
+  // GESTION DES TYPES DE PROJETS
+  // ========================================
+
+  async getTypeProjets(params?: {
+    nom?: string;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<TypeProjet>> {
+    const response: AxiosResponse<PaginatedResponse<TypeProjet>> = 
+      await this.client.get('/v1/type-projets', { params });
+    
+    if (response.data.success && response.data.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération des types de projets');
+  }
+
+  async getTypeProjet(id: number): Promise<TypeProjet> {
+    const response: AxiosResponse<ApiResponse<TypeProjet>> = 
+      await this.client.get(`/v1/type-projets/${id}`);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération du type de projet');
+  }
+
+  async createTypeProjet(data: TypeProjetCreateRequest): Promise<TypeProjet> {
+    const response: AxiosResponse<ApiResponse<TypeProjet>> = 
+      await this.client.post('/v1/type-projets', data);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de création du type de projet');
+  }
+
+  async updateTypeProjet(id: number, data: TypeProjetUpdateRequest): Promise<TypeProjet> {
+    const response: AxiosResponse<ApiResponse<TypeProjet>> = 
+      await this.client.put(`/v1/type-projets/${id}`, data);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de mise à jour du type de projet');
+  }
+
+  async deleteTypeProjet(id: number): Promise<void> {
+    const response: AxiosResponse<ApiResponse<void>> = 
+      await this.client.delete(`/v1/type-projets/${id}`);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Erreur de suppression du type de projet');
+    }
+  }
+
+  async getTypeProjetStatistiques(id: number): Promise<{
+    type_projet: TypeProjet;
+    statistiques: TypeProjetStatistiques;
+  }> {
+    const response: AxiosResponse<ApiResponse<{
+      type_projet: TypeProjet;
+      statistiques: TypeProjetStatistiques;
+    }>> = await this.client.get(`/v1/type-projets/${id}/statistiques`);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération des statistiques');
+  }
+
+  // ========================================
+  // GESTION DES PROJETS
+  // ========================================
+
+  async getProjects(params?: {
+    search?: string;
+    statut?: string;
+    porteur_id?: number;
+    donneur_ordre_id?: number;
+    type_projet_id?: number;
+    en_retard?: boolean;
+    niveau_execution_min?: number;
+    niveau_execution_max?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<Project>> {
+    const response: AxiosResponse<PaginatedResponse<Project>> = 
+      await this.client.get('/v1/projets', { params });
+    
+    if (response.data.success && response.data.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération des projets');
+  }
+
+  async getProject(id: number): Promise<Project> {
+    const response: AxiosResponse<ApiResponse<Project>> = 
+      await this.client.get(`/v1/projets/${id}`);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération du projet');
+  }
+
+  async createProject(data: ProjectCreateRequest): Promise<Project> {
+    const response: AxiosResponse<ApiResponse<Project>> = 
+      await this.client.post('/v1/projets', data);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de création du projet');
+  }
+
+  async updateProject(id: number, data: ProjectUpdateRequest): Promise<Project> {
+    const response: AxiosResponse<ApiResponse<Project>> = 
+      await this.client.put(`/v1/projets/${id}`, data);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de mise à jour du projet');
+  }
+
+  async deleteProject(id: number): Promise<void> {
+    const response: AxiosResponse<ApiResponse<void>> = 
+      await this.client.delete(`/v1/projets/${id}`);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Erreur de suppression du projet');
+    }
+  }
+
+  async changeProjectStatut(id: number, data: ProjectStatutChangeRequest): Promise<Project> {
+    const formData = new FormData();
+    formData.append('nouveau_statut', data.nouveau_statut);
+    if (data.commentaire) formData.append('commentaire', data.commentaire);
+    if (data.justificatif) formData.append('justificatif', data.justificatif);
+
+    const response: AxiosResponse<ApiResponse<Project>> = 
+      await this.client.post(`/v1/projets/${id}/changer-statut`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de changement de statut');
+  }
+
+  async updateProjectExecutionLevel(id: number, niveau_execution: number): Promise<Project> {
+    const response: AxiosResponse<ApiResponse<Project>> = 
+      await this.client.put(`/v1/projets/${id}/niveau-execution`, { niveau_execution });
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de mise à jour du niveau d\'exécution');
+  }
+
+  async getProjectDashboard(params?: {
+    statut?: string;
+    type_projet_id?: number;
+    en_retard?: boolean;
+  }): Promise<any> {
+    const response: AxiosResponse<ApiResponse<any>> = 
+      await this.client.get('/v1/projets/tableau-bord', { params });
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur de récupération du tableau de bord');
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Sidebar } from '@/components/sidebar';
 import Topbar from '@/components/Shared/Topbar';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,8 +42,12 @@ import {
   Clock,
   Filter,
   Package,
-  Briefcase
+  Briefcase,
+  ChevronLeft,
+  ChevronFirst,
+  ChevronLast
 } from "lucide-react";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { apiClient, TypeEntite, Entite, User, Poste } from "@/lib/api";
 
 interface EntiteWithDetails extends Entite {
@@ -116,6 +121,22 @@ export default function EntitiesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("tous");
   const [searchTermPostes, setSearchTermPostes] = useState("");
+  
+  // Valeurs debounced pour éviter les appels API trop fréquents
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+  const debouncedSearchTermPostes = useDebounce(searchTermPostes, 1000);
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+  
+  // États pour la pagination des postes
+  const [currentPagePostes, setCurrentPagePostes] = useState(1);
+  const [totalPagesPostes, setTotalPagesPostes] = useState(1);
+  const [totalItemsPostes, setTotalItemsPostes] = useState(0);
+  const [itemsPerPagePostes, setItemsPerPagePostes] = useState(15);
 
   // États des modales
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -195,22 +216,83 @@ export default function EntitiesPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, selectedTypeFilter, currentPagePostes, itemsPerPagePostes, debouncedSearchTermPostes]);
+
+  // Gestionnaires de pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset à la première page
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset à la première page lors de la recherche
+  };
+
+  const handleTypeFilter = (typeId: string) => {
+    setSelectedTypeFilter(typeId);
+    setCurrentPage(1); // Reset à la première page lors du filtrage
+  };
+
+  // Gestionnaires de pagination pour les postes
+  const handlePageChangePostes = (page: number) => {
+    setCurrentPagePostes(page);
+  };
+
+  const handleItemsPerPageChangePostes = (newItemsPerPage: number) => {
+    setItemsPerPagePostes(newItemsPerPage);
+    setCurrentPagePostes(1); // Reset à la première page
+  };
+
+  const handleSearchPostes = (value: string) => {
+    setSearchTermPostes(value);
+    setCurrentPagePostes(1); // Reset à la première page lors de la recherche
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [typeEntitesData, entitesData, usersData, postesData] = await Promise.all([
+      
+      // Paramètres pour l'API entités
+      const entiteParams = {
+        nom: debouncedSearchTerm || undefined,
+        type_entite_id: selectedTypeFilter !== "tous" ? parseInt(selectedTypeFilter) : undefined,
+        page: currentPage,
+        per_page: itemsPerPage,
+        sort_by: 'nom',
+        sort_order: 'asc' as const
+      };
+
+      // Paramètres pour l'API postes
+      const posteParams = {
+        nom: debouncedSearchTermPostes || undefined,
+        page: currentPagePostes,
+        per_page: itemsPerPagePostes,
+        sort_by: 'nom',
+        sort_order: 'asc' as const
+      };
+
+      const [typeEntitesData, entitesResponse, usersData, postesResponse] = await Promise.all([
         apiClient.getTypeEntites(),
-        apiClient.getEntitesDetailed(),
+        apiClient.getEntitesDetailed(entiteParams),
         apiClient.getUsersDetailed(),
-        apiClient.getPostes()
+        apiClient.getPostes(posteParams)
       ]);
 
       setTypeEntites(typeEntitesData);
-      setEntites(entitesData);
+      setEntites(entitesResponse.data || []);
+      setTotalPages(entitesResponse.pagination?.last_page || 1);
+      setTotalItems(entitesResponse.pagination?.total || 0);
       setUsers(usersData.data || []);
-      setPostes(postesData);
+      setPostes(postesResponse.data || []);
+      setTotalPagesPostes(postesResponse.pagination?.last_page || 1);
+      setTotalItemsPostes(postesResponse.pagination?.total || 0);
+      
+
     } catch (error) {
       console.error("Erreur de chargement:", error);
       toast({
@@ -772,8 +854,8 @@ export default function EntitiesPage() {
             setSidebarOpen={setSidebarOpen}
           />
           <main className="flex-1 overflow-y-auto p-3 lg:p-6">
-            <div className="flex items-center justify-center h-64">
-              <span className="ml-2">Chargement des entités...</span>
+      <div className="flex items-center justify-center h-64">
+        <span className="ml-2">Chargement des entités...</span>
             </div>
           </main>
         </div>
@@ -793,7 +875,7 @@ export default function EntitiesPage() {
         />
 
         <main className="flex-1 overflow-y-auto p-3 lg:p-6">
-          <div className="space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gestion des Entités</h1>
@@ -874,13 +956,13 @@ export default function EntitiesPage() {
                     <Input
                       placeholder="Rechercher une entité..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearch(e.target.value)}
                       className="pl-9"
                     />
                   </div>
                 </div>
                 <div className="w-48">
-                  <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
+                  <Select value={selectedTypeFilter} onValueChange={handleTypeFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="Filtrer par type" />
                     </SelectTrigger>
@@ -939,7 +1021,7 @@ export default function EntitiesPage() {
                           <div className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
                             <span>{entite.employes_actuels?.length || 0} employés</span>
-                          </div>
+                      </div>
                           {(entite.nombre_enfants || 0) > 0 && (
                             <div className="flex items-center gap-1">
                               <GitBranch className="h-4 w-4" />
@@ -1019,6 +1101,96 @@ export default function EntitiesPage() {
                   Aucune entité trouvée
                 </div>
               )}
+
+                                  {/* Pagination */}
+                    
+                    {/* Forcer l'affichage pour test */}
+                    {true && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems} entités
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={itemsPerPage.toString()} onValueChange={(value) => handleItemsPerPageChange(parseInt(value))}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="15">15</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronFirst className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(pageNum)}
+                              className="w-8 h-8"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronLast className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1038,7 +1210,7 @@ export default function EntitiesPage() {
                   <Card key={type.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="pt-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold">{type.nom}</h3>
+                    <h3 className="font-semibold">{type.nom}</h3>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -1067,11 +1239,11 @@ export default function EntitiesPage() {
                         </DropdownMenu>
                       </div>
                       
-                      {type.description && (
+                    {type.description && (
                         <p className="text-sm text-muted-foreground mb-3">
-                          {type.description}
-                        </p>
-                      )}
+                        {type.description}
+                      </p>
+                    )}
                       
                       <div className="flex justify-between items-center">
                         <Badge variant="secondary">
@@ -1080,8 +1252,8 @@ export default function EntitiesPage() {
                         
                         <div className="text-xs text-muted-foreground">
                           Créé le {new Date(type.date_creation).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -1125,7 +1297,7 @@ export default function EntitiesPage() {
                   <Input
                     placeholder="Rechercher un poste..."
                     value={searchTermPostes}
-                    onChange={(e) => setSearchTermPostes(e.target.value)}
+                    onChange={(e) => handleSearchPostes(e.target.value)}
                     className="pl-9"
                   />
                 </div>
@@ -1247,6 +1419,95 @@ export default function EntitiesPage() {
                   )}
                 </div>
               )}
+
+                    
+                    {/* Forcer l'affichage pour test */}
+                    {true && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      Affichage de {((currentPagePostes - 1) * itemsPerPagePostes) + 1} à {Math.min(currentPagePostes * itemsPerPagePostes, totalItemsPostes)} sur {totalItemsPostes} postes
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={itemsPerPagePostes.toString()} onValueChange={(value) => handleItemsPerPageChangePostes(parseInt(value))}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="15">15</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChangePostes(1)}
+                        disabled={currentPagePostes === 1}
+                      >
+                        <ChevronFirst className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChangePostes(currentPagePostes - 1)}
+                        disabled={currentPagePostes === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPagesPostes) }, (_, i) => {
+                          let pageNum;
+                          if (totalPagesPostes <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPagePostes <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPagePostes >= totalPagesPostes - 2) {
+                            pageNum = totalPagesPostes - 4 + i;
+                          } else {
+                            pageNum = currentPagePostes - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPagePostes === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChangePostes(pageNum)}
+                              className="w-8 h-8"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChangePostes(currentPagePostes + 1)}
+                        disabled={currentPagePostes === totalPagesPostes}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChangePostes(totalPagesPostes)}
+                        disabled={currentPagePostes === totalPagesPostes}
+                      >
+                        <ChevronLast className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -1291,10 +1552,10 @@ export default function EntitiesPage() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <TreePine className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+              <div className="text-center py-8 text-muted-foreground">
+                <TreePine className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                   <p>Chargement de l'organigramme...</p>
-                </div>
+              </div>
               )}
             </CardContent>
           </Card>
@@ -1735,20 +1996,19 @@ export default function EntitiesPage() {
           <form onSubmit={handleAffecterChef} className="space-y-4">
             <div>
               <Label htmlFor="user_id">Utilisateur *</Label>
-              <Select value={chefFormData.user_id} onValueChange={(value) => 
-                setChefFormData({...chefFormData, user_id: value})
-              }>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un utilisateur" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map(user => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.prenom} {user.nom} ({user.matricule})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={users.map(user => ({
+                  value: user.id.toString(),
+                  label: `${user.prenom} ${user.nom}`,
+                  description: `Matricule: ${user.matricule} - Email: ${user.email}`,
+                  searchTerms: `${user.prenom} ${user.nom} ${user.matricule} ${user.email}`
+                }))}
+                value={chefFormData.user_id}
+                onValueChange={(value) => setChefFormData({...chefFormData, user_id: value})}
+                placeholder="Sélectionner un utilisateur"
+                searchPlaceholder="Rechercher par nom, prénom, matricule..."
+                emptyMessage="Aucun utilisateur trouvé"
+              />
             </div>
 
             <div>

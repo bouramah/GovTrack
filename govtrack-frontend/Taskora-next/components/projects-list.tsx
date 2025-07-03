@@ -22,6 +22,9 @@ import {
   AlertTriangle,
   CheckCircle,
   PauseCircle,
+  Loader2,
+  Search,
+  Filter,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,104 +34,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { apiClient, Project, PaginatedResponse } from "@/lib/api";
 import { ProjectViewDetailsModal } from "./project-view-details-modal";
 import { ProjectTimelineModal } from "./project-timeline-modal";
 import { ProjectStatusModal } from "./project-status-modal";
 import { ProjectArchiveModal } from "./project-archive-modal";
 
-interface Project {
-  id: number;
-  name: string;
-  description: string;
-  status: "Planning" | "In Progress" | "Completed" | "On Hold";
-  deadline: string;
-  progress: number;
-  tasks: number;
-  activity: number;
-  starred: boolean;
-  team: {
-    name: string;
-    avatar: string;
-  }[];
-  priority: "Low" | "Medium" | "High";
-  client: string;
-  budget: string;
-  startDate: string;
-}
-
 interface ProjectsListProps {
   viewMode: "grid" | "list";
   filterStatus: string | null;
 }
-
-const teamMembers = [
-  {
-    id: 1,
-    name: "Alex Morgan",
-    email: "alex.morgan@example.com",
-    role: "UI/UX Designer",
-    avatar: "/avatars/alex-morgan.png",
-    tasks: {
-      total: 18,
-      running: 7,
-      completed: 11,
-    },
-    performance: 12,
-  },
-  {
-    id: 2,
-    name: "Jessica Chen",
-    email: "jessica.chen@example.com",
-    role: "Frontend Developer",
-    avatar: "/avatars/jessica-chen.png",
-    tasks: {
-      total: 24,
-      running: 9,
-      completed: 15,
-    },
-    performance: 8,
-  },
-  {
-    id: 3,
-    name: "Ryan Park",
-    email: "ryan.park@example.com",
-    role: "Product Manager",
-    avatar: "/avatars/ryan-park.png",
-    tasks: {
-      total: 14,
-      running: 3,
-      completed: 11,
-    },
-    performance: 15,
-  },
-  {
-    id: 4,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@example.com",
-    role: "Backend Developer",
-    avatar: "/avatars/sarah-johnson.png",
-    tasks: {
-      total: 20,
-      running: 8,
-      completed: 12,
-    },
-    performance: -3,
-  },
-  {
-    id: 5,
-    name: "David Kim",
-    email: "david.kim@example.com",
-    role: "QA Engineer",
-    avatar: "/avatars/david-kim.png",
-    tasks: {
-      total: 16,
-      running: 5,
-      completed: 11,
-    },
-    performance: 6,
-  },
-];
 
 export default function ProjectsList({
   viewMode,
@@ -144,19 +62,79 @@ export default function ProjectsList({
     "complete" | "hold" | "change"
   >("change");
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+  });
+  const [filters, setFilters] = useState({
+    search: "",
+    statut: "",
+    type_projet_id: undefined as number | undefined,
+    en_retard: false,
+    sort_by: "date_creation",
+    sort_order: "desc" as "asc" | "desc",
+  });
   const { toast } = useToast();
 
-  // Simulate fetching projects
-  useEffect(() => {
-    // This would normally be an API call
-    setProjects(sampleProjects);
-  }, []);
+  // Fonction pour charger les projets
+  const loadProjects = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params: any = {
+        ...filters,
+        page,
+        per_page: pagination.per_page,
+      };
 
-  // Apply filters
+      // Exclure les valeurs vides des paramètres
+      Object.keys(params).forEach(key => {
+        if (params[key] === "" || params[key] === undefined || params[key] === null) {
+          delete params[key];
+        }
+      });
+
+      // Appliquer le filtre de statut du parent si présent
+      if (filterStatus) {
+        params.statut = filterStatus;
+      }
+
+      const response: PaginatedResponse<Project> = await apiClient.getProjects(params);
+      
+      console.log('API Response:', response);
+      console.log('Pagination:', response.pagination);
+      
+      setProjects(response.data || []);
+      setFilteredProjects(response.data || []);
+      setPagination(response.pagination);
+      
+    } catch (err: any) {
+      setError(err.message || "Erreur lors du chargement des projets");
+      toast({
+        title: "Erreur",
+        description: err.message || "Impossible de charger les projets",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger les projets au montage et quand les filtres changent
+  useEffect(() => {
+    loadProjects();
+  }, [filters, filterStatus]);
+
+  // Appliquer les filtres locaux
   useEffect(() => {
     if (filterStatus) {
       setFilteredProjects(
-        projects.filter((project) => project.status === filterStatus)
+        projects.filter((project) => project.statut === filterStatus)
       );
     } else {
       setFilteredProjects(projects);
@@ -174,22 +152,10 @@ export default function ProjectsList({
   };
 
   const handleToggleStar = (project: Project) => {
-    const updatedProjects = projects.map((p) => {
-      if (p.id === project.id) {
-        return { ...p, starred: !p.starred };
-      }
-      return p;
-    });
-    setProjects(updatedProjects);
-
+    // TODO: Implémenter la fonctionnalité de favoris
     toast({
-      title: project.starred
-        ? "Project removed from favorites"
-        : "Project added to favorites",
-      description: `"${project.name}" has been ${
-        project.starred ? "removed from" : "added to"
-      } your favorites.`,
-      duration: 3000,
+      title: "Fonctionnalité à venir",
+      description: "La gestion des favoris sera bientôt disponible",
     });
   };
 
@@ -202,25 +168,33 @@ export default function ProjectsList({
     setStatusModalOpen(true);
   };
 
-  const handleUpdateStatus = (
-    status: "Planning" | "In Progress" | "Completed" | "On Hold",
+  const handleUpdateStatus = async (
+    status: string,
     note: string
   ) => {
     if (!selectedProject) return;
 
-    const updatedProjects = projects.map((p) => {
-      if (p.id === selectedProject.id) {
-        return { ...p, status };
-      }
-      return p;
-    });
-    setProjects(updatedProjects);
+    try {
+      await apiClient.changeProjectStatut(selectedProject.id, {
+        nouveau_statut: status,
+        commentaire: note,
+      });
 
-    toast({
-      title: `Project status updated`,
-      description: `"${selectedProject.name}" has been marked as ${status}.`,
-      duration: 3000,
-    });
+      toast({
+        title: "Statut mis à jour",
+        description: "Le statut du projet a été modifié avec succès",
+      });
+
+      // Recharger les projets
+      loadProjects(pagination.current_page);
+      setStatusModalOpen(false);
+    } catch (err: any) {
+      toast({
+        title: "Erreur",
+        description: err.message || "Impossible de modifier le statut",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleArchiveProject = (project: Project) => {
@@ -228,45 +202,278 @@ export default function ProjectsList({
     setArchiveModalOpen(true);
   };
 
-  const handleConfirmArchive = (notifyTeam: boolean) => {
+  const handleConfirmArchive = async (notifyTeam: boolean) => {
     if (!selectedProject) return;
 
-    // In a real app, you would call an API to archive the project
-    const updatedProjects = projects.filter((p) => p.id !== selectedProject.id);
-    setProjects(updatedProjects);
+    try {
+      await apiClient.deleteProject(selectedProject.id);
+      
+      toast({
+        title: "Projet archivé",
+        description: "Le projet a été archivé avec succès",
+      });
 
-    setArchiveModalOpen(false);
-
-    toast({
-      title: "Project archived",
-      description: `"${selectedProject.name}" has been archived. ${
-        notifyTeam ? "Team members have been notified." : ""
-      }`,
-      duration: 3000,
-    });
-
-    setSelectedProject(null);
+      // Recharger les projets
+      loadProjects(pagination.current_page);
+      setArchiveModalOpen(false);
+    } catch (err: any) {
+      toast({
+        title: "Erreur",
+        description: err.message || "Impossible d'archiver le projet",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (filteredProjects.length === 0) {
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSearch = (value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      search: value,
+    }));
+  };
+
+  const handlePageChange = (page: number) => {
+    loadProjects(page);
+  };
+
+  // Fonction pour obtenir la couleur du statut
+  const getStatusColor = (statut: string) => {
+    switch (statut) {
+      case "a_faire":
+        return "bg-gray-100 text-gray-800";
+      case "en_cours":
+        return "bg-blue-100 text-blue-800";
+      case "demande_cloture":
+        return "bg-yellow-100 text-yellow-800";
+      case "termine":
+        return "bg-green-100 text-green-800";
+      case "bloque":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Fonction pour obtenir le libellé du statut
+  const getStatusLabel = (statut: string) => {
+    const statuts: Record<string, string> = {
+      a_faire: "À faire",
+      en_cours: "En cours",
+      demande_cloture: "Demande de clôture",
+      termine: "Terminé",
+      bloque: "Bloqué",
+      demande_de_cloture: "Demande de clôture",
+    };
+    return statuts[statut] || statut;
+  };
+
+  // Fonction pour obtenir les initiales
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  if (loading && projects.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
-            No projects found
-          </h3>
-          <p className="text-gray-500">
-            Try adjusting your filters or create a new project.
-          </p>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Chargement des projets...</span>
+      </div>
+    );
+  }
+
+  if (error && projects.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <Button onClick={() => loadProjects()}>
+          Réessayer
+        </Button>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Filtres et recherche */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Rechercher des projets..."
+              value={filters.search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Select
+            value={filters.statut}
+            onValueChange={(value) => handleFilterChange("statut", value)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="a_faire">À faire</SelectItem>
+              <SelectItem value="en_cours">En cours</SelectItem>
+              <SelectItem value="demande_de_cloture">Demande de clôture</SelectItem>
+              <SelectItem value="termine">Terminé</SelectItem>
+              <SelectItem value="bloque">Bloqué</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.sort_by}
+            onValueChange={(value) => handleFilterChange("sort_by", value)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Trier par" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_creation">Date de création</SelectItem>
+              <SelectItem value="titre">Titre</SelectItem>
+              <SelectItem value="statut">Statut</SelectItem>
+              <SelectItem value="niveau_execution">Niveau d'exécution</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Statistiques par statut */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total</p>
+                <p className="text-2xl font-bold">{pagination.total}</p>
+              </div>
+              <BarChart2 className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">À faire</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.statut === "a_faire").length}
+                </p>
+              </div>
+              <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-sm font-bold">À</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">En cours</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.statut === "en_cours").length}
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Demande clôture</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.statut === "demande_de_cloture").length}
+                </p>
+              </div>
+              <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <span className="text-yellow-600 text-sm font-bold">DC</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Terminés</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.statut === "termine").length}
+                </p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Statistiques supplémentaires */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Bloqués</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.statut === "bloque").length}
+                </p>
+              </div>
+              <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                <span className="text-red-600 text-sm font-bold">B</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">En retard</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => p.est_en_retard).length}
+                </p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Niveau moyen</p>
+                <p className="text-2xl font-bold">
+                  {projects.length > 0 
+                    ? Math.round(projects.reduce((sum, p) => sum + p.niveau_execution, 0) / projects.length)
+                    : 0}%
+                </p>
+              </div>
+              <BarChart2 className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Liste des projets */}
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 xl:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
             <ProjectCard
               key={project.id}
@@ -276,80 +483,134 @@ export default function ProjectsList({
               onToggleStar={handleToggleStar}
               onStatusChange={handleStatusChange}
               onArchive={handleArchiveProject}
+              getStatusColor={getStatusColor}
+              getStatusLabel={getStatusLabel}
+              getInitials={getInitials}
             />
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto ">
-            <table className="w-full whitespace-nowrap">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Project
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Progress
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Deadline
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">
-                    Team
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProjects.map((project) => (
-                  <ProjectRow
-                    key={project.id}
-                    project={project}
-                    onViewDetails={handleViewDetails}
-                    onViewTimeline={handleViewTimeline}
-                    onToggleStar={handleToggleStar}
-                    onStatusChange={handleStatusChange}
-                    onArchive={handleArchiveProject}
-                  />
-                ))}
-              </tbody>
-            </table>
+        <div className="space-y-4">
+          {filteredProjects.map((project) => (
+            <ProjectRow
+              key={project.id}
+              project={project}
+              onViewDetails={handleViewDetails}
+              onViewTimeline={handleViewTimeline}
+              onToggleStar={handleToggleStar}
+              onStatusChange={handleStatusChange}
+              onArchive={handleArchiveProject}
+              getStatusColor={getStatusColor}
+              getStatusLabel={getStatusLabel}
+              getInitials={getInitials}
+            />
+          ))}
+        </div>
+      )}
+
+
+
+      {/* Pagination */}
+      {pagination.total > 0 && (
+        <div className="flex justify-center mt-8">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(1)}
+              disabled={pagination.current_page === 1}
+              size="sm"
+            >
+              Première
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+              size="sm"
+            >
+              Précédent
+            </Button>
+            
+            {/* Pages numérotées */}
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
+                let pageNum;
+                if (pagination.last_page <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.current_page <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.current_page >= pagination.last_page - 2) {
+                  pageNum = pagination.last_page - 4 + i;
+                } else {
+                  pageNum = pagination.current_page - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pagination.current_page === pageNum ? "default" : "outline"}
+                    onClick={() => handlePageChange(pageNum)}
+                    size="sm"
+                    className="w-10 h-10"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+              size="sm"
+            >
+              Suivant
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.last_page)}
+              disabled={pagination.current_page === pagination.last_page}
+              size="sm"
+            >
+              Dernière
+            </Button>
+            
+            <span className="flex items-center px-4 text-sm text-gray-600">
+              {pagination.total} projets • Page {pagination.current_page} sur {pagination.last_page}
+            </span>
           </div>
         </div>
       )}
 
       {/* Modals */}
-      <ProjectViewDetailsModal
-        project={selectedProject}
-        isOpen={viewDetailsOpen}
-        onClose={() => setViewDetailsOpen(false)}
-      />
-
-      <ProjectTimelineModal
-        project={selectedProject}
-        isOpen={timelineOpen}
-        onClose={() => setTimelineOpen(false)}
-      />
-
-      <ProjectStatusModal
-        project={selectedProject}
-        isOpen={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-        onStatusChange={handleUpdateStatus}
-        action={statusAction}
-      />
-
-      <ProjectArchiveModal
-        project={selectedProject}
-        isOpen={archiveModalOpen}
-        onClose={() => setArchiveModalOpen(false)}
-        onArchive={handleConfirmArchive}
-      />
+      {selectedProject && (
+        <>
+          <ProjectViewDetailsModal
+            project={selectedProject}
+            open={viewDetailsOpen}
+            onOpenChange={setViewDetailsOpen}
+          />
+          <ProjectTimelineModal
+            project={selectedProject}
+            open={timelineOpen}
+            onOpenChange={setTimelineOpen}
+          />
+          <ProjectStatusModal
+            project={selectedProject}
+            action={statusAction}
+            open={statusModalOpen}
+            onOpenChange={setStatusModalOpen}
+            onUpdateStatus={handleUpdateStatus}
+          />
+          <ProjectArchiveModal
+            project={selectedProject}
+            open={archiveModalOpen}
+            onOpenChange={setArchiveModalOpen}
+            onConfirmArchive={handleConfirmArchive}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -364,6 +625,9 @@ interface ProjectCardProps {
     action: "complete" | "hold" | "change"
   ) => void;
   onArchive: (project: Project) => void;
+  getStatusColor: (statut: string) => string;
+  getStatusLabel: (statut: string) => string;
+  getInitials: (name: string) => string;
 }
 
 function ProjectCard({
@@ -373,6 +637,9 @@ function ProjectCard({
   onToggleStar,
   onStatusChange,
   onArchive,
+  getStatusColor,
+  getStatusLabel,
+  getInitials,
 }: ProjectCardProps) {
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
@@ -382,18 +649,13 @@ function ProjectCard({
             <div
               className={cn(
                 "w-1 h-12 rounded-full",
-                project.status === "In Progress" && "bg-yellow-500",
-                project.status === "Completed" && "bg-green-500",
-                project.status === "Planning" && "bg-blue-500",
-                project.status === "On Hold" && "bg-gray-500"
+                getStatusColor(project.statut)
               )}
             />
             <div>
               <CardTitle className="text-lg flex items-center">
-                {project.name}
-                {project.starred && (
-                  <Star className="h-4 w-4 ml-2 text-yellow-500 fill-yellow-500" />
-                )}
+                {project.titre}
+                {/* TODO: Implémenter les favoris */}
               </CardTitle>
               <CardDescription>{project.description}</CardDescription>
             </div>
@@ -401,17 +663,10 @@ function ProjectCard({
           <Badge
             className={cn(
               "font-medium text-nowrap",
-              project.status === "In Progress" &&
-                "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-              project.status === "Completed" &&
-                "bg-green-100 text-green-800 hover:bg-green-100",
-              project.status === "Planning" &&
-                "bg-blue-100 text-blue-800 hover:bg-blue-100",
-              project.status === "On Hold" &&
-                "bg-gray-100 text-gray-800 hover:bg-gray-100"
+              getStatusColor(project.statut)
             )}
           >
-            {project.status}
+            {getStatusLabel(project.statut)}
           </Badge>
         </div>
       </CardHeader>
@@ -419,7 +674,12 @@ function ProjectCard({
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center text-gray-500 text-sm">
             <Calendar className="h-4 w-4 mr-1" />
-            <span>Deadline: {project.deadline}</span>
+            <span>
+              Échéance: {project.date_fin_previsionnelle 
+                ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')
+                : 'Non définie'
+              }
+            </span>
           </div>
           <ProjectActions
             project={project}
@@ -432,62 +692,64 @@ function ProjectCard({
         </div>
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Progress</span>
-            <span className="font-medium">{project.progress}%</span>
+            <span className="text-gray-500">Niveau d'exécution</span>
+            <span className="font-medium">{project.niveau_execution}%</span>
           </div>
-          <Progress value={project.progress} className="h-2" />
+          <Progress value={project.niveau_execution} className="h-2" />
         </div>
         <div className="mt-4 flex justify-between items-center">
           <div className="flex -space-x-2">
-            {project.team.map((member, index) => (
-              <Avatar key={index} className="h-8 w-8 border-2 border-white">
-                <AvatarImage
-                  src={member.avatar || "/placeholder.svg"}
-                  alt={member.name}
-                />
-                <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-              </Avatar>
-            ))}
+            {/* Porteur du projet */}
+            <Avatar className="h-8 w-8 border-2 border-white">
+              <AvatarImage
+                src={`/avatars/${project.porteur.nom.toLowerCase()}-${project.porteur.prenom.toLowerCase()}.png`}
+                alt={`${project.porteur.prenom} ${project.porteur.nom}`}
+              />
+              <AvatarFallback>{getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}</AvatarFallback>
+            </Avatar>
+            {/* Donneur d'ordre */}
+            <Avatar className="h-8 w-8 border-2 border-white">
+              <AvatarImage
+                src={`/avatars/${project.donneur_ordre.nom.toLowerCase()}-${project.donneur_ordre.prenom.toLowerCase()}.png`}
+                alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`}
+              />
+              <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
+            </Avatar>
           </div>
           <div className="flex items-center space-x-3 text-xs text-gray-500">
             <div className="flex items-center">
               <FileText className="h-3.5 w-3.5 mr-1" />
-              <span>{project.tasks} tasks</span>
+              <span>{project.taches_count || 0} tâches</span>
             </div>
             <div className="flex items-center">
               <BarChart2 className="h-3.5 w-3.5 mr-1" />
-              <span>{project.activity} activities</span>
+              <span>{project.type_projet.nom}</span>
             </div>
           </div>
         </div>
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <p className="text-gray-500 mb-1">Client</p>
-              <p className="font-medium">{project.client}</p>
+              <p className="text-gray-500 mb-1">Porteur</p>
+              <p className="font-medium">{project.porteur.prenom} {project.porteur.nom}</p>
             </div>
             <div>
-              <p className="text-gray-500 mb-1">Budget</p>
-              <p className="font-medium">{project.budget}</p>
+              <p className="text-gray-500 mb-1">Donneur d'ordre</p>
+              <p className="font-medium">{project.donneur_ordre.prenom} {project.donneur_ordre.nom}</p>
             </div>
             <div>
-              <p className="text-gray-500 mb-1">Start Date</p>
-              <p className="font-medium">{project.startDate}</p>
+              <p className="text-gray-500 mb-1">Date de début</p>
+              <p className="font-medium">{new Date(project.date_debut_previsionnelle).toLocaleDateString('fr-FR')}</p>
             </div>
             <div>
-              <p className="text-gray-500 mb-1">Priority</p>
+              <p className="text-gray-500 mb-1">Statut</p>
               <Badge
                 className={cn(
                   "font-medium",
-                  project.priority === "High" &&
-                    "bg-red-100 text-red-800 hover:bg-red-100",
-                  project.priority === "Medium" &&
-                    "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-                  project.priority === "Low" &&
-                    "bg-green-100 text-green-800 hover:bg-green-100"
+                  getStatusColor(project.statut)
                 )}
               >
-                {project.priority}
+                {getStatusLabel(project.statut)}
               </Badge>
             </div>
           </div>
@@ -507,6 +769,9 @@ interface ProjectRowProps {
     action: "complete" | "hold" | "change"
   ) => void;
   onArchive: (project: Project) => void;
+  getStatusColor: (statut: string) => string;
+  getStatusLabel: (statut: string) => string;
+  getInitials: (name: string) => string;
 }
 
 function ProjectRow({
@@ -516,6 +781,9 @@ function ProjectRow({
   onToggleStar,
   onStatusChange,
   onArchive,
+  getStatusColor,
+  getStatusLabel,
+  getInitials,
 }: ProjectRowProps) {
   return (
     <tr className="border-b border-gray-200 hover:bg-gray-50">
@@ -524,18 +792,13 @@ function ProjectRow({
           <div
             className={cn(
               "w-1 h-8 rounded-full mr-3",
-              project.status === "In Progress" && "bg-yellow-500",
-              project.status === "Completed" && "bg-green-500",
-              project.status === "Planning" && "bg-blue-500",
-              project.status === "On Hold" && "bg-gray-500"
+              getStatusColor(project.statut)
             )}
           />
           <div>
             <div className="font-medium text-gray-900 flex items-center text-nowrap">
-              {project.name}
-              {project.starred && (
-                <Star className="h-3.5 w-3.5 ml-1.5 text-yellow-500 fill-yellow-500" />
-              )}
+              {project.titre}
+              {/* TODO: Implémenter les favoris */}
             </div>
             <div className="text-xs text-gray-500">{project.description}</div>
           </div>
@@ -545,45 +808,50 @@ function ProjectRow({
         <Badge
           className={cn(
             "font-medium text-nowrap",
-            project.status === "In Progress" &&
-              "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-            project.status === "Completed" &&
-              "bg-green-100 text-green-800 hover:bg-green-100",
-            project.status === "Planning" &&
-              "bg-blue-100 text-blue-800 hover:bg-blue-100",
-            project.status === "On Hold" &&
-              "bg-gray-100 text-gray-800 hover:bg-gray-100"
+            getStatusColor(project.statut)
           )}
         >
-          {project.status}
+          {getStatusLabel(project.statut)}
         </Badge>
       </td>
       <td className="py-3 px-4">
         <div className="w-32">
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-500">Progress</span>
-            <span className="font-medium">{project.progress}%</span>
+            <span className="text-gray-500">Exécution</span>
+            <span className="font-medium">{project.niveau_execution}%</span>
           </div>
-          <Progress value={project.progress} className="h-1.5" />
+          <Progress value={project.niveau_execution} className="h-1.5" />
         </div>
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center text-gray-500 text-sm">
           <Calendar className="h-3.5 w-3.5 mr-1.5" />
-          <span className="text-nowrap">{project.deadline}</span>
+          <span className="text-nowrap">
+            {project.date_fin_previsionnelle 
+              ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')
+              : 'Non définie'
+            }
+          </span>
         </div>
       </td>
       <td className="py-3 px-4">
         <div className="flex -space-x-2">
-          {project.team.map((member, index) => (
-            <Avatar key={index} className="h-7 w-7 border-2 border-white">
-              <AvatarImage
-                src={member.avatar || "/placeholder.svg"}
-                alt={member.name}
-              />
-              <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-            </Avatar>
-          ))}
+          {/* Porteur du projet */}
+          <Avatar className="h-7 w-7 border-2 border-white">
+            <AvatarImage
+              src={`/avatars/${project.porteur.nom.toLowerCase()}-${project.porteur.prenom.toLowerCase()}.png`}
+              alt={`${project.porteur.prenom} ${project.porteur.nom}`}
+            />
+            <AvatarFallback>{getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}</AvatarFallback>
+          </Avatar>
+          {/* Donneur d'ordre */}
+          <Avatar className="h-7 w-7 border-2 border-white">
+            <AvatarImage
+              src={`/avatars/${project.donneur_ordre.nom.toLowerCase()}-${project.donneur_ordre.prenom.toLowerCase()}.png`}
+              alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`}
+            />
+            <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
+          </Avatar>
         </div>
       </td>
       <td className="py-3 px-4  flex justify-end cursor-pointer">
@@ -633,32 +901,27 @@ function ProjectActions({
           <span>View Timeline</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onToggleStar(project)}>
-          <Star
-            className={cn(
-              "h-4 w-4 mr-2",
-              project.starred && "fill-yellow-500 text-yellow-500"
-            )}
-          />
-          <span>{project.starred ? "Remove Star" : "Star Project"}</span>
+          <Star className="h-4 w-4 mr-2" />
+          <span>Marquer comme favori</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => onStatusChange(project, "change")}
-          disabled={project.status === "Completed"}
+          disabled={project.statut === "termine"}
         >
           <Clock className="h-4 w-4 mr-2" />
           <span>Change Status</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onStatusChange(project, "complete")}
-          disabled={project.status === "Completed"}
+          disabled={project.statut === "termine"}
         >
           <CheckCircle className="h-4 w-4 mr-2" />
           <span>Mark as Completed</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onStatusChange(project, "hold")}
-          disabled={project.status === "On Hold"}
+          disabled={project.statut === "bloque"}
         >
           <PauseCircle className="h-4 w-4 mr-2" />
           <span>Put on Hold</span>
@@ -675,133 +938,3 @@ function ProjectActions({
     </DropdownMenu>
   );
 }
-
-// Helper function to get initials from name
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
-}
-
-// Sample projects data
-const sampleProjects: Project[] = [
-  {
-    id: 1,
-    name: "Figma Design System",
-    description: "UI component library for design system",
-    status: "In Progress",
-    deadline: "Nov 15, 2023",
-    progress: 65,
-    tasks: 24,
-    activity: 128,
-    starred: true,
-    team: [
-      { name: "Alex Morgan", avatar: "/avatars/alex-morgan.png" },
-      { name: "Jessica Chen", avatar: "/avatars/jessica-chen.png" },
-      { name: "Ryan Park", avatar: "/avatars/ryan-park.png" },
-    ],
-    priority: "High",
-    client: "Acme Inc.",
-    budget: "$12,500",
-    startDate: "Oct 1, 2023",
-  },
-  {
-    id: 2,
-    name: "Keep React",
-    description: "React component library development",
-    status: "Planning",
-    deadline: "Dec 5, 2023",
-    progress: 25,
-    tasks: 18,
-    activity: 86,
-    starred: false,
-    team: [
-      { name: "Sarah Johnson", avatar: "/avatars/sarah-johnson.png" },
-      { name: "David Kim", avatar: "/avatars/david-kim.png" },
-      { name: "Alex Morgan", avatar: "/avatars/alex-morgan.png" },
-    ],
-    priority: "Medium",
-    client: "TechCorp",
-    budget: "$18,000",
-    startDate: "Oct 15, 2023",
-  },
-  {
-    id: 3,
-    name: "StaticMania",
-    description: "Marketing website redesign project",
-    status: "Completed",
-    deadline: "Oct 25, 2023",
-    progress: 100,
-    tasks: 32,
-    activity: 214,
-    starred: true,
-    team: [
-      { name: "Jessica Chen", avatar: "/avatars/jessica-chen.png" },
-      { name: "Ryan Park", avatar: "/avatars/ryan-park.png" },
-      { name: "Sarah Johnson", avatar: "/avatars/sarah-johnson.png" },
-    ],
-    priority: "Medium",
-    client: "StaticMania",
-    budget: "$9,800",
-    startDate: "Sep 5, 2023",
-  },
-  {
-    id: 4,
-    name: "Mobile App Development",
-    description: "Cross-platform mobile application",
-    status: "In Progress",
-    deadline: "Dec 20, 2023",
-    progress: 42,
-    tasks: 45,
-    activity: 156,
-    starred: false,
-    team: [
-      { name: "David Kim", avatar: "/avatars/david-kim.png" },
-      { name: "Alex Morgan", avatar: "/avatars/alex-morgan.png" },
-      { name: "Jessica Chen", avatar: "/avatars/jessica-chen.png" },
-    ],
-    priority: "High",
-    client: "MobiTech",
-    budget: "$32,000",
-    startDate: "Sep 15, 2023",
-  },
-  {
-    id: 5,
-    name: "E-commerce Platform",
-    description: "Online shopping platform development",
-    status: "On Hold",
-    deadline: "Jan 10, 2024",
-    progress: 30,
-    tasks: 38,
-    activity: 92,
-    starred: false,
-    team: [
-      { name: "Ryan Park", avatar: "/avatars/ryan-park.png" },
-      { name: "Sarah Johnson", avatar: "/avatars/sarah-johnson.png" },
-    ],
-    priority: "Low",
-    client: "ShopNow Inc.",
-    budget: "$24,500",
-    startDate: "Oct 5, 2023",
-  },
-  {
-    id: 6,
-    name: "Analytics Dashboard",
-    description: "Data visualization and reporting tool",
-    status: "Planning",
-    deadline: "Jan 25, 2024",
-    progress: 15,
-    tasks: 22,
-    activity: 48,
-    starred: true,
-    team: [
-      { name: "Jessica Chen", avatar: "/avatars/jessica-chen.png" },
-      { name: "David Kim", avatar: "/avatars/david-kim.png" },
-    ],
-    priority: "Medium",
-    client: "DataViz Corp",
-    budget: "$16,800",
-    startDate: "Nov 1, 2023",
-  },
-];

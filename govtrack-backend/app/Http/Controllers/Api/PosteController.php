@@ -14,49 +14,77 @@ class PosteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $postes = Poste::with(['affectations' => function ($query) {
-                            $query->where('statut', true)->with(['user', 'entite']);
-                        }])
-                       ->orderBy('nom')
-                       ->get()
-                       ->map(function ($poste) {
-                           // Récupérer toutes les affectations pour calculer les statistiques
-                           $toutesAffectations = $poste->affectations()->get();
-                           $affectationsActives = $poste->affectations->count();
+        try {
+            $query = Poste::with(['affectations' => function ($query) {
+                                $query->where('statut', true)->with(['user', 'entite']);
+                            }]);
 
-                           return [
-                               'id' => $poste->id,
-                               'nom' => $poste->nom,
-                               'description' => $poste->description,
-                               'affectations_actuelles_count' => $affectationsActives,
-                               'affectations_count' => $toutesAffectations->count(),
-                               'nombre_affectations_actives' => $affectationsActives, // Compatibilité
-                               'employes_actuels' => $poste->affectations->map(function ($affectation) {
-                                   return [
-                                       'user' => [
-                                           'id' => $affectation->user->id,
-                                           'nom' => $affectation->user->nom,
-                                           'prenom' => $affectation->user->prenom,
-                                           'matricule' => $affectation->user->matricule,
-                                       ],
-                                       'entite' => $affectation->entite->nom,
-                                       'date_debut' => $affectation->date_debut,
-                                   ];
-                               }),
-                               'date_creation' => $poste->date_creation,
-                               'date_modification' => $poste->date_modification,
-                               'creer_par' => $poste->creer_par,
-                               'modifier_par' => $poste->modifier_par,
-                           ];
-                       });
+            // Filtrage par nom
+            if ($request->filled('nom')) {
+                $query->where('nom', 'like', '%' . $request->nom . '%');
+            }
 
-        return response()->json([
-            'success' => true,
-            'data' => $postes,
-            'message' => 'Postes récupérés avec succès'
-        ]);
+            // Tri
+            $sortBy = $request->get('sort_by', 'nom');
+            $sortOrder = $request->get('sort_order', 'asc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $postes = $query->paginate($perPage);
+
+            $data = $postes->getCollection()->map(function ($poste) {
+                // Récupérer toutes les affectations pour calculer les statistiques
+                $toutesAffectations = $poste->affectations()->get();
+                $affectationsActives = $poste->affectations->count();
+
+                return [
+                    'id' => $poste->id,
+                    'nom' => $poste->nom,
+                    'description' => $poste->description,
+                    'affectations_actuelles_count' => $affectationsActives,
+                    'affectations_count' => $toutesAffectations->count(),
+                    'nombre_affectations_actives' => $affectationsActives, // Compatibilité
+                    'employes_actuels' => $poste->affectations->map(function ($affectation) {
+                        return [
+                            'user' => [
+                                'id' => $affectation->user->id,
+                                'nom' => $affectation->user->nom,
+                                'prenom' => $affectation->user->prenom,
+                                'matricule' => $affectation->user->matricule,
+                            ],
+                            'entite' => $affectation->entite->nom,
+                            'date_debut' => $affectation->date_debut,
+                        ];
+                    }),
+                    'date_creation' => $poste->date_creation,
+                    'date_modification' => $poste->date_modification,
+                    'creer_par' => $poste->creer_par,
+                    'modifier_par' => $poste->modifier_par,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $postes->currentPage(),
+                    'last_page' => $postes->lastPage(),
+                    'per_page' => $postes->perPage(),
+                    'total' => $postes->total(),
+                ],
+                'message' => 'Postes récupérés avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des postes',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

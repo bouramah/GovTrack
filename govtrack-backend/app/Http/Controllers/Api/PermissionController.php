@@ -14,33 +14,61 @@ class PermissionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $permissions = Permission::with(['roles.users'])
-                                ->orderBy('nom')
-                                ->get()
-                                ->map(function ($permission) {
-                                    return [
-                                        'id' => $permission->id,
-                                        'nom' => $permission->nom,
-                                        'description' => $permission->description,
-                                        'nombre_roles' => $permission->roles->count(),
-                                        'roles' => $permission->roles->pluck('nom'),
-                                        'nombre_utilisateurs_total' => $permission->roles
-                                            ->pluck('users')
-                                            ->flatten()
-                                            ->unique('id')
-                                            ->count(),
-                                        'date_creation' => $permission->date_creation,
-                                        'creer_par' => $permission->creer_par,
-                                    ];
-                                });
+        try {
+            $query = Permission::with(['roles.users']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $permissions,
-            'message' => 'Permissions récupérées avec succès'
-        ]);
+            // Filtrage par nom
+            if ($request->filled('nom')) {
+                $query->where('nom', 'like', '%' . $request->nom . '%');
+            }
+
+            // Tri
+            $sortBy = $request->get('sort_by', 'nom');
+            $sortOrder = $request->get('sort_order', 'asc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $permissions = $query->paginate($perPage);
+
+            $data = $permissions->getCollection()->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'nom' => $permission->nom,
+                    'description' => $permission->description,
+                    'nombre_roles' => $permission->roles->count(),
+                    'roles' => $permission->roles->pluck('nom'),
+                    'nombre_utilisateurs_total' => $permission->roles
+                        ->pluck('users')
+                        ->flatten()
+                        ->unique('id')
+                        ->count(),
+                    'date_creation' => $permission->date_creation,
+                    'creer_par' => $permission->creer_par,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $permissions->currentPage(),
+                    'last_page' => $permissions->lastPage(),
+                    'per_page' => $permissions->perPage(),
+                    'total' => $permissions->total(),
+                ],
+                'message' => 'Permissions récupérées avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des permissions',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

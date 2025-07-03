@@ -25,6 +25,8 @@ import {
   UserCog,
   Building,
   Shield,
+  FolderOpen,
+  FolderKanban,
 } from "lucide-react";
 import { useState } from "react";
 import { SearchModal } from "./search-modal";
@@ -173,7 +175,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/" icon={Home}>
                 Accueil
               </NavItem>
-              <NavItem href="/projects" icon={FileText}>
+              <NavItem href="/projects" icon={FolderKanban}>
                 Projets
               </NavItem>
               <NavItem href="/my-tasks" icon={CheckSquare}>
@@ -191,7 +193,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/notifications" icon={Bell}>
                 Notifications
               </NavItem>
-              
+
               {/* Section Administration */}
               <div className="pt-4 border-t border-gray-200 mt-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
@@ -205,6 +207,9 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 </NavItem>
                 <NavItem href="/roles" icon={Shield}>
                   Rôles & Permissions
+                </NavItem>
+                <NavItem href="/type-projets" icon={FolderOpen}>
+                  Types de Projets
                 </NavItem>
               </div>
 

@@ -16,7 +16,7 @@ class TypeProjetController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = TypeProjet::query();
+            $query = TypeProjet::withCount('projets');
 
             // Filtrage par nom
             if ($request->filled('nom')) {
