@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -264,5 +265,23 @@ class User extends Authenticatable
     public function estDansEquipeProjet($projetId): bool
     {
         return $this->projetsImpliques()->contains('id', $projetId);
+    }
+
+    /**
+     * Obtenir l'URL complète de la photo de profil
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo) {
+            return null;
+        }
+
+        // Si l'URL est déjà complète, la retourner telle quelle
+        if (str_starts_with($this->photo, 'http')) {
+            return $this->photo;
+        }
+
+        // Générer l'URL complète depuis le storage public
+        return Storage::disk('public')->url($this->photo);
     }
 }

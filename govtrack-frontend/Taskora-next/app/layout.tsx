@@ -2,12 +2,14 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Taskora - Project Management Dashboard UI Kit",
-  description: "A clean, modern Project Management Dashboard Ui kit",
+  title: "GovTrack - Système de Gestion d'Instructions Gouvernementales",
+  description: "Plateforme moderne de gestion des projets et instructions gouvernementales avec système de permissions",
 };
 
 export default function RootLayout({
@@ -16,8 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="fr">
+      <body className={inter.className}>
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
+      </body>
     </html>
   );
 }

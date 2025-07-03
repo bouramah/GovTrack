@@ -22,11 +22,17 @@ class PosteController extends Controller
                        ->orderBy('nom')
                        ->get()
                        ->map(function ($poste) {
+                           // Récupérer toutes les affectations pour calculer les statistiques
+                           $toutesAffectations = $poste->affectations()->get();
+                           $affectationsActives = $poste->affectations->count();
+
                            return [
                                'id' => $poste->id,
                                'nom' => $poste->nom,
                                'description' => $poste->description,
-                               'nombre_affectations_actives' => $poste->affectations->count(),
+                               'affectations_actuelles_count' => $affectationsActives,
+                               'affectations_count' => $toutesAffectations->count(),
+                               'nombre_affectations_actives' => $affectationsActives, // Compatibilité
                                'employes_actuels' => $poste->affectations->map(function ($affectation) {
                                    return [
                                        'user' => [
@@ -40,7 +46,9 @@ class PosteController extends Controller
                                    ];
                                }),
                                'date_creation' => $poste->date_creation,
+                               'date_modification' => $poste->date_modification,
                                'creer_par' => $poste->creer_par,
+                               'modifier_par' => $poste->modifier_par,
                            ];
                        });
 

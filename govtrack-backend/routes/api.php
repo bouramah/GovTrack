@@ -38,6 +38,8 @@ Route::prefix('v1/auth')->group(function () {
         Route::post('logout-all', [AuthController::class, 'logoutAll']);
         Route::get('me', [AuthController::class, 'me']);
         Route::post('refresh', [AuthController::class, 'refresh']);
+        Route::put('profile', [AuthController::class, 'updateProfile']);
+        Route::post('profile/photo', [AuthController::class, 'uploadProfilePhoto']);
     });
 });
 

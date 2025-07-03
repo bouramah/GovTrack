@@ -18,10 +18,17 @@ class EntiteController extends Controller
      */
     public function index(): JsonResponse
     {
-        $entites = Entite::with(['typeEntite', 'parent', 'enfants'])
+        $entites = Entite::with(['typeEntite', 'parent', 'enfants', 'affectations' => function($query) {
+                             $query->where('statut', true);
+                         }, 'affectations.user', 'chefs' => function($query) {
+                             $query->whereNull('date_fin');
+                         }, 'chefs.user'])
                          ->orderBy('nom')
                          ->get()
                          ->map(function ($entite) {
+                             // Chef actuel
+                             $chefActuel = $entite->chefs->first();
+
                              return [
                                  'id' => $entite->id,
                                  'nom' => $entite->nom,
@@ -32,6 +39,22 @@ class EntiteController extends Controller
                                      'nom' => $entite->parent->nom
                                  ] : null,
                                  'nombre_enfants' => $entite->enfants->count(),
+                                 'chef_actuel' => $chefActuel ? [
+                                     'id' => $chefActuel->user->id,
+                                     'nom' => $chefActuel->user->nom,
+                                     'prenom' => $chefActuel->user->prenom,
+                                     'matricule' => $chefActuel->user->matricule,
+                                 ] : null,
+                                 'employes_actuels' => $entite->affectations->map(function ($affectation) {
+                                     return [
+                                         'user' => [
+                                             'id' => $affectation->user->id,
+                                             'nom' => $affectation->user->nom,
+                                             'prenom' => $affectation->user->prenom,
+                                             'matricule' => $affectation->user->matricule,
+                                         ],
+                                     ];
+                                 }),
                                  'date_creation' => $entite->date_creation,
                                  'creer_par' => $entite->creer_par,
                              ];
@@ -578,7 +601,7 @@ class EntiteController extends Controller
                 ->first();
 
             // Historique des chefs (si demandé)
-            $historiqueChefs = [];
+            $historiqueChefs = collect();
             if ($includeHistorique || $statut === 'historique' || $statut === 'tous') {
                 $historiqueChefs = $entite->chefs()
                     ->whereNotNull('date_fin')
@@ -604,7 +627,7 @@ class EntiteController extends Controller
             }
 
             // Employés actuels
-            $utilisateursActuels = [];
+            $utilisateursActuels = collect();
             if ($statut === 'actuel' || $statut === 'tous') {
                 $affectationsActuelles = $entite->affectations()
                     ->where('statut', true)
@@ -637,7 +660,7 @@ class EntiteController extends Controller
             }
 
             // Historique des employés (si demandé)
-            $historiqueUtilisateurs = [];
+            $historiqueUtilisateurs = collect();
             if ($includeHistorique || $statut === 'historique' || $statut === 'tous') {
                 $affectationsPassees = $entite->affectations()
                     ->where('statut', false)
@@ -742,14 +765,12 @@ class EntiteController extends Controller
                     'employes_historique' => $historiqueUtilisateurs->count(),
                     'chefs_historique' => $historiqueChefs->count(),
                     'a_chef_actuel' => $chefActuel !== null,
-                    'repartition_par_type' => [
-                        'chefs' => $utilisateursFiltres->where('type', 'chef')->count(),
-                        'employes' => $utilisateursFiltres->where('type', 'employe')->count(),
-                    ],
-                    'repartition_par_statut' => [
-                        'actuels' => $utilisateursFiltres->where('est_actuel', true)->count(),
-                        'historique' => $utilisateursFiltres->where('est_actuel', false)->count(),
-                    ],
+                ],
+                'repartition' => [
+                    'chefs' => $utilisateursFiltres->where('type', 'chef')->count(),
+                    'employes' => $utilisateursFiltres->where('type', 'employe')->count(),
+                    'actuels' => $utilisateursFiltres->where('est_actuel', true)->count(),
+                    'historique' => $utilisateursFiltres->where('est_actuel', false)->count(),
                 ],
             ];
 

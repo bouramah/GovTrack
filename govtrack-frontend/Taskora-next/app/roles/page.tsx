@@ -1,0 +1,1404 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Sidebar } from '@/components/sidebar';
+import Topbar from '@/components/Shared/Topbar';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Shield,
+  Key,
+  Users,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  Search,
+  Calendar,
+  UserPlus,
+  UserMinus,
+  Settings,
+  Crown,
+  CheckCircle,
+  XCircle,
+  Filter
+} from "lucide-react";
+import { apiClient, Role, Permission, User } from "@/lib/api";
+
+interface RoleWithDetails extends Role {
+  permissions_count?: number;
+  users_count?: number;
+}
+
+interface PermissionWithDetails extends Permission {
+  roles_count?: number;
+  users_count?: number;
+}
+
+const formatBackendErrors = (error: any): string => {
+  if (error.response?.data?.errors) {
+    const errors = error.response.data.errors;
+    return Object.values(errors).flat().join(', ');
+  }
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  return "Une erreur inattendue s'est produite";
+};
+
+export default function RolesPermissionsPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [roles, setRoles] = useState<RoleWithDetails[]>([]);
+  const [permissions, setPermissions] = useState<PermissionWithDetails[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("roles");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTermPermissions, setSearchTermPermissions] = useState("");
+
+  // États des modales pour les rôles
+  const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
+  const [showEditRoleModal, setShowEditRoleModal] = useState(false);
+  const [showDetailRoleModal, setShowDetailRoleModal] = useState(false);
+  const [showDeleteRoleDialog, setShowDeleteRoleDialog] = useState(false);
+  const [showManagePermissionsModal, setShowManagePermissionsModal] = useState(false);
+
+  // États des modales pour les permissions
+  const [showCreatePermissionModal, setShowCreatePermissionModal] = useState(false);
+  const [showEditPermissionModal, setShowEditPermissionModal] = useState(false);
+  const [showDetailPermissionModal, setShowDetailPermissionModal] = useState(false);
+  const [showDeletePermissionDialog, setShowDeletePermissionDialog] = useState(false);
+  const [showManageRolesModal, setShowManageRolesModal] = useState(false);
+  const [showPermissionUsersModal, setShowPermissionUsersModal] = useState(false);
+
+  // Données sélectionnées
+  const [selectedRole, setSelectedRole] = useState<RoleWithDetails | null>(null);
+  const [selectedPermission, setSelectedPermission] = useState<PermissionWithDetails | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<RoleWithDetails | null>(null);
+  const [permissionToDelete, setPermissionToDelete] = useState<PermissionWithDetails | null>(null);
+  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [permissionUsers, setPermissionUsers] = useState<User[]>([]);
+
+  // Formulaires
+  const [roleFormData, setRoleFormData] = useState({
+    nom: "",
+    description: ""
+  });
+
+  const [permissionFormData, setPermissionFormData] = useState({
+    nom: "",
+    description: ""
+  });
+
+  const [selectedPermissionsForRole, setSelectedPermissionsForRole] = useState<number[]>([]);
+  const [selectedRolesForPermission, setSelectedRolesForPermission] = useState<number[]>([]);
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [rolesData, permissionsData, usersData] = await Promise.all([
+        apiClient.getRoles(),
+        apiClient.getPermissions(),
+        apiClient.getUsersDetailed()
+      ]);
+
+      setRoles(rolesData);
+      setPermissions(permissionsData);
+      setUsers(usersData.data || []);
+    } catch (error) {
+      console.error("Erreur de chargement:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de charger les données",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================
+  // FONCTIONS GESTION DES RÔLES
+  // ============================================
+
+  const handleCreateRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.createRole(roleFormData);
+      await loadData();
+      setShowCreateRoleModal(false);
+      setRoleFormData({ nom: "", description: "" });
+      toast({
+        title: "✅ Succès",
+        description: "Rôle créé avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur création rôle:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRole) return;
+    
+    try {
+      await apiClient.updateRole(selectedRole.id, roleFormData);
+      await loadData();
+      setShowEditRoleModal(false);
+      setSelectedRole(null);
+      setRoleFormData({ nom: "", description: "" });
+      toast({
+        title: "✅ Succès",
+        description: "Rôle modifié avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur modification rôle:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteRole = async () => {
+    if (!roleToDelete) return;
+    
+    try {
+      await apiClient.deleteRole(roleToDelete.id);
+      await loadData();
+      setShowDeleteRoleDialog(false);
+      setRoleToDelete(null);
+      toast({
+        title: "✅ Succès",
+        description: "Rôle supprimé avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur suppression rôle:", error);
+      toast({
+        title: "❌ Erreur", 
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewRoleDetails = async (role: RoleWithDetails) => {
+    try {
+      const response = await apiClient.getRole(role.id);
+      setSelectedRole(response);
+      setShowDetailRoleModal(true);
+    } catch (error: any) {
+      console.error("Erreur détails rôle:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de récupérer les détails du rôle",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openEditRoleModal = (role: RoleWithDetails) => {
+    setSelectedRole(role);
+    setRoleFormData({
+      nom: role.nom,
+      description: role.description || ""
+    });
+    setShowEditRoleModal(true);
+  };
+
+  const openDeleteRoleDialog = (role: RoleWithDetails) => {
+    setRoleToDelete(role);
+    setShowDeleteRoleDialog(true);
+  };
+
+  const openManagePermissionsModal = async (role: RoleWithDetails) => {
+    try {
+      const [roleDetails, availablePermsResponse] = await Promise.all([
+        apiClient.getRole(role.id),
+        apiClient.getAvailablePermissionsForRole(role.id)
+      ]);
+      
+      setSelectedRole(roleDetails);
+      // L'API retourne { role, permissions_disponibles, permissions_deja_assignees }
+      setAvailablePermissions(availablePermsResponse.permissions_disponibles || []);
+      setSelectedPermissionsForRole(roleDetails.permissions?.map((p: Permission) => p.id) || []);
+      setShowManagePermissionsModal(true);
+    } catch (error: any) {
+      console.error("Erreur chargement permissions:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de charger les permissions",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAssignPermissionToRole = async (permissionId: number) => {
+    if (!selectedRole) return;
+    
+    try {
+      await apiClient.assignPermissionToRole(selectedRole.id, { permission_id: permissionId });
+      const updatedRole = await apiClient.getRole(selectedRole.id);
+      setSelectedRole(updatedRole);
+      setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      await loadData();
+      toast({
+        title: "✅ Succès",
+        description: "Permission assignée au rôle"
+      });
+    } catch (error: any) {
+      console.error("Erreur assignation permission:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemovePermissionFromRole = async (permissionId: number) => {
+    if (!selectedRole) return;
+    
+    try {
+      await apiClient.removePermissionFromRole(selectedRole.id, permissionId);
+      const updatedRole = await apiClient.getRole(selectedRole.id);
+      setSelectedRole(updatedRole);
+      setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      await loadData();
+      toast({
+        title: "✅ Succès",
+        description: "Permission retirée du rôle"
+      });
+    } catch (error: any) {
+      console.error("Erreur retrait permission:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  // ============================================
+  // FONCTIONS GESTION DES PERMISSIONS
+  // ============================================
+
+  const handleCreatePermission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await apiClient.createPermission(permissionFormData);
+      await loadData();
+      setShowCreatePermissionModal(false);
+      setPermissionFormData({ nom: "", description: "" });
+      toast({
+        title: "✅ Succès",
+        description: "Permission créée avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur création permission:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdatePermission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPermission) return;
+    
+    try {
+      await apiClient.updatePermission(selectedPermission.id, permissionFormData);
+      await loadData();
+      setShowEditPermissionModal(false);
+      setSelectedPermission(null);
+      setPermissionFormData({ nom: "", description: "" });
+      toast({
+        title: "✅ Succès",
+        description: "Permission modifiée avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur modification permission:", error);
+      toast({
+        title: "❌ Erreur",
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePermission = async () => {
+    if (!permissionToDelete) return;
+    
+    try {
+      await apiClient.deletePermission(permissionToDelete.id);
+      await loadData();
+      setShowDeletePermissionDialog(false);
+      setPermissionToDelete(null);
+      toast({
+        title: "✅ Succès",
+        description: "Permission supprimée avec succès"
+      });
+    } catch (error: any) {
+      console.error("Erreur suppression permission:", error);
+      toast({
+        title: "❌ Erreur", 
+        description: formatBackendErrors(error),
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewPermissionDetails = async (permission: PermissionWithDetails) => {
+    try {
+      const response = await apiClient.getPermission(permission.id);
+      setSelectedPermission(response);
+      setShowDetailPermissionModal(true);
+    } catch (error: any) {
+      console.error("Erreur détails permission:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de récupérer les détails de la permission",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openEditPermissionModal = (permission: PermissionWithDetails) => {
+    setSelectedPermission(permission);
+    setPermissionFormData({
+      nom: permission.nom,
+      description: permission.description || ""
+    });
+    setShowEditPermissionModal(true);
+  };
+
+  const openDeletePermissionDialog = (permission: PermissionWithDetails) => {
+    setPermissionToDelete(permission);
+    setShowDeletePermissionDialog(true);
+  };
+
+  const openManageRolesModal = async (permission: PermissionWithDetails) => {
+    try {
+      const [permissionDetails, availableRolesResponse] = await Promise.all([
+        apiClient.getPermission(permission.id),
+        apiClient.getAvailableRolesForPermission(permission.id)
+      ]);
+      
+      setSelectedPermission(permissionDetails);
+      // L'API retourne { permission, roles_disponibles, roles_deja_assignes }
+      setAvailableRoles(availableRolesResponse.roles_disponibles || []);
+      setSelectedRolesForPermission(permissionDetails.roles?.map((r: Role) => r.id) || []);
+      setShowManageRolesModal(true);
+    } catch (error: any) {
+      console.error("Erreur chargement rôles:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de charger les rôles",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openPermissionUsersModal = async (permission: PermissionWithDetails) => {
+    try {
+      const response = await apiClient.getPermissionUsers(permission.id);
+      // L'API retourne { permission, utilisateurs, statistiques }
+      setPermissionUsers(response.utilisateurs || []);
+      setSelectedPermission(permission);
+      setShowPermissionUsersModal(true);
+    } catch (error: any) {
+      console.error("Erreur chargement utilisateurs:", error);
+      toast({
+        title: "❌ Erreur",
+        description: "Impossible de charger les utilisateurs",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredRoles = roles.filter(role =>
+    role.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (role.description || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredPermissions = permissions.filter(permission =>
+    permission.nom.toLowerCase().includes(searchTermPermissions.toLowerCase()) ||
+    (permission.description || "").toLowerCase().includes(searchTermPermissions.toLowerCase())
+  );
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50">
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+        <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
+          <Topbar name="Rôles & Permissions" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <main className="flex-1 overflow-y-auto p-3 lg:p-6">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Chargement des rôles et permissions...</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50">
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
+        <Topbar name="Rôles & Permissions" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <main className="flex-1 overflow-y-auto p-3 lg:p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* En-tête */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Rôles & Permissions</h1>
+                <p className="text-gray-600">Gérer le système de contrôle d'accès basé sur les rôles (RBAC)</p>
+              </div>
+            </div>
+
+            {/* Statistiques */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Rôles</CardTitle>
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{roles.length}</div>
+                  <p className="text-xs text-muted-foreground">rôles configurés</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Permissions</CardTitle>
+                  <Key className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{permissions.length}</div>
+                  <p className="text-xs text-muted-foreground">permissions disponibles</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Utilisateurs avec Rôles</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {users.filter(u => u.roles && u.roles.length > 0).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">ont des rôles assignés</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Rôles Actifs</CardTitle>
+                  <Settings className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {roles.filter(r => (r.nombre_utilisateurs || 0) > 0).length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">avec utilisateurs</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="roles">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Rôles
+                </TabsTrigger>
+                <TabsTrigger value="permissions">
+                  <Key className="h-4 w-4 mr-2" />
+                  Permissions
+                </TabsTrigger>
+                <TabsTrigger value="overview">
+                  <Users className="h-4 w-4 mr-2" />
+                  Vue d'ensemble
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Onglet Rôles */}
+              <TabsContent value="roles" className="space-y-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Rôles ({roles.length})
+                    </CardTitle>
+                    <Button onClick={() => setShowCreateRoleModal(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nouveau Rôle
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Recherche */}
+                    <div className="mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Rechercher un rôle..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Liste des rôles */}
+                    <div className="space-y-4">
+                      {filteredRoles.map((role) => (
+                        <Card key={role.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold text-lg">{role.nom}</h3>
+                                  <Badge variant={(role.nombre_utilisateurs || 0) > 0 ? "default" : "secondary"}>
+                                    {role.nombre_utilisateurs || 0} utilisateurs
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {role.nombre_permissions || 0} permissions
+                                  </Badge>
+                                </div>
+                                
+                                {role.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {role.description}
+                                  </p>
+                                )}
+                                
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Créé le {formatDate(role.date_creation)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleViewRoleDetails(role)}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Voir détails
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openEditRoleModal(role)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Modifier
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openManagePermissionsModal(role)}>
+                                    <Settings className="h-4 w-4 mr-2" />
+                                    Gérer permissions
+                                  </DropdownMenuItem>
+                                  <Separator />
+                                  <DropdownMenuItem 
+                                    onClick={() => openDeleteRoleDialog(role)} 
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Supprimer
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {filteredRoles.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                        <p>
+                          {searchTerm 
+                            ? 'Aucun rôle trouvé pour cette recherche' 
+                            : 'Aucun rôle trouvé'
+                          }
+                        </p>
+                        {!searchTerm && (
+                          <Button 
+                            variant="outline" 
+                            className="mt-4"
+                            onClick={() => setShowCreateRoleModal(true)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Créer le premier rôle
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Onglet Permissions */}
+              <TabsContent value="permissions" className="space-y-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Key className="h-5 w-5" />
+                      Permissions ({permissions.length})
+                    </CardTitle>
+                    <Button onClick={() => setShowCreatePermissionModal(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nouvelle Permission
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Recherche */}
+                    <div className="mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Rechercher une permission..."
+                          value={searchTermPermissions}
+                          onChange={(e) => setSearchTermPermissions(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Liste des permissions */}
+                    <div className="space-y-4">
+                      {filteredPermissions.map((permission) => (
+                        <Card key={permission.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="pt-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold text-lg">{permission.nom}</h3>
+                                  <Badge variant="outline">
+                                    {permission.roles?.length || 0} rôles
+                                  </Badge>
+                                </div>
+                                
+                                {permission.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    {permission.description}
+                                  </p>
+                                )}
+                                
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Créée le {formatDate(permission.date_creation)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleViewPermissionDetails(permission)}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Voir détails
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openEditPermissionModal(permission)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Modifier
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openManageRolesModal(permission)}>
+                                    <Settings className="h-4 w-4 mr-2" />
+                                    Gérer rôles
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openPermissionUsersModal(permission)}>
+                                    <Users className="h-4 w-4 mr-2" />
+                                    Voir utilisateurs
+                                  </DropdownMenuItem>
+                                  <Separator />
+                                  <DropdownMenuItem 
+                                    onClick={() => openDeletePermissionDialog(permission)} 
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Supprimer
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {filteredPermissions.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Key className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                        <p>
+                          {searchTermPermissions 
+                            ? 'Aucune permission trouvée pour cette recherche' 
+                            : 'Aucune permission trouvée'
+                          }
+                        </p>
+                        {!searchTermPermissions && (
+                          <Button 
+                            variant="outline" 
+                            className="mt-4"
+                            onClick={() => setShowCreatePermissionModal(true)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Créer la première permission
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Onglet Vue d'ensemble */}
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Rôles les plus utilisés */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Crown className="h-5 w-5" />
+                        Rôles les plus utilisés
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {roles
+                          .sort((a, b) => (b.nombre_utilisateurs || 0) - (a.nombre_utilisateurs || 0))
+                          .slice(0, 5)
+                          .map((role) => (
+                            <div key={role.id} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{role.nom}</span>
+                              </div>
+                              <Badge variant="secondary">
+                                {role.nombre_utilisateurs || 0} utilisateurs
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Permissions les plus assignées */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Key className="h-5 w-5" />
+                        Permissions les plus assignées
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {permissions
+                          .sort((a, b) => (b.roles?.length || 0) - (a.roles?.length || 0))
+                          .slice(0, 5)
+                          .map((permission) => (
+                            <div key={permission.id} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Key className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{permission.nom}</span>
+                              </div>
+                              <Badge variant="outline">
+                                {permission.roles?.length || 0} rôles
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* MODALES - ROLES */}
+            
+            {/* Modal Création Rôle */}
+            <Dialog open={showCreateRoleModal} onOpenChange={setShowCreateRoleModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Créer un nouveau rôle</DialogTitle>
+                  <DialogDescription>
+                    Ajoutez un nouveau rôle au système. Vous pourrez gérer ses permissions par la suite.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateRole}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="role-nom">Nom du rôle *</Label>
+                      <Input
+                        id="role-nom"
+                        value={roleFormData.nom}
+                        onChange={(e) => setRoleFormData({...roleFormData, nom: e.target.value})}
+                        placeholder="Ex: Administrateur, Gestionnaire..."
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="role-description">Description</Label>
+                      <Textarea
+                        id="role-description"
+                        value={roleFormData.description}
+                        onChange={(e) => setRoleFormData({...roleFormData, description: e.target.value})}
+                        placeholder="Description du rôle et de ses responsabilités..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setShowCreateRoleModal(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Créer le rôle</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Modal Modification Rôle */}
+            <Dialog open={showEditRoleModal} onOpenChange={setShowEditRoleModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Modifier le rôle</DialogTitle>
+                  <DialogDescription>
+                    Modifiez les informations de ce rôle.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleUpdateRole}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-role-nom">Nom du rôle *</Label>
+                      <Input
+                        id="edit-role-nom"
+                        value={roleFormData.nom}
+                        onChange={(e) => setRoleFormData({...roleFormData, nom: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-role-description">Description</Label>
+                      <Textarea
+                        id="edit-role-description"
+                        value={roleFormData.description}
+                        onChange={(e) => setRoleFormData({...roleFormData, description: e.target.value})}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setShowEditRoleModal(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Enregistrer</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Modal Détails Rôle */}
+            <Dialog open={showDetailRoleModal} onOpenChange={setShowDetailRoleModal}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Détails du rôle : {selectedRole?.nom}
+                  </DialogTitle>
+                </DialogHeader>
+                {selectedRole && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Nom</Label>
+                        <p className="text-lg font-semibold">{selectedRole.nom}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Utilisateurs</Label>
+                        <p className="text-lg font-semibold">{selectedRole.statistiques?.total_utilisateurs || 0}</p>
+                      </div>
+                    </div>
+                    
+                    {selectedRole.description && (
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                        <p className="mt-1">{selectedRole.description}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">
+                        Permissions ({selectedRole.permissions?.length || 0})
+                      </Label>
+                      <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                        {selectedRole.permissions?.map((permission) => (
+                          <div key={permission.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{permission.nom}</span>
+                          </div>
+                        )) || <p className="text-muted-foreground">Aucune permission assignée</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">
+                        Utilisateurs avec ce rôle ({selectedRole.utilisateurs?.length || 0})
+                      </Label>
+                      <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                        {selectedRole.utilisateurs && selectedRole.utilisateurs.length > 0 ? (
+                          selectedRole.utilisateurs.map((user: any) => (
+                            <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{user.prenom} {user.nom}</span>
+                              <span className="text-sm text-muted-foreground">({user.matricule})</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground">Aucun utilisateur assigné à ce rôle</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div>Créé le {formatDate(selectedRole.date_creation)}</div>
+                      {selectedRole.date_modification && (
+                        <div>Modifié le {formatDate(selectedRole.date_modification)}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button onClick={() => setShowDetailRoleModal(false)}>Fermer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog Suppression Rôle */}
+            <AlertDialog open={showDeleteRoleDialog} onOpenChange={setShowDeleteRoleDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer le rôle</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Êtes-vous sûr de vouloir supprimer le rôle "{roleToDelete?.nom}" ?
+                    {(roleToDelete?.nombre_utilisateurs || 0) > 0 && (
+                      <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded">
+                        <p className="text-orange-800 text-sm">
+                          ⚠️ Attention : Ce rôle est assigné à {roleToDelete?.nombre_utilisateurs || 0} utilisateur(s). 
+                          La suppression retirera automatiquement ce rôle de tous les utilisateurs.
+                        </p>
+                      </div>
+                    )}
+                    Cette action est irréversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteRole} className="bg-destructive hover:bg-destructive/90">
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal Gestion Permissions pour Rôle */}
+            <Dialog open={showManagePermissionsModal} onOpenChange={setShowManagePermissionsModal}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Gérer les permissions : {selectedRole?.nom}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Assignez ou retirez des permissions pour ce rôle.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Permissions assignées */}
+                    <div>
+                      <h4 className="font-medium mb-3 text-green-700">
+                        Permissions assignées ({selectedRole?.permissions?.length || 0})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
+                        {selectedRole?.permissions?.map((permission) => (
+                          <div key={permission.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium">{permission.nom}</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemovePermissionFromRole(permission.id)}
+                            >
+                              <UserMinus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )) || <p className="text-sm text-muted-foreground">Aucune permission assignée</p>}
+                      </div>
+                    </div>
+
+                    {/* Permissions disponibles */}
+                    <div>
+                      <h4 className="font-medium mb-3 text-blue-700">
+                        Permissions disponibles ({availablePermissions.filter(p => !selectedPermissionsForRole.includes(p.id)).length})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
+                        {availablePermissions
+                          .filter(permission => !selectedPermissionsForRole.includes(permission.id))
+                          .map((permission) => (
+                            <div key={permission.id} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                              <div className="flex items-center gap-2">
+                                <XCircle className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium">{permission.nom}</span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAssignPermissionToRole(permission.id)}
+                              >
+                                <UserPlus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        {availablePermissions.filter(p => !selectedPermissionsForRole.includes(p.id)).length === 0 && (
+                          <p className="text-sm text-muted-foreground">Toutes les permissions sont assignées</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setShowManagePermissionsModal(false)}>Fermer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* MODALES - PERMISSIONS */}
+            
+            {/* Modal Création Permission */}
+            <Dialog open={showCreatePermissionModal} onOpenChange={setShowCreatePermissionModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Créer une nouvelle permission</DialogTitle>
+                  <DialogDescription>
+                    Ajoutez une nouvelle permission au système.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreatePermission}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="permission-nom">Nom de la permission *</Label>
+                      <Input
+                        id="permission-nom"
+                        value={permissionFormData.nom}
+                        onChange={(e) => setPermissionFormData({...permissionFormData, nom: e.target.value})}
+                        placeholder="Ex: gerer_projets, consulter_rapports..."
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="permission-description">Description</Label>
+                      <Textarea
+                        id="permission-description"
+                        value={permissionFormData.description}
+                        onChange={(e) => setPermissionFormData({...permissionFormData, description: e.target.value})}
+                        placeholder="Description de cette permission..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setShowCreatePermissionModal(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Créer la permission</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Modal Modification Permission */}
+            <Dialog open={showEditPermissionModal} onOpenChange={setShowEditPermissionModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Modifier la permission</DialogTitle>
+                  <DialogDescription>
+                    Modifiez les informations de cette permission.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleUpdatePermission}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-permission-nom">Nom de la permission *</Label>
+                      <Input
+                        id="edit-permission-nom"
+                        value={permissionFormData.nom}
+                        onChange={(e) => setPermissionFormData({...permissionFormData, nom: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-permission-description">Description</Label>
+                      <Textarea
+                        id="edit-permission-description"
+                        value={permissionFormData.description}
+                        onChange={(e) => setPermissionFormData({...permissionFormData, description: e.target.value})}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setShowEditPermissionModal(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Enregistrer</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Modal Détails Permission */}
+            <Dialog open={showDetailPermissionModal} onOpenChange={setShowDetailPermissionModal}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5" />
+                    Détails de la permission : {selectedPermission?.nom}
+                  </DialogTitle>
+                </DialogHeader>
+                {selectedPermission && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Nom</Label>
+                        <p className="text-lg font-semibold">{selectedPermission.nom}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Rôles associés</Label>
+                        <p className="text-lg font-semibold">{selectedPermission.roles?.length || 0}</p>
+                      </div>
+                    </div>
+                    
+                    {selectedPermission.description && (
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                        <p className="mt-1">{selectedPermission.description}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">
+                        Rôles ayant cette permission ({selectedPermission.roles?.length || 0})
+                      </Label>
+                      <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                        {selectedPermission.roles?.map((role: Role) => (
+                          <div key={role.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <Shield className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{role.nom}</span>
+                          </div>
+                        )) || <p className="text-muted-foreground">Aucun rôle n'a cette permission</p>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div>Créée le {formatDate(selectedPermission.date_creation)}</div>
+                      {selectedPermission.date_modification && (
+                        <div>Modifiée le {formatDate(selectedPermission.date_modification)}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button onClick={() => setShowDetailPermissionModal(false)}>Fermer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Dialog Suppression Permission */}
+            <AlertDialog open={showDeletePermissionDialog} onOpenChange={setShowDeletePermissionDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer la permission</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Êtes-vous sûr de vouloir supprimer la permission "{permissionToDelete?.nom}" ?
+                    {permissionToDelete?.roles && permissionToDelete.roles.length > 0 && (
+                      <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded">
+                        <p className="text-orange-800 text-sm">
+                          ⚠️ Attention : Cette permission est assignée à {permissionToDelete.roles.length} rôle(s). 
+                          La suppression retirera automatiquement cette permission de tous les rôles.
+                        </p>
+                      </div>
+                    )}
+                    Cette action est irréversible.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeletePermission} className="bg-destructive hover:bg-destructive/90">
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Modal Gestion Rôles pour Permission */}
+            <Dialog open={showManageRolesModal} onOpenChange={setShowManageRolesModal}>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Gérer les rôles : {selectedPermission?.nom}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Voyez quels rôles ont cette permission.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Rôles avec cette permission */}
+                    <div>
+                      <h4 className="font-medium mb-3 text-green-700">
+                        Rôles avec cette permission ({selectedPermission?.roles?.length || 0})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
+                        {selectedPermission?.roles?.map((role) => (
+                          <div key={role.id} className="flex items-center gap-2 p-2 bg-green-50 rounded">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium">{role.nom}</span>
+                          </div>
+                        )) || <p className="text-sm text-muted-foreground">Aucun rôle n'a cette permission</p>}
+                      </div>
+                    </div>
+
+                    {/* Rôles sans cette permission */}
+                    <div>
+                      <h4 className="font-medium mb-3 text-blue-700">
+                        Rôles sans cette permission ({availableRoles.filter(r => !selectedRolesForPermission.includes(r.id)).length})
+                      </h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
+                        {availableRoles
+                          .filter(role => !selectedRolesForPermission.includes(role.id))
+                          .map((role) => (
+                            <div key={role.id} className="flex items-center gap-2 p-2 bg-blue-50 rounded">
+                              <XCircle className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium">{role.nom}</span>
+                            </div>
+                          ))}
+                        {availableRoles.filter(r => !selectedRolesForPermission.includes(r.id)).length === 0 && (
+                          <p className="text-sm text-muted-foreground">Tous les rôles ont cette permission</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    💡 Pour assigner cette permission à un rôle, utilisez la gestion des permissions depuis l'onglet Rôles.
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setShowManageRolesModal(false)}>Fermer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Modal Utilisateurs ayant la Permission */}
+            <Dialog open={showPermissionUsersModal} onOpenChange={setShowPermissionUsersModal}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Utilisateurs ayant la permission : {selectedPermission?.nom}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Liste des utilisateurs qui ont cette permission via leurs rôles.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {permissionUsers.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {permissionUsers.map((user) => (
+                        <div key={user.id} className="flex items-center gap-3 p-3 border rounded">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-700">
+                              {user.prenom.charAt(0)}{user.nom.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium">{user.prenom} {user.nom}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <div className="flex gap-1 mt-1">
+                              {user.roles_avec_cette_permission?.map((role: any) => (
+                                <Badge key={role.id} variant="outline" className="text-xs">
+                                  {role.nom}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                      <p>Aucun utilisateur n'a cette permission</p>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setShowPermissionUsersModal(false)}>Fermer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

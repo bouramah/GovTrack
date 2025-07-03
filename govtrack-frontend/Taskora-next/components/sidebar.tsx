@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Home,
   CheckSquare,
@@ -17,9 +18,25 @@ import {
   ContactRound,
   ChevronDown,
   ChevronUp,
+  User,
+  LogOut,
+  Settings,
+  ChevronsUpDown,
+  UserCog,
+  Building,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { SearchModal } from "./search-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SidebarProps {
   open: boolean;
@@ -100,12 +117,17 @@ const messages = [
 export function Sidebar({ open, setOpen }: SidebarProps) {
   const pathname = usePathname();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   const [showAllProjects, setShowAllProjects] = useState(false);
   const visiableProjects = showAllProjects ? projects : projects.slice(0, 3);
 
   const [showAllMessage, setShowAllMessage] = useState(false);
   const visiableMessages = showAllMessage ? messages : messages.slice(0, 3);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <>
@@ -128,9 +150,9 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           <Link href="/" className="flex items-center">
             <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold mr-2">
-              T
+              G
             </div>
-            <span className="text-xl font-semibold">Taskora</span>
+            <span className="text-xl font-semibold">GovTrack</span>
           </Link>
           <Button
             variant="ghost"
@@ -144,24 +166,24 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         </div>
 
         {/* Sidebar content - scrollable */}
-        <div className="h-[calc(100vh-4rem)]">
-          <div className="px-3 py-4">
+        <div className="h-[calc(100vh-4rem)] flex flex-col">
+          <div className="flex-1 px-3 py-4">
             {/* Main navigation */}
             <nav className="space-y-1 mb-6">
               <NavItem href="/" icon={Home}>
-                Home
+                Accueil
               </NavItem>
               <NavItem href="/projects" icon={FileText}>
-                Projects
+                Projets
               </NavItem>
               <NavItem href="/my-tasks" icon={CheckSquare}>
-                My Tasks
+                Mes Tâches
               </NavItem>
               <NavItem href="/kanban" icon={LayoutGrid}>
-                Kanban desk
+                Kanban
               </NavItem>
               <NavItem href="/calendar" icon={Calendar}>
-                Calendar
+                Calendrier
               </NavItem>
               <NavItem href="/contacts" icon={ContactRound}>
                 Contacts
@@ -169,6 +191,23 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/notifications" icon={Bell}>
                 Notifications
               </NavItem>
+              
+              {/* Section Administration */}
+              <div className="pt-4 border-t border-gray-200 mt-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
+                  Administration
+                </p>
+                <NavItem href="/users" icon={UserCog}>
+                  Gestion Utilisateurs
+                </NavItem>
+                <NavItem href="/entities" icon={Building}>
+                  Entités
+                </NavItem>
+                <NavItem href="/roles" icon={Shield}>
+                  Rôles & Permissions
+                </NavItem>
+              </div>
+
               <NavItem
                 href="#"
                 icon={Search}
@@ -177,7 +216,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   setSearchModalOpen(true);
                 }}
               >
-                Search
+                Rechercher
               </NavItem>
             </nav>
 
@@ -185,7 +224,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
             <div className="mb-6">
               <div className="flex items-center justify-between px-3 mb-2">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Latest Projects
+                  Projets Récents
                 </h3>
               </div>
               <div
@@ -205,74 +244,145 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   )
                 )}
               </div>
-
-              {projects.length > 3 && (
+              <div className="mt-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start mt-2 text-xs text-gray-500"
+                  className="w-full text-gray-500 hover:text-gray-700"
                   onClick={() => setShowAllProjects(!showAllProjects)}
                 >
-                  {showAllProjects ? "Less all project" : "See all project"}
                   {showAllProjects ? (
-                    <ChevronUp className="h-3 w-3 ml-auto" />
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" />
+                      Voir moins
+                    </>
                   ) : (
-                    <ChevronDown className="h-3 w-3 ml-auto" />
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                      Voir plus
+                    </>
                   )}
                 </Button>
-              )}
+              </div>
             </div>
 
-            {/* message  */}
+            {/* Messages section */}
             <div className="mb-6">
               <div className="flex items-center justify-between px-3 mb-2">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Latest Message
+                  Messages
                 </h3>
               </div>
               <div
                 className={`space-y-1 ${
-                  showAllMessage ? "max-h-[500px]" : "max-h-40"
+                  showAllMessage ? "max-h-96" : "max-h-40"
                 } transition-all ease-in-out duration-700`}
               >
-                {visiableMessages.map(
-                  ({ name, message, avatar, time, unread }, idx) => (
-                    <MessageItem
-                      key={idx}
-                      name={name}
-                      message={message}
-                      avatar={avatar}
-                      time={time}
-                      unread={unread}
-                    />
-                  )
-                )}
+                {visiableMessages.map(({ name, message, avatar, time }, idx) => (
+                  <MessageItem
+                    key={idx}
+                    name={name}
+                    message={message}
+                    avatar={avatar}
+                    time={time}
+                  />
+                ))}
               </div>
-
-              {messages.length > 3 && (
+              <div className="mt-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start mt-2 text-xs text-gray-500"
+                  className="w-full text-gray-500 hover:text-gray-700"
                   onClick={() => setShowAllMessage(!showAllMessage)}
                 >
-                  {showAllMessage ? "Less all message" : "See all message"}
                   {showAllMessage ? (
-                    <ChevronUp className="h-3 w-3 ml-auto" />
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" />
+                      Voir moins
+                    </>
                   ) : (
-                    <ChevronDown className="h-3 w-3 ml-auto" />
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                      Voir plus
+                    </>
                   )}
                 </Button>
-              )}
+              </div>
             </div>
           </div>
+
+          {/* Menu utilisateur - fixé en bas */}
+          {user && (
+            <div className="border-t border-gray-200 p-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start h-auto p-2"
+                  >
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage src={user?.photo} alt={`${user?.prenom} ${user?.nom}`} />
+                      <AvatarFallback className="rounded-lg">
+                        {user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="ml-2 flex-1 text-left text-sm">
+                      <div className="truncate font-semibold">{user?.prenom} {user?.nom}</div>
+                      <div className="truncate text-xs text-gray-500">{user?.email}</div>
+                    </div>
+                    <ChevronsUpDown className="ml-auto h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56"
+                  side="right"
+                  align="end"
+                  sideOffset={8}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        <AvatarImage src={user?.photo} alt={`${user?.prenom} ${user?.nom}`} />
+                        <AvatarFallback className="rounded-lg">
+                          {user?.prenom?.charAt(0)}{user?.nom?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">{user?.prenom} {user?.nom}</span>
+                        <span className="truncate text-xs">{user?.email}</span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        Mon Profil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Paramètres
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Bell className="mr-2 h-4 w-4" />
+                      Notifications
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
       </div>
 
-      <SearchModal
-        isOpen={searchModalOpen}
-        onClose={() => setSearchModalOpen(false)}
-      />
+      <SearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
     </>
   );
 }
