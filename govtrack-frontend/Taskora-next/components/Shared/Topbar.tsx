@@ -103,7 +103,6 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
             <span className="absolute top-[-6px] -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             <span className="sr-only">Notifications</span>
           </Link>
-          <NewProjectModal />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

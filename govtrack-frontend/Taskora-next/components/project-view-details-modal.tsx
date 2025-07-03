@@ -11,82 +11,59 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, FileText, Users, BarChart2, MessageSquare, CheckSquare, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface Project {
-  id: number
-  name: string
-  description: string
-  status: "Planning" | "In Progress" | "Completed" | "On Hold"
-  deadline: string
-  progress: number
-  tasks: number
-  activity: number
-  starred: boolean
-  team: {
-    name: string
-    avatar: string
-  }[]
-  priority: "Low" | "Medium" | "High"
-  client: string
-  budget: string
-  startDate: string
-}
+import { Project as ApiProject } from "@/lib/api"
 
 interface ProjectViewDetailsModalProps {
-  project: Project | null
-  isOpen: boolean
-  onClose: () => void
+  project: ApiProject | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function ProjectViewDetailsModal({ project, isOpen, onClose }: ProjectViewDetailsModalProps) {
+export function ProjectViewDetailsModal({ project, open, onOpenChange }: ProjectViewDetailsModalProps) {
   const [activeTab, setActiveTab] = useState("overview")
   const router = useRouter()
 
   if (!project) return null
 
   const handleOpenFullProject = () => {
-    onClose()
-    router.push(`/projects/${project.id}/full-details`)
+    onOpenChange(false)
+    router.push(`/projects/${project.id}`)
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start space-x-3">
             <div
               className={cn(
                 "w-2 h-16 rounded-full",
-                project.status === "In Progress" && "bg-yellow-500",
-                project.status === "Completed" && "bg-green-500",
-                project.status === "Planning" && "bg-blue-500",
-                project.status === "On Hold" && "bg-gray-500",
+                project.statut === "en_cours" && "bg-yellow-500",
+                project.statut === "termine" && "bg-green-500",
+                project.statut === "a_faire" && "bg-blue-500",
+                project.statut === "bloque" && "bg-gray-500",
               )}
             />
             <div>
-              <DialogTitle className="text-2xl font-bold flex items-center">{project.name}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold flex items-center">{project.titre}</DialogTitle>
               <DialogDescription>{project.description}</DialogDescription>
               <div className="flex items-center mt-2 space-x-4">
                 <Badge
                   className={cn(
                     "font-medium",
-                    project.status === "In Progress" && "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-                    project.status === "Completed" && "bg-green-100 text-green-800 hover:bg-green-100",
-                    project.status === "Planning" && "bg-blue-100 text-blue-800 hover:bg-blue-100",
-                    project.status === "On Hold" && "bg-gray-100 text-gray-800 hover:bg-gray-100",
+                    project.statut === "en_cours" && "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+                    project.statut === "termine" && "bg-green-100 text-green-800 hover:bg-green-100",
+                    project.statut === "a_faire" && "bg-blue-100 text-blue-800 hover:bg-blue-100",
+                    project.statut === "bloque" && "bg-gray-100 text-gray-800 hover:bg-gray-100",
                   )}
                 >
-                  {project.status}
+                  {project.statut_libelle}
                 </Badge>
                 <Badge
-                  className={cn(
-                    "font-medium",
-                    project.priority === "High" && "bg-red-100 text-red-800 hover:bg-red-100",
-                    project.priority === "Medium" && "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-                    project.priority === "Low" && "bg-green-100 text-green-800 hover:bg-green-100",
-                  )}
+                  variant="outline"
+                  className="text-xs border-blue-200 text-blue-700"
                 >
-                  {project.priority} Priority
+                  {project.type_projet?.nom || "Type non défini"}
                 </Badge>
               </div>
             </div>
@@ -95,44 +72,42 @@ export function ProjectViewDetailsModal({ project, isOpen, onClose }: ProjectVie
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-500 mb-1">Progress</div>
+            <div className="text-sm text-gray-500 mb-1">Progression</div>
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xl font-bold">{project.progress}%</div>
+              <div className="text-xl font-bold">{project.niveau_execution}%</div>
               <div className="text-xs text-gray-500">
-                {project.tasks} tasks ({Math.round((project.progress / 100) * project.tasks)} completed)
+                {project.taches_count || 0} tâches
               </div>
             </div>
-            <Progress value={project.progress} className="h-2" />
+            <Progress value={project.niveau_execution} className="h-2" />
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-500 mb-1">Budget</div>
-            <div className="text-xl font-bold">{project.budget}</div>
-            <div className="text-xs text-gray-500 mt-1">Client: {project.client}</div>
+            <div className="text-sm text-gray-500 mb-1">Porteur</div>
+            <div className="text-sm font-medium">{project.porteur.prenom} {project.porteur.nom}</div>
+            <div className="text-xs text-gray-500 mt-1">{project.porteur.email}</div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-500 mb-1">Team</div>
+            <div className="text-sm text-gray-500 mb-1">Donneur d'ordre</div>
             <div className="flex -space-x-2 mb-2">
-              {project.team.map((member, index) => (
-                <Avatar key={index} className="h-8 w-8 border-2 border-white">
-                  <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                  <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                </Avatar>
-              ))}
+              <Avatar className="h-8 w-8 border-2 border-white">
+                <AvatarImage src="/placeholder.svg" alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`} />
+                <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
+              </Avatar>
             </div>
-            <div className="text-xs text-gray-500">{project.team.length} team members</div>
+            <div className="text-xs text-gray-500">Donneur d'ordre</div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-sm text-gray-500 mb-1">Dates</div>
             <div className="flex items-center text-gray-700 text-sm mb-1">
               <Calendar className="h-3.5 w-3.5 mr-1" />
-              <span>Start: {project.startDate}</span>
+              <span>Début: {project.date_debut_previsionnelle ? new Date(project.date_debut_previsionnelle).toLocaleDateString('fr-FR') : 'Non définie'}</span>
             </div>
             <div className="flex items-center text-gray-700 text-sm">
               <Clock className="h-3.5 w-3.5 mr-1" />
-              <span>Deadline: {project.deadline}</span>
+              <span>Fin: {project.date_fin_previsionnelle ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR') : 'Non définie'}</span>
             </div>
           </div>
         </div>

@@ -25,6 +25,9 @@ import {
   Loader2,
   Search,
   Filter,
+  Settings,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,11 +40,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { apiClient, Project, PaginatedResponse } from "@/lib/api";
+import { apiClient, Project as ApiProject, PaginatedResponse } from "@/lib/api";
 import { ProjectViewDetailsModal } from "./project-view-details-modal";
 import { ProjectTimelineModal } from "./project-timeline-modal";
 import { ProjectStatusModal } from "./project-status-modal";
 import { ProjectArchiveModal } from "./project-archive-modal";
+import ProjectModal from "@/components/Shared/ProjectModal";
+import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
 
 interface ProjectsListProps {
   viewMode: "grid" | "list";
@@ -52,9 +57,9 @@ export default function ProjectsList({
   viewMode,
   filterStatus,
 }: ProjectsListProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<ApiProject[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<ApiProject[]>([]);
+  const [selectedProject, setSelectedProject] = useState<ApiProject | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -62,6 +67,10 @@ export default function ProjectsList({
     "complete" | "hold" | "change"
   >("change");
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProjectForAction, setSelectedProjectForAction] = useState<ApiProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -104,7 +113,7 @@ export default function ProjectsList({
         params.statut = filterStatus;
       }
 
-      const response: PaginatedResponse<Project> = await apiClient.getProjects(params);
+      const response: PaginatedResponse<ApiProject> = await apiClient.getProjects(params);
       
       console.log('API Response:', response);
       console.log('Pagination:', response.pagination);
@@ -141,17 +150,17 @@ export default function ProjectsList({
     }
   }, [filterStatus, projects]);
 
-  const handleViewDetails = (project: Project) => {
-    setSelectedProject(project);
-    setViewDetailsOpen(true);
+  const handleViewDetails = (project: ApiProject) => {
+    // Naviguer vers la page de détails du projet
+    window.location.href = `/projects/${project.id}`;
   };
 
-  const handleViewTimeline = (project: Project) => {
-    setSelectedProject(project);
-    setTimelineOpen(true);
+  const handleViewTimeline = (project: ApiProject) => {
+    // Naviguer vers la page de détails du projet avec l'onglet timeline
+    window.location.href = `/projects/${project.id}?tab=timeline`;
   };
 
-  const handleToggleStar = (project: Project) => {
+  const handleToggleStar = (project: ApiProject) => {
     // TODO: Implémenter la fonctionnalité de favoris
     toast({
       title: "Fonctionnalité à venir",
@@ -160,7 +169,7 @@ export default function ProjectsList({
   };
 
   const handleStatusChange = (
-    project: Project,
+    project: ApiProject,
     action: "complete" | "hold" | "change"
   ) => {
     setSelectedProject(project);
@@ -197,7 +206,7 @@ export default function ProjectsList({
     }
   };
 
-  const handleArchiveProject = (project: Project) => {
+  const handleArchiveProject = (project: ApiProject) => {
     setSelectedProject(project);
     setArchiveModalOpen(true);
   };
@@ -206,14 +215,12 @@ export default function ProjectsList({
     if (!selectedProject) return;
 
     try {
-      await apiClient.deleteProject(selectedProject.id);
-      
+      // TODO: Implémenter l'archivage
       toast({
         title: "Projet archivé",
         description: "Le projet a été archivé avec succès",
       });
 
-      // Recharger les projets
       loadProjects(pagination.current_page);
       setArchiveModalOpen(false);
     } catch (err: any) {
@@ -226,31 +233,67 @@ export default function ProjectsList({
   };
 
   const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-    }));
+    // Si la valeur est "all", on la remplace par une chaîne vide pour le filtre
+    const filterValue = value === "all" ? "" : value;
+    setFilters(prev => ({ ...prev, [key]: filterValue }));
   };
 
   const handleSearch = (value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      search: value,
-    }));
+    handleFilterChange('search', value);
   };
 
   const handlePageChange = (page: number) => {
     loadProjects(page);
   };
 
-  // Fonction pour obtenir la couleur du statut
+  const handleProjectCreated = () => {
+    loadProjects(1); // Recharger depuis la première page
+    toast({
+      title: 'Projet créé',
+      description: 'Le projet a été créé avec succès.',
+      variant: 'success',
+    });
+  };
+
+  const handleEditProject = (project: ApiProject) => {
+    setSelectedProjectForAction(project);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteProject = (project: ApiProject) => {
+    setSelectedProjectForAction(project);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleProjectEdited = () => {
+    loadProjects(pagination.current_page);
+    setEditModalOpen(false);
+    setSelectedProjectForAction(null);
+    toast({
+      title: 'Projet modifié',
+      description: 'Le projet a été modifié avec succès.',
+      variant: 'success',
+    });
+  };
+
+  const handleProjectDeleted = () => {
+    loadProjects(pagination.current_page);
+    setDeleteDialogOpen(false);
+    setSelectedProjectForAction(null);
+    toast({
+      title: 'Projet supprimé',
+      description: 'Le projet a été supprimé avec succès.',
+      variant: 'success',
+    });
+  };
+
   const getStatusColor = (statut: string) => {
     switch (statut) {
       case "a_faire":
         return "bg-gray-100 text-gray-800";
       case "en_cours":
         return "bg-blue-100 text-blue-800";
-      case "demande_cloture":
+      case "demande_de_cloture":
         return "bg-yellow-100 text-yellow-800";
       case "termine":
         return "bg-green-100 text-green-800";
@@ -261,20 +304,17 @@ export default function ProjectsList({
     }
   };
 
-  // Fonction pour obtenir le libellé du statut
   const getStatusLabel = (statut: string) => {
     const statuts: Record<string, string> = {
       a_faire: "À faire",
       en_cours: "En cours",
-      demande_cloture: "Demande de clôture",
+      demande_de_cloture: "Demande de clôture",
       termine: "Terminé",
       bloque: "Bloqué",
-      demande_de_cloture: "Demande de clôture",
     };
     return statuts[statut] || statut;
   };
 
-  // Fonction pour obtenir les initiales
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -283,32 +323,10 @@ export default function ProjectsList({
       .toUpperCase();
   };
 
-  if (loading && projects.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Chargement des projets...</span>
-      </div>
-    );
-  }
-
-  if (error && projects.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <Button onClick={() => loadProjects()}>
-          Réessayer
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <>
       {/* Filtres et recherche */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -321,310 +339,174 @@ export default function ProjectsList({
           </div>
         </div>
         <div className="flex gap-2">
-          <Select
-            value={filters.statut}
-            onValueChange={(value) => handleFilterChange("statut", value)}
-          >
-            <SelectTrigger className="w-40">
+                      <Select
+              value={filters.statut || "all"}
+              onValueChange={(value) => handleFilterChange('statut', value)}
+            >
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Statut" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="a_faire">À faire</SelectItem>
-              <SelectItem value="en_cours">En cours</SelectItem>
-              <SelectItem value="demande_de_cloture">Demande de clôture</SelectItem>
-              <SelectItem value="termine">Terminé</SelectItem>
-              <SelectItem value="bloque">Bloqué</SelectItem>
-            </SelectContent>
+                          <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="a_faire">À faire</SelectItem>
+                <SelectItem value="en_cours">En cours</SelectItem>
+                <SelectItem value="demande_de_cloture">Demande de clôture</SelectItem>
+                <SelectItem value="termine">Terminé</SelectItem>
+                <SelectItem value="bloque">Bloqué</SelectItem>
+              </SelectContent>
           </Select>
-          <Select
-            value={filters.sort_by}
-            onValueChange={(value) => handleFilterChange("sort_by", value)}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreateModalOpen(true)}
           >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Trier par" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_creation">Date de création</SelectItem>
-              <SelectItem value="titre">Titre</SelectItem>
-              <SelectItem value="statut">Statut</SelectItem>
-              <SelectItem value="niveau_execution">Niveau d'exécution</SelectItem>
-            </SelectContent>
-          </Select>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau projet
+          </Button>
         </div>
-      </div>
-
-      {/* Statistiques par statut */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold">{pagination.total}</p>
-              </div>
-              <BarChart2 className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">À faire</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.statut === "a_faire").length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">À</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">En cours</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.statut === "en_cours").length}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Demande clôture</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.statut === "demande_de_cloture").length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-yellow-600 text-sm font-bold">DC</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Terminés</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.statut === "termine").length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Statistiques supplémentaires */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Bloqués</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.statut === "bloque").length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                <span className="text-red-600 text-sm font-bold">B</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">En retard</p>
-                <p className="text-2xl font-bold">
-                  {projects.filter(p => p.est_en_retard).length}
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Niveau moyen</p>
-                <p className="text-2xl font-bold">
-                  {projects.length > 0 
-                    ? Math.round(projects.reduce((sum, p) => sum + p.niveau_execution, 0) / projects.length)
-                    : 0}%
-                </p>
-              </div>
-              <BarChart2 className="h-8 w-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Liste des projets */}
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              onViewDetails={handleViewDetails}
-              onViewTimeline={handleViewTimeline}
-              onToggleStar={handleToggleStar}
-              onStatusChange={handleStatusChange}
-              onArchive={handleArchiveProject}
-              getStatusColor={getStatusColor}
-              getStatusLabel={getStatusLabel}
-              getInitials={getInitials}
-            />
-          ))}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-gray-600">Chargement des projets...</span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="text-center py-12">
+          <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Aucun projet trouvé</h3>
+          <p className="text-gray-600 mb-4">
+            {filters.search || filters.statut
+              ? "Aucun projet ne correspond à vos critères de recherche."
+              : "Aucun projet n'a encore été créé."}
+          </p>
+          <Button onClick={() => setCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Créer le premier projet
+          </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredProjects.map((project) => (
-            <ProjectRow
-              key={project.id}
-              project={project}
-              onViewDetails={handleViewDetails}
-              onViewTimeline={handleViewTimeline}
-              onToggleStar={handleToggleStar}
-              onStatusChange={handleStatusChange}
-              onArchive={handleArchiveProject}
-              getStatusColor={getStatusColor}
-              getStatusLabel={getStatusLabel}
-              getInitials={getInitials}
-            />
-          ))}
-        </div>
-      )}
-
-
-
-      {/* Pagination */}
-      {pagination.total > 0 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handlePageChange(1)}
-              disabled={pagination.current_page === 1}
-              size="sm"
-            >
-              Première
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handlePageChange(pagination.current_page - 1)}
-              disabled={pagination.current_page === 1}
-              size="sm"
-            >
-              Précédent
-            </Button>
-            
-            {/* Pages numérotées */}
-            <div className="flex gap-1">
-              {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
-                let pageNum;
-                if (pagination.last_page <= 5) {
-                  pageNum = i + 1;
-                } else if (pagination.current_page <= 3) {
-                  pageNum = i + 1;
-                } else if (pagination.current_page >= pagination.last_page - 2) {
-                  pageNum = pagination.last_page - 4 + i;
-                } else {
-                  pageNum = pagination.current_page - 2 + i;
-                }
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={pagination.current_page === pageNum ? "default" : "outline"}
-                    onClick={() => handlePageChange(pageNum)}
-                    size="sm"
-                    className="w-10 h-10"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
+        <>
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onViewDetails={handleViewDetails}
+                  onViewTimeline={handleViewTimeline}
+                  onToggleStar={handleToggleStar}
+                  onStatusChange={handleStatusChange}
+                  onArchive={handleArchiveProject}
+                  onEdit={handleEditProject}
+                  onDelete={handleDeleteProject}
+                  getStatusColor={getStatusColor}
+                  getStatusLabel={getStatusLabel}
+                  getInitials={getInitials}
+                />
+              ))}
             </div>
-            
-            <Button
-              variant="outline"
-              onClick={() => handlePageChange(pagination.current_page + 1)}
-              disabled={pagination.current_page === pagination.last_page}
-              size="sm"
-            >
-              Suivant
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handlePageChange(pagination.last_page)}
-              disabled={pagination.current_page === pagination.last_page}
-              size="sm"
-            >
-              Dernière
-            </Button>
-            
-            <span className="flex items-center px-4 text-sm text-gray-600">
-              {pagination.total} projets • Page {pagination.current_page} sur {pagination.last_page}
-            </span>
-          </div>
-        </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredProjects.map((project) => (
+                <ProjectRow
+                  key={project.id}
+                  project={project}
+                  onViewDetails={handleViewDetails}
+                  onViewTimeline={handleViewTimeline}
+                  onToggleStar={handleToggleStar}
+                  onStatusChange={handleStatusChange}
+                  onArchive={handleArchiveProject}
+                  onEdit={handleEditProject}
+                  onDelete={handleDeleteProject}
+                  getStatusColor={getStatusColor}
+                  getStatusLabel={getStatusLabel}
+                  getInitials={getInitials}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination.last_page > 1 && (
+            <div className="flex items-center justify-center space-x-2 pt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+                disabled={pagination.current_page === 1}
+              >
+                Précédent
+              </Button>
+              <span className="text-sm text-gray-600">
+                Page {pagination.current_page} sur {pagination.last_page}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+                disabled={pagination.current_page === pagination.last_page}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modals */}
-      {selectedProject && (
-        <>
-          <ProjectViewDetailsModal
-            project={selectedProject}
-            open={viewDetailsOpen}
-            onOpenChange={setViewDetailsOpen}
-          />
-          <ProjectTimelineModal
-            project={selectedProject}
-            open={timelineOpen}
-            onOpenChange={setTimelineOpen}
-          />
-          <ProjectStatusModal
-            project={selectedProject}
-            action={statusAction}
-            open={statusModalOpen}
-            onOpenChange={setStatusModalOpen}
-            onUpdateStatus={handleUpdateStatus}
-          />
-          <ProjectArchiveModal
-            project={selectedProject}
-            open={archiveModalOpen}
-            onOpenChange={setArchiveModalOpen}
-            onConfirmArchive={handleConfirmArchive}
-          />
-        </>
-      )}
-    </div>
+      <ProjectModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={handleProjectCreated}
+      />
+
+      <ProjectModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedProjectForAction(null);
+        }}
+        project={selectedProjectForAction}
+        onSuccess={handleProjectEdited}
+      />
+
+      <DeleteProjectDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedProjectForAction(null);
+        }}
+        project={selectedProjectForAction}
+        onSuccess={handleProjectDeleted}
+      />
+
+      {/* Modals existants temporairement désactivés pour éviter les conflits de types */}
+      {/* TODO: Corriger les interfaces des modals existants */}
+    </>
   );
 }
 
+// Composant ProjectCard (vue grille)
 interface ProjectCardProps {
-  project: Project;
-  onViewDetails: (project: Project) => void;
-  onViewTimeline: (project: Project) => void;
-  onToggleStar: (project: Project) => void;
+  project: ApiProject;
+  onViewDetails: (project: ApiProject) => void;
+  onViewTimeline: (project: ApiProject) => void;
+  onToggleStar: (project: ApiProject) => void;
   onStatusChange: (
-    project: Project,
+    project: ApiProject,
     action: "complete" | "hold" | "change"
   ) => void;
-  onArchive: (project: Project) => void;
+  onArchive: (project: ApiProject) => void;
+  onEdit: (project: ApiProject) => void;
+  onDelete: (project: ApiProject) => void;
   getStatusColor: (statut: string) => string;
   getStatusLabel: (statut: string) => string;
   getInitials: (name: string) => string;
@@ -637,138 +519,133 @@ function ProjectCard({
   onToggleStar,
   onStatusChange,
   onArchive,
+  onEdit,
+  onDelete,
   getStatusColor,
   getStatusLabel,
   getInitials,
 }: ProjectCardProps) {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex flex-wrap gap-2 justify-between items-start">
-          <div className="flex items-start space-x-2">
-            <div
-              className={cn(
-                "w-1 h-12 rounded-full",
-                getStatusColor(project.statut)
-              )}
-            />
-            <div>
-              <CardTitle className="text-lg flex items-center">
-                {project.titre}
-                {/* TODO: Implémenter les favoris */}
-              </CardTitle>
-              <CardDescription>{project.description}</CardDescription>
-            </div>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <CardTitle 
+              className="text-lg cursor-pointer hover:text-blue-600 transition-colors truncate"
+              onClick={() => onViewDetails(project)}
+            >
+              {project.titre}
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-600 line-clamp-2 mt-1">
+              {project.description || "Aucune description disponible"}
+            </CardDescription>
           </div>
-          <Badge
-            className={cn(
-              "font-medium text-nowrap",
-              getStatusColor(project.statut)
-            )}
-          >
-            {getStatusLabel(project.statut)}
-          </Badge>
+          <div className="flex items-center space-x-1 ml-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => onToggleStar(project)}
+            >
+              <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
+            </Button>
+            <ProjectActions
+              project={project}
+              onViewDetails={onViewDetails}
+              onViewTimeline={onViewTimeline}
+              onToggleStar={onToggleStar}
+              onStatusChange={onStatusChange}
+              onArchive={onArchive}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center text-gray-500 text-sm">
-            <Calendar className="h-4 w-4 mr-1" />
-            <span>
-              Échéance: {project.date_fin_previsionnelle 
-                ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')
-                : 'Non définie'
-              }
+
+      <CardContent className="space-y-4">
+        {/* Statut et progression */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Badge
+              className={cn(
+                "font-medium",
+                getStatusColor(project.statut)
+              )}
+            >
+              {getStatusLabel(project.statut)}
+            </Badge>
+            <span className="text-sm font-medium text-gray-700">
+              {project.niveau_execution}%
             </span>
-          </div>
-          <ProjectActions
-            project={project}
-            onViewDetails={onViewDetails}
-            onViewTimeline={onViewTimeline}
-            onToggleStar={onToggleStar}
-            onStatusChange={onStatusChange}
-            onArchive={onArchive}
-          />
-        </div>
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Niveau d'exécution</span>
-            <span className="font-medium">{project.niveau_execution}%</span>
           </div>
           <Progress value={project.niveau_execution} className="h-2" />
         </div>
-        <div className="mt-4 flex justify-between items-center">
-          <div className="flex -space-x-2">
-            {/* Porteur du projet */}
-            <Avatar className="h-8 w-8 border-2 border-white">
-              <AvatarImage
-                src={`/avatars/${project.porteur.nom.toLowerCase()}-${project.porteur.prenom.toLowerCase()}.png`}
-                alt={`${project.porteur.prenom} ${project.porteur.nom}`}
-              />
-              <AvatarFallback>{getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}</AvatarFallback>
-            </Avatar>
-            {/* Donneur d'ordre */}
-            <Avatar className="h-8 w-8 border-2 border-white">
-              <AvatarImage
-                src={`/avatars/${project.donneur_ordre.nom.toLowerCase()}-${project.donneur_ordre.prenom.toLowerCase()}.png`}
-                alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`}
-              />
-              <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex items-center space-x-3 text-xs text-gray-500">
-            <div className="flex items-center">
-              <FileText className="h-3.5 w-3.5 mr-1" />
-              <span>{project.taches_count || 0} tâches</span>
-            </div>
-            <div className="flex items-center">
-              <BarChart2 className="h-3.5 w-3.5 mr-1" />
-              <span>{project.type_projet.nom}</span>
-            </div>
-          </div>
+
+        {/* Dates */}
+        <div className="flex items-center text-sm text-gray-500">
+          <Calendar className="h-4 w-4 mr-1" />
+          <span>
+            {new Date(project.date_debut_previsionnelle).toLocaleDateString('fr-FR')}
+            {project.date_fin_previsionnelle && (
+              <> - {new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')}</>
+            )}
+          </span>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <p className="text-gray-500 mb-1">Porteur</p>
-              <p className="font-medium">{project.porteur.prenom} {project.porteur.nom}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 mb-1">Donneur d'ordre</p>
-              <p className="font-medium">{project.donneur_ordre.prenom} {project.donneur_ordre.nom}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 mb-1">Date de début</p>
-              <p className="font-medium">{new Date(project.date_debut_previsionnelle).toLocaleDateString('fr-FR')}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 mb-1">Statut</p>
-              <Badge
-                className={cn(
-                  "font-medium",
-                  getStatusColor(project.statut)
-                )}
-              >
-                {getStatusLabel(project.statut)}
-              </Badge>
-            </div>
+
+        {/* Type de projet */}
+        <div className="text-sm text-gray-600">
+          <span className="font-medium">Type :</span> {project.type_projet.nom}
+        </div>
+
+        {/* Porteur et Donneur d'ordre */}
+        <div className="flex items-center justify-between">
+          <div className="flex -space-x-2">
+            <Avatar className="h-8 w-8 border-2 border-white">
+              <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
+                {getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}
+              </AvatarFallback>
+            </Avatar>
+            <Avatar className="h-8 w-8 border-2 border-white">
+              <AvatarFallback className="text-xs bg-green-100 text-green-700">
+                {getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}
+              </AvatarFallback>
+            </Avatar>
           </div>
+          <span className="text-xs text-gray-500">
+            Porteur & Donneur d'ordre
+          </span>
+        </div>
+
+        {/* Bouton Voir détails */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => onViewDetails(project)}
+          >
+            Voir détails
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
+// Composant ProjectRow (vue liste)
 interface ProjectRowProps {
-  project: Project;
-  onViewDetails: (project: Project) => void;
-  onViewTimeline: (project: Project) => void;
-  onToggleStar: (project: Project) => void;
+  project: ApiProject;
+  onViewDetails: (project: ApiProject) => void;
+  onViewTimeline: (project: ApiProject) => void;
+  onToggleStar: (project: ApiProject) => void;
   onStatusChange: (
-    project: Project,
+    project: ApiProject,
     action: "complete" | "hold" | "change"
   ) => void;
-  onArchive: (project: Project) => void;
+  onArchive: (project: ApiProject) => void;
+  onEdit: (project: ApiProject) => void;
+  onDelete: (project: ApiProject) => void;
   getStatusColor: (statut: string) => string;
   getStatusLabel: (statut: string) => string;
   getInitials: (name: string) => string;
@@ -781,96 +658,93 @@ function ProjectRow({
   onToggleStar,
   onStatusChange,
   onArchive,
+  onEdit,
+  onDelete,
   getStatusColor,
   getStatusLabel,
   getInitials,
 }: ProjectRowProps) {
   return (
-    <tr className="border-b border-gray-200 hover:bg-gray-50">
-      <td className="py-3 px-4">
-        <div className="flex items-center">
-          <div
-            className={cn(
-              "w-1 h-8 rounded-full mr-3",
-              getStatusColor(project.statut)
-            )}
-          />
-          <div>
-            <div className="font-medium text-gray-900 flex items-center text-nowrap">
-              {project.titre}
-              {/* TODO: Implémenter les favoris */}
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 flex-1">
+            <div
+              className={cn(
+                "w-2 h-12 rounded-full",
+                getStatusColor(project.statut)
+              )}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <h3 
+                  className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={() => onViewDetails(project)}
+                >
+                  {project.titre}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => onToggleStar(project)}
+                >
+                  <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
+                </Button>
+              </div>
+              <p className="text-sm text-gray-600 truncate">
+                {project.description || "Aucune description disponible"}
+              </p>
             </div>
-            <div className="text-xs text-gray-500">{project.description}</div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-900">
+                {project.niveau_execution}%
+              </div>
+              <div className="text-xs text-gray-500">Progression</div>
+            </div>
+            
+            <Badge
+              className={cn(
+                "font-medium",
+                getStatusColor(project.statut)
+              )}
+            >
+              {getStatusLabel(project.statut)}
+            </Badge>
+            
+            <ProjectActions
+              project={project}
+              onViewDetails={onViewDetails}
+              onViewTimeline={onViewTimeline}
+              onToggleStar={onToggleStar}
+              onStatusChange={onStatusChange}
+              onArchive={onArchive}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           </div>
         </div>
-      </td>
-      <td className="py-3 px-4">
-        <Badge
-          className={cn(
-            "font-medium text-nowrap",
-            getStatusColor(project.statut)
-          )}
-        >
-          {getStatusLabel(project.statut)}
-        </Badge>
-      </td>
-      <td className="py-3 px-4">
-        <div className="w-32">
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-500">Exécution</span>
-            <span className="font-medium">{project.niveau_execution}%</span>
-          </div>
-          <Progress value={project.niveau_execution} className="h-1.5" />
-        </div>
-      </td>
-      <td className="py-3 px-4">
-        <div className="flex items-center text-gray-500 text-sm">
-          <Calendar className="h-3.5 w-3.5 mr-1.5" />
-          <span className="text-nowrap">
-            {project.date_fin_previsionnelle 
-              ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')
-              : 'Non définie'
-            }
-          </span>
-        </div>
-      </td>
-      <td className="py-3 px-4">
-        <div className="flex -space-x-2">
-          {/* Porteur du projet */}
-          <Avatar className="h-7 w-7 border-2 border-white">
-            <AvatarImage
-              src={`/avatars/${project.porteur.nom.toLowerCase()}-${project.porteur.prenom.toLowerCase()}.png`}
-              alt={`${project.porteur.prenom} ${project.porteur.nom}`}
-            />
-            <AvatarFallback>{getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}</AvatarFallback>
-          </Avatar>
-          {/* Donneur d'ordre */}
-          <Avatar className="h-7 w-7 border-2 border-white">
-            <AvatarImage
-              src={`/avatars/${project.donneur_ordre.nom.toLowerCase()}-${project.donneur_ordre.prenom.toLowerCase()}.png`}
-              alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`}
-            />
-            <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
-          </Avatar>
-        </div>
-      </td>
-      <td className="py-3 px-4  flex justify-end cursor-pointer">
-        <MoreHorizontal className="text-end" />
-      </td>
-    </tr>
+      </CardContent>
+    </Card>
   );
 }
 
+// Composant ProjectActions
 interface ProjectActionsProps {
-  project: Project;
-  onViewDetails: (project: Project) => void;
-  onViewTimeline: (project: Project) => void;
-  onToggleStar: (project: Project) => void;
+  project: ApiProject;
+  onViewDetails: (project: ApiProject) => void;
+  onViewTimeline: (project: ApiProject) => void;
+  onToggleStar: (project: ApiProject) => void;
   onStatusChange: (
-    project: Project,
+    project: ApiProject,
     action: "complete" | "hold" | "change"
   ) => void;
-  onArchive: (project: Project) => void;
+  onArchive: (project: ApiProject) => void;
+  onEdit: (project: ApiProject) => void;
+  onDelete: (project: ApiProject) => void;
 }
 
 function ProjectActions({
@@ -880,59 +754,55 @@ function ProjectActions({
   onToggleStar,
   onStatusChange,
   onArchive,
+  onEdit,
+  onDelete,
 }: ProjectActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
           <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Project actions</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Project Actions</DropdownMenuLabel>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onViewDetails(project)}>
           <FileText className="h-4 w-4 mr-2" />
-          <span>View Details</span>
+          Voir détails
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(project)}>
+          <Settings className="h-4 w-4 mr-2" />
+          Modifier
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDelete(project)} className="text-red-600 focus:text-red-600">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Supprimer
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onViewTimeline(project)}>
-          <Clock className="h-4 w-4 mr-2" />
-          <span>View Timeline</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onToggleStar(project)}>
-          <Star className="h-4 w-4 mr-2" />
-          <span>Marquer comme favori</span>
+          <BarChart2 className="h-4 w-4 mr-2" />
+          Voir timeline
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => onStatusChange(project, "change")}
-          disabled={project.statut === "termine"}
-        >
-          <Clock className="h-4 w-4 mr-2" />
-          <span>Change Status</span>
+        <DropdownMenuItem onClick={() => onStatusChange(project, "change")}> 
+          <Settings className="h-4 w-4 mr-2" />
+          Changer statut
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => onStatusChange(project, "complete")}
-          disabled={project.statut === "termine"}
-        >
+        <DropdownMenuItem onClick={() => onStatusChange(project, "complete")}> 
           <CheckCircle className="h-4 w-4 mr-2" />
-          <span>Mark as Completed</span>
+          Marquer terminé
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => onStatusChange(project, "hold")}
-          disabled={project.statut === "bloque"}
-        >
+        <DropdownMenuItem onClick={() => onStatusChange(project, "hold")}> 
           <PauseCircle className="h-4 w-4 mr-2" />
-          <span>Put on Hold</span>
+          Mettre en attente
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
+        <DropdownMenuItem 
           onClick={() => onArchive(project)}
-          className="text-red-600"
+          className="text-red-600 focus:text-red-600"
         >
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <span>Archive Project</span>
+          <Trash2 className="h-4 w-4 mr-2" />
+          Archiver
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

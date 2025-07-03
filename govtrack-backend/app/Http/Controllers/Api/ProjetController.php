@@ -277,6 +277,7 @@ class ProjetController extends Controller
             // Ajouter des informations calculées
             $projet->statut_libelle = $projet->statut_libelle;
             $projet->est_en_retard = $projet->est_en_retard;
+            $projet->taches_count = $projet->taches->count();
 
             return response()->json([
                 'success' => true,

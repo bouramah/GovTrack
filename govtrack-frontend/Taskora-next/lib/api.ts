@@ -176,10 +176,24 @@ export interface Task {
   titre: string;
   description: string;
   statut: string;
-  priorite: string;
-  date_echeance?: string;
+  niveau_execution: number;
+  date_debut_previsionnelle?: string;
+  date_fin_previsionnelle?: string;
+  date_debut_reelle?: string;
+  date_fin_reelle?: string;
   projet_id: number;
   responsable_id: number;
+  responsable?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    matricule: string;
+    email: string;
+  };
+  date_creation: string;
+  date_modification?: string;
+  creer_par: string;
+  modifier_par?: string;
 }
 
 // ========================================
@@ -1358,25 +1372,45 @@ class ApiClient {
   }
 
   async createProject(data: ProjectCreateRequest): Promise<Project> {
-    const response: AxiosResponse<ApiResponse<Project>> = 
-      await this.client.post('/v1/projets', data);
-    
-    if (response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response: AxiosResponse<ApiResponse<Project>> = 
+        await this.client.post('/v1/projets', data);
+      
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      throw new Error(response.data.message || 'Erreur de création du projet');
+    } catch (error: any) {
+      // Si c'est une erreur de validation (422), on la relance avec les détails
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const validationError = new Error('Erreur de validation');
+        (validationError as any).response = error.response;
+        throw validationError;
+      }
+      throw error;
     }
-    
-    throw new Error(response.data.message || 'Erreur de création du projet');
   }
 
   async updateProject(id: number, data: ProjectUpdateRequest): Promise<Project> {
-    const response: AxiosResponse<ApiResponse<Project>> = 
-      await this.client.put(`/v1/projets/${id}`, data);
-    
-    if (response.data.success && response.data.data) {
-      return response.data.data;
+    try {
+      const response: AxiosResponse<ApiResponse<Project>> = 
+        await this.client.put(`/v1/projets/${id}`, data);
+      
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      throw new Error(response.data.message || 'Erreur de mise à jour du projet');
+    } catch (error: any) {
+      // Si c'est une erreur de validation (422), on la relance avec les détails
+      if (error.response?.status === 422 && error.response?.data?.errors) {
+        const validationError = new Error('Erreur de validation');
+        (validationError as any).response = error.response;
+        throw validationError;
+      }
+      throw error;
     }
-    
-    throw new Error(response.data.message || 'Erreur de mise à jour du projet');
   }
 
   async deleteProject(id: number): Promise<void> {
