@@ -171,6 +171,30 @@ export interface ProjectStatutChangeRequest {
   justificatif?: File;
 }
 
+export interface ProjectExecutionLevelRequest {
+  niveau_execution: number;
+  commentaire?: string;
+}
+
+export interface ProjectDashboard {
+  total_projets: number;
+  projets_par_statut: {
+    [key: string]: {
+      libelle: string;
+      count: number;
+      pourcentage: number;
+    };
+  };
+  projets_en_retard: number;
+  niveau_execution_moyen: number;
+  projets_recents: Project[];
+  permissions_info: {
+    level: 'all_projects' | 'entity_projects' | 'my_projects';
+    description: string;
+    scope: string;
+  };
+}
+
 export interface Task {
   id: number;
   titre: string;
@@ -1440,30 +1464,49 @@ class ApiClient {
     throw new Error(response.data.message || 'Erreur de changement de statut');
   }
 
-  async updateProjectExecutionLevel(id: number, niveau_execution: number): Promise<Project> {
-    const response: AxiosResponse<ApiResponse<Project>> = 
-      await this.client.put(`/v1/projets/${id}/niveau-execution`, { niveau_execution });
-    
-    if (response.data.success && response.data.data) {
-      return response.data.data;
+  async updateProjectExecutionLevel(id: number, data: ProjectExecutionLevelRequest): Promise<Project> {
+    try {
+      const response: AxiosResponse<ApiResponse<Project>> = 
+        await this.client.post(`/v1/projets/${id}/niveau-execution`, data);
+      
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      throw new Error(response.data.message || 'Erreur de mise à jour du niveau d\'exécution');
+    } catch (error: any) {
+      // Gestion des erreurs spécifiques du backend
+      if (error.response?.status === 422) {
+        // Erreur de validation ou règles métier
+        const errorMessage = error.response.data.message || 'Erreur de validation';
+        const validationError = new Error(errorMessage);
+        (validationError as any).response = error.response;
+        throw validationError;
+      }
+      throw error;
     }
-    
-    throw new Error(response.data.message || 'Erreur de mise à jour du niveau d\'exécution');
   }
 
   async getProjectDashboard(params?: {
     statut?: string;
     type_projet_id?: number;
     en_retard?: boolean;
-  }): Promise<any> {
-    const response: AxiosResponse<ApiResponse<any>> = 
-      await this.client.get('/v1/projets/tableau-bord', { params });
-    
-    if (response.data.success && response.data.data) {
-      return response.data.data;
+  }): Promise<ProjectDashboard> {
+    try {
+      const response: AxiosResponse<ApiResponse<ProjectDashboard>> = 
+        await this.client.get('/v1/projets/tableau-bord', { params });
+      
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      throw new Error(response.data.message || 'Erreur de récupération du tableau de bord');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        throw new Error('Vous n\'avez pas les permissions nécessaires pour consulter le tableau de bord');
+      }
+      throw error;
     }
-    
-    throw new Error(response.data.message || 'Erreur de récupération du tableau de bord');
   }
 }
 

@@ -28,6 +28,7 @@ import {
   Settings,
   Trash2,
   Plus,
+  TrendingUp,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,6 +48,7 @@ import { ProjectStatusModal } from "./project-status-modal";
 import { ProjectArchiveModal } from "./project-archive-modal";
 import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
+import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
 
 interface ProjectsListProps {
   viewMode: "grid" | "list";
@@ -70,6 +72,7 @@ export default function ProjectsList({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [executionLevelModalOpen, setExecutionLevelModalOpen] = useState(false);
   const [selectedProjectForAction, setSelectedProjectForAction] = useState<ApiProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -265,6 +268,11 @@ export default function ProjectsList({
     setDeleteDialogOpen(true);
   };
 
+  const handleUpdateExecutionLevel = (project: ApiProject) => {
+    setSelectedProjectForAction(project);
+    setExecutionLevelModalOpen(true);
+  };
+
   const handleProjectEdited = () => {
     loadProjects(pagination.current_page);
     setEditModalOpen(false);
@@ -283,6 +291,17 @@ export default function ProjectsList({
     toast({
       title: 'Projet supprimé',
       description: 'Le projet a été supprimé avec succès.',
+      variant: 'success',
+    });
+  };
+
+  const handleExecutionLevelUpdated = () => {
+    loadProjects(pagination.current_page);
+    setExecutionLevelModalOpen(false);
+    setSelectedProjectForAction(null);
+    toast({
+      title: 'Niveau d\'exécution mis à jour',
+      description: 'Le niveau d\'exécution a été mis à jour avec succès.',
       variant: 'success',
     });
   };
@@ -407,6 +426,7 @@ export default function ProjectsList({
                   onArchive={handleArchiveProject}
                   onEdit={handleEditProject}
                   onDelete={handleDeleteProject}
+                  onUpdateExecutionLevel={handleUpdateExecutionLevel}
                   getStatusColor={getStatusColor}
                   getStatusLabel={getStatusLabel}
                   getInitials={getInitials}
@@ -426,6 +446,7 @@ export default function ProjectsList({
                   onArchive={handleArchiveProject}
                   onEdit={handleEditProject}
                   onDelete={handleDeleteProject}
+                  onUpdateExecutionLevel={handleUpdateExecutionLevel}
                   getStatusColor={getStatusColor}
                   getStatusLabel={getStatusLabel}
                   getInitials={getInitials}
@@ -488,6 +509,16 @@ export default function ProjectsList({
         onSuccess={handleProjectDeleted}
       />
 
+      <ProjectExecutionLevelModal
+        isOpen={executionLevelModalOpen}
+        onClose={() => {
+          setExecutionLevelModalOpen(false);
+          setSelectedProjectForAction(null);
+        }}
+        project={selectedProjectForAction}
+        onSuccess={handleExecutionLevelUpdated}
+      />
+
       {/* Modals existants temporairement désactivés pour éviter les conflits de types */}
       {/* TODO: Corriger les interfaces des modals existants */}
     </>
@@ -507,6 +538,7 @@ interface ProjectCardProps {
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
+  onUpdateExecutionLevel: (project: ApiProject) => void;
   getStatusColor: (statut: string) => string;
   getStatusLabel: (statut: string) => string;
   getInitials: (name: string) => string;
@@ -521,6 +553,7 @@ function ProjectCard({
   onArchive,
   onEdit,
   onDelete,
+  onUpdateExecutionLevel,
   getStatusColor,
   getStatusLabel,
   getInitials,
@@ -558,6 +591,7 @@ function ProjectCard({
               onArchive={onArchive}
               onEdit={onEdit}
               onDelete={onDelete}
+              onUpdateExecutionLevel={onUpdateExecutionLevel}
             />
           </div>
         </div>
@@ -646,6 +680,7 @@ interface ProjectRowProps {
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
+  onUpdateExecutionLevel: (project: ApiProject) => void;
   getStatusColor: (statut: string) => string;
   getStatusLabel: (statut: string) => string;
   getInitials: (name: string) => string;
@@ -660,6 +695,7 @@ function ProjectRow({
   onArchive,
   onEdit,
   onDelete,
+  onUpdateExecutionLevel,
   getStatusColor,
   getStatusLabel,
   getInitials,
@@ -724,6 +760,7 @@ function ProjectRow({
               onArchive={onArchive}
               onEdit={onEdit}
               onDelete={onDelete}
+              onUpdateExecutionLevel={onUpdateExecutionLevel}
             />
           </div>
         </div>
@@ -745,6 +782,7 @@ interface ProjectActionsProps {
   onArchive: (project: ApiProject) => void;
   onEdit: (project: ApiProject) => void;
   onDelete: (project: ApiProject) => void;
+  onUpdateExecutionLevel: (project: ApiProject) => void;
 }
 
 function ProjectActions({
@@ -756,6 +794,7 @@ function ProjectActions({
   onArchive,
   onEdit,
   onDelete,
+  onUpdateExecutionLevel,
 }: ProjectActionsProps) {
   return (
     <DropdownMenu>
@@ -774,6 +813,10 @@ function ProjectActions({
         <DropdownMenuItem onClick={() => onEdit(project)}>
           <Settings className="h-4 w-4 mr-2" />
           Modifier
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onUpdateExecutionLevel(project)}>
+          <TrendingUp className="h-4 w-4 mr-2 text-blue-600" />
+          Mettre à jour le niveau d'exécution
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onDelete(project)} className="text-red-600 focus:text-red-600">
           <Trash2 className="h-4 w-4 mr-2" />

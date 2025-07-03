@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { apiClient, Project } from "@/lib/api";
 import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
+import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -51,6 +52,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [executionLevelModalOpen, setExecutionLevelModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -298,7 +300,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               <div className="text-sm text-gray-500 mb-1">Niveau d'exécution</div>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xl font-bold">{project.niveau_execution}%</div>
-                <div className="text-xs text-gray-500">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setExecutionLevelModalOpen(true)}
+                  className="ml-2"
+                  disabled={project.statut !== 'en_cours'}
+                >
+                  Mettre à jour
+                </Button>
+                <div className="text-xs text-gray-500 ml-2">
                   {project.taches_count || 0} tâches
                 </div>
               </div>
@@ -728,6 +739,13 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
         onClose={() => setDeleteDialogOpen(false)}
         project={project}
         onSuccess={handleProjectDelete}
+      />
+
+      <ProjectExecutionLevelModal
+        isOpen={executionLevelModalOpen}
+        onClose={() => setExecutionLevelModalOpen(false)}
+        project={project}
+        onSuccess={handleProjectUpdate}
       />
     </div>
   );
