@@ -131,6 +131,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Projets (Instructions/Recommandations) - routes spéciales d'abord
     Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
 
+    // Filtres pour les projets
+    Route::get('projets/filtres/entites', [ProjetController::class, 'getEntitesForFilter']); // Permissions: view_all_projects
+    Route::get('projets/filtres/utilisateurs', [ProjetController::class, 'getUsersForFilter']); // Permissions: view_all_projects | view_my_entity_projects
+
     // Projets - CRUD
     Route::get('projets', [ProjetController::class, 'index']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
     Route::get('projets/{id}', [ProjetController::class, 'show']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects

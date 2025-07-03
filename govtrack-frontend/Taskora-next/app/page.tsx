@@ -1,7 +1,7 @@
 "use client";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ProjectDashboard from "@/components/ProjectDashboard";
-import LayoutWithSidebar from "@/components/layout-with-sidebar";
+import { Sidebar } from "@/components/sidebar";
 import Topbar from "@/components/Shared/Topbar";
 import { useState } from "react";
 
@@ -9,14 +9,19 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <ProtectedRoute>
-      <LayoutWithSidebar>
-        <div className="flex flex-col min-h-screen">
+      <div className="bg-gray-50">
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+
+        {/* Main Content */}
+        <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col pt-16">
           <Topbar name="Dashboard" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          <main className="flex-1 pt-16 px-4 md:px-8 bg-gray-50">
+
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-y-auto min-h-0 bg-gray-50 p-3 lg:p-6">
             <ProjectDashboard />
           </main>
         </div>
-      </LayoutWithSidebar>
+      </div>
     </ProtectedRoute>
   );
 }

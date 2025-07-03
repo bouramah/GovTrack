@@ -23,7 +23,9 @@ class ProjetController extends Controller
             $user = $request->user();
             $query = Projet::with(['typeProjet', 'porteur', 'donneurOrdre']);
 
+            // ========================================
             // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES PROJETS
+            // ========================================
 
             if ($user->hasPermission('view_all_projects')) {
                 // 🔓 NIVEAU 1 : VIEW ALL PROJECTS - Accès complet à tous les projets
@@ -87,23 +89,13 @@ class ProjetController extends Controller
                 ], 403);
             }
 
-            // Filtres standard (disponibles selon les permissions)
+            // ========================================
+            // FILTRES AVANCÉS SELON LES PERMISSIONS
+            // ========================================
+
+            // Filtres de base (disponibles pour tous)
             if ($request->filled('statut')) {
                 $query->byStatut($request->statut);
-            }
-
-            if ($request->filled('porteur_id')) {
-                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
-                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byPorteur($request->porteur_id);
-                }
-            }
-
-            if ($request->filled('donneur_ordre_id')) {
-                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
-                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byDonneurOrdre($request->donneur_ordre_id);
-                }
             }
 
             if ($request->filled('type_projet_id')) {
@@ -122,12 +114,79 @@ class ProjetController extends Controller
                 $query->where('niveau_execution', '<=', $request->niveau_execution_max);
             }
 
+            // Filtres de date
+            if ($request->filled('date_debut_previsionnelle_debut')) {
+                $query->where('date_debut_previsionnelle', '>=', $request->date_debut_previsionnelle_debut);
+            }
+
+            if ($request->filled('date_debut_previsionnelle_fin')) {
+                $query->where('date_debut_previsionnelle', '<=', $request->date_debut_previsionnelle_fin);
+            }
+
+            if ($request->filled('date_fin_previsionnelle_debut')) {
+                $query->where('date_fin_previsionnelle', '>=', $request->date_fin_previsionnelle_debut);
+            }
+
+            if ($request->filled('date_fin_previsionnelle_fin')) {
+                $query->where('date_fin_previsionnelle', '<=', $request->date_fin_previsionnelle_fin);
+            }
+
+            if ($request->filled('date_creation_debut')) {
+                $query->where('created_at', '>=', $request->date_creation_debut);
+            }
+
+            if ($request->filled('date_creation_fin')) {
+                $query->where('created_at', '<=', $request->date_creation_fin);
+            }
+
+            // Filtres par utilisateur (selon les permissions)
+            if ($request->filled('porteur_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byPorteur($request->porteur_id);
+                }
+            }
+
+            if ($request->filled('donneur_ordre_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byDonneurOrdre($request->donneur_ordre_id);
+                }
+            }
+
+            // Filtre par entité (seulement pour view_all_projects)
+            if ($request->filled('entite_id') && $user->hasPermission('view_all_projects')) {
+                $entiteId = $request->entite_id;
+
+                // Récupérer tous les utilisateurs de cette entité
+                $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                    ->distinct()
+                    ->pluck('user_id');
+
+                // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
+                $query->where(function ($q) use ($utilisateursEntite) {
+                    $q->whereIn('porteur_id', $utilisateursEntite)
+                      ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
+                      ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
+                          $tq->whereIn('responsable_id', $utilisateursEntite);
+                      });
+                });
+            }
+
             // Recherche textuelle
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('titre', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereHas('porteur', function ($pq) use ($search) {
+                          $pq->where('nom', 'like', "%{$search}%")
+                             ->orWhere('prenom', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('donneurOrdre', function ($dq) use ($search) {
+                          $dq->where('nom', 'like', "%{$search}%")
+                             ->orWhere('prenom', 'like', "%{$search}%");
+                      });
                 });
             }
 
@@ -153,6 +212,19 @@ class ProjetController extends Controller
                 'level' => $user->hasPermission('view_all_projects') ? 'all_projects' :
                           ($user->hasPermission('view_my_entity_projects') ? 'entity_projects' : 'my_projects'),
                 'can_filter_by_user' => $user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects'),
+                'can_filter_by_entity' => $user->hasPermission('view_all_projects'),
+                'can_filter_by_date' => true, // Tous les utilisateurs peuvent filtrer par date
+                'available_filters' => [
+                    'basic' => ['statut', 'type_projet_id', 'en_retard', 'niveau_execution_min', 'niveau_execution_max', 'search'],
+                    'date' => [
+                        'date_debut_previsionnelle_debut', 'date_debut_previsionnelle_fin',
+                        'date_fin_previsionnelle_debut', 'date_fin_previsionnelle_fin',
+                        'date_creation_debut', 'date_creation_fin'
+                    ],
+                    'user' => $user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')
+                        ? ['porteur_id', 'donneur_ordre_id'] : [],
+                    'entity' => $user->hasPermission('view_all_projects') ? ['entite_id'] : []
+                ],
                 'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à tous les projets' :
                                ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité' : 'Vos projets personnels')
             ];
@@ -759,6 +831,113 @@ class ProjetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la mise à jour du niveau d\'exécution',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer les entités disponibles pour les filtres
+     */
+    public function getEntitesForFilter(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            // Seuls les utilisateurs avec view_all_projects peuvent filtrer par entité
+            if (!$user->hasPermission('view_all_projects')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions nécessaires pour filtrer par entité'
+                ], 403);
+            }
+
+            $entites = \App\Models\Entite::select('id', 'nom', 'type_entite_id')
+                ->with('typeEntite:id,nom')
+                ->orderBy('nom')
+                ->get()
+                ->map(function ($entite) {
+                    return [
+                        'id' => $entite->id,
+                        'nom' => $entite->nom,
+                        'type' => $entite->typeEntite->nom ?? 'Non défini'
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $entites
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des entités',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer les utilisateurs disponibles pour les filtres
+     */
+    public function getUsersForFilter(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            // Seuls les utilisateurs avec view_all_projects ou view_my_entity_projects peuvent filtrer par utilisateur
+            if (!$user->hasPermission('view_all_projects') && !$user->hasPermission('view_my_entity_projects')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions nécessaires pour filtrer par utilisateur'
+                ], 403);
+            }
+
+            $query = User::select('id', 'nom', 'prenom', 'email', 'matricule');
+
+            // Si l'utilisateur a view_my_entity_projects, limiter aux utilisateurs de son entité
+            if ($user->hasPermission('view_my_entity_projects') && !$user->hasPermission('view_all_projects')) {
+                $affectationActuelle = $user->affectations()->where('statut', true)->first();
+
+                if ($affectationActuelle) {
+                    $entiteId = $affectationActuelle->service_id;
+
+                    // Récupérer tous les utilisateurs de cette entité
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                        ->distinct()
+                        ->pluck('user_id');
+
+                    $query->whereIn('id', $utilisateursEntite);
+                } else {
+                    // Si pas d'affectation, retourner seulement l'utilisateur lui-même
+                    $query->where('id', $user->id);
+                }
+            }
+
+            $users = $query->orderBy('nom')
+                ->orderBy('prenom')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'nom' => $user->nom,
+                        'prenom' => $user->prenom,
+                        'email' => $user->email,
+                        'matricule' => $user->matricule,
+                        'display_name' => $user->prenom . ' ' . $user->nom . ($user->matricule ? ' (' . $user->matricule . ')' : '')
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $users
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des utilisateurs',
                 'error' => $e->getMessage()
             ], 500);
         }

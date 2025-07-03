@@ -321,3 +321,183 @@ php artisan db:seed --class=ProjectPermissionsSeeder
 ---
 
 *Cette documentation reflète l'état complet de l'API GovTrack v2.0 avec toutes ses fonctionnalités avancées et son système de permissions innovant.*
+
+## Filtres Avancés pour les Projets
+
+### Permissions et Filtres Disponibles
+
+Les filtres disponibles dépendent du niveau de permission de l'utilisateur :
+
+#### 🔓 Niveau 1 : `view_all_projects` (Administrateur)
+- **Accès** : Tous les projets
+- **Filtres disponibles** :
+  - Tous les filtres de base
+  - Tous les filtres de date
+  - Filtres par utilisateur (porteur, donneur d'ordre)
+  - Filtres par entité
+  - Recherche textuelle étendue
+
+#### 🏢 Niveau 2 : `view_my_entity_projects` (Chef d'entité)
+- **Accès** : Projets de son entité
+- **Filtres disponibles** :
+  - Tous les filtres de base
+  - Tous les filtres de date
+  - Filtres par utilisateur (porteur, donneur d'ordre) - limité à son entité
+  - Recherche textuelle étendue
+
+#### 👤 Niveau 3 : `view_my_projects` (Utilisateur standard)
+- **Accès** : Ses projets personnels
+- **Filtres disponibles** :
+  - Filtres de base uniquement
+  - Tous les filtres de date
+  - Recherche textuelle basique
+
+### Filtres de Base (Tous les niveaux)
+
+```http
+GET /api/v1/projets?statut=en_cours&type_projet_id=1&en_retard=true&niveau_execution_min=50&niveau_execution_max=100
+```
+
+| Paramètre | Type | Description |
+|-----------|------|-------------|
+| `statut` | string | Statut du projet (a_faire, en_cours, termine, etc.) |
+| `type_projet_id` | integer | ID du type de projet |
+| `en_retard` | boolean | Projets en retard uniquement |
+| `niveau_execution_min` | integer | Niveau d'exécution minimum (0-100) |
+| `niveau_execution_max` | integer | Niveau d'exécution maximum (0-100) |
+
+### Filtres de Date (Tous les niveaux)
+
+```http
+GET /api/v1/projets?date_debut_previsionnelle_debut=2024-01-01&date_debut_previsionnelle_fin=2024-12-31&date_creation_debut=2024-01-01&date_creation_fin=2024-12-31
+```
+
+| Paramètre | Type | Description |
+|-----------|------|-------------|
+| `date_debut_previsionnelle_debut` | date | Date de début prévisionnelle (>=) |
+| `date_debut_previsionnelle_fin` | date | Date de début prévisionnelle (<=) |
+| `date_fin_previsionnelle_debut` | date | Date de fin prévisionnelle (>=) |
+| `date_fin_previsionnelle_fin` | date | Date de fin prévisionnelle (<=) |
+| `date_creation_debut` | date | Date de création (>=) |
+| `date_creation_fin` | date | Date de création (<=) |
+
+### Filtres par Utilisateur (Niveaux 1 et 2)
+
+```http
+GET /api/v1/projets?porteur_id=123&donneur_ordre_id=456
+```
+
+| Paramètre | Type | Description |
+|-----------|------|-------------|
+| `porteur_id` | integer | ID de l'utilisateur porteur |
+| `donneur_ordre_id` | integer | ID de l'utilisateur donneur d'ordre |
+
+### Filtre par Entité (Niveau 1 uniquement)
+
+```http
+GET /api/v1/projets?entite_id=789
+```
+
+| Paramètre | Type | Description |
+|-----------|------|-------------|
+| `entite_id` | integer | ID de l'entité |
+
+### Recherche Textuelle
+
+```http
+GET /api/v1/projets?search=terme de recherche
+```
+
+**Niveaux 1 et 2** : Recherche dans titre, description, nom/prénom du porteur et donneur d'ordre
+**Niveau 3** : Recherche dans titre et description uniquement
+
+### Endpoints pour les Filtres
+
+#### Récupérer les Entités Disponibles
+
+```http
+GET /api/v1/projets/filtres/entites
+```
+
+**Permissions** : `view_all_projects`
+
+**Réponse** :
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "nom": "Direction Générale",
+      "type": "Direction"
+    }
+  ]
+}
+```
+
+#### Récupérer les Utilisateurs Disponibles
+
+```http
+GET /api/v1/projets/filtres/utilisateurs
+```
+
+**Permissions** : `view_all_projects` ou `view_my_entity_projects`
+
+**Réponse** :
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "email": "jean.dupont@example.com",
+      "matricule": "EMP001",
+      "display_name": "Jean Dupont (EMP001)"
+    }
+  ]
+}
+```
+
+### Informations de Permissions dans la Réponse
+
+La réponse de l'endpoint `/api/v1/projets` inclut des informations sur les filtres disponibles :
+
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {...},
+  "permissions": {
+    "level": "all_projects",
+    "can_filter_by_user": true,
+    "can_filter_by_entity": true,
+    "can_filter_by_date": true,
+    "available_filters": {
+      "basic": ["statut", "type_projet_id", "en_retard", "niveau_execution_min", "niveau_execution_max", "search"],
+      "date": ["date_debut_previsionnelle_debut", "date_debut_previsionnelle_fin", "date_fin_previsionnelle_debut", "date_fin_previsionnelle_fin", "date_creation_debut", "date_creation_fin"],
+      "user": ["porteur_id", "donneur_ordre_id"],
+      "entity": ["entite_id"]
+    },
+    "description": "Accès complet à tous les projets"
+  }
+}
+```
+
+### Exemples d'Utilisation
+
+#### Filtre Complexe (Administrateur)
+```http
+GET /api/v1/projets?statut=en_cours&entite_id=5&date_debut_previsionnelle_debut=2024-01-01&niveau_execution_min=25&search=urgent
+```
+
+#### Filtre Simple (Utilisateur Standard)
+```http
+GET /api/v1/projets?statut=en_cours&date_creation_debut=2024-01-01&search=mon projet
+```
+
+#### Filtre par Utilisateur (Chef d'Entité)
+```http
+GET /api/v1/projets?porteur_id=123&en_retard=true&date_fin_previsionnelle_fin=2024-12-31
+```

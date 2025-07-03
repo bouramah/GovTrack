@@ -93,11 +93,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     per_page: number;
     total: number;
   };
-  permissions?: {
-    level: string;
-    can_filter_by_user: boolean;
-    description: string;
-  };
+  permissions?: ProjectPermissions;
 }
 
 export interface Project {
@@ -418,6 +414,66 @@ export interface TypeProjetUpdateRequest {
   description?: string;
   duree_previsionnelle_jours: number;
   description_sla?: string;
+}
+
+export interface ProjectFilters {
+  // Filtres de base
+  search?: string;
+  statut?: string;
+  type_projet_id?: number;
+  en_retard?: boolean;
+  niveau_execution_min?: number;
+  niveau_execution_max?: number;
+  
+  // Filtres de date
+  date_debut_previsionnelle_debut?: string;
+  date_debut_previsionnelle_fin?: string;
+  date_fin_previsionnelle_debut?: string;
+  date_fin_previsionnelle_fin?: string;
+  date_creation_debut?: string;
+  date_creation_fin?: string;
+  
+  // Filtres par utilisateur (selon permissions)
+  porteur_id?: number;
+  donneur_ordre_id?: number;
+  
+  // Filtre par entité (selon permissions)
+  entite_id?: number;
+  
+  // Tri et pagination
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+  page?: number;
+}
+
+export interface ProjectPermissions {
+  level: 'all_projects' | 'entity_projects' | 'my_projects';
+  can_filter_by_user: boolean;
+  can_filter_by_entity: boolean;
+  can_filter_by_date: boolean;
+  available_filters: {
+    basic: string[];
+    date: string[];
+    user: string[];
+    entity: string[];
+  };
+  description: string;
+}
+
+export interface FilterEntity {
+  id: number;
+  nom: string;
+  type: string;
+}
+
+export interface FilterUser {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  matricule: string;
+  display_name: string;
 }
 
 // Configuration du client API avec Axios
@@ -1360,28 +1416,13 @@ class ApiClient {
   // GESTION DES PROJETS
   // ========================================
 
-  async getProjects(params?: {
-    search?: string;
-    statut?: string;
-    porteur_id?: number;
-    donneur_ordre_id?: number;
-    type_projet_id?: number;
-    en_retard?: boolean;
-    niveau_execution_min?: number;
-    niveau_execution_max?: number;
-    sort_by?: string;
-    sort_order?: 'asc' | 'desc';
-    per_page?: number;
-    page?: number;
-  }): Promise<PaginatedResponse<Project>> {
-    const response: AxiosResponse<PaginatedResponse<Project>> = 
-      await this.client.get('/v1/projets', { params });
-    
-    if (response.data.success && response.data.data) {
+  async getProjects(params?: ProjectFilters): Promise<PaginatedResponse<Project>> {
+    try {
+      const response = await this.client.get('/v1/projets', { params });
       return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des projets');
     }
-    
-    throw new Error(response.data.message || 'Erreur de récupération des projets');
   }
 
   async getProject(id: number): Promise<Project> {
@@ -1506,6 +1547,24 @@ class ApiClient {
         throw new Error('Vous n\'avez pas les permissions nécessaires pour consulter le tableau de bord');
       }
       throw error;
+    }
+  }
+
+  async getProjectFilterEntities(): Promise<FilterEntity[]> {
+    try {
+      const response = await this.client.get('/v1/projets/filtres/entites');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des entités pour filtres');
+    }
+  }
+
+  async getProjectFilterUsers(): Promise<FilterUser[]> {
+    try {
+      const response = await this.client.get('/v1/projets/filtres/utilisateurs');
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des utilisateurs pour filtres');
     }
   }
 }

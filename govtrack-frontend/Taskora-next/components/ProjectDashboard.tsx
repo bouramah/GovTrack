@@ -123,7 +123,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
           </p>
         </div>
         <div className="flex justify-center md:justify-end">
-          <Link href="/projects/create">
+          <Link href="/projects">
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
               <Plus className="h-5 w-5 mr-2" />
               Créer un projet

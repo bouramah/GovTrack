@@ -41,7 +41,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { apiClient, Project as ApiProject, PaginatedResponse } from "@/lib/api";
+import { apiClient, Project as ApiProject, PaginatedResponse, ProjectFilters, ProjectPermissions } from "@/lib/api";
 import { ProjectViewDetailsModal } from "./project-view-details-modal";
 import { ProjectTimelineModal } from "./project-timeline-modal";
 import { ProjectStatusModal } from "./project-status-modal";
@@ -49,6 +49,7 @@ import { ProjectArchiveModal } from "./project-archive-modal";
 import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
 import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
+import ProjectsAdvancedFilters from "./projects-advanced-filters";
 
 interface ProjectsListProps {
   viewMode: "grid" | "list";
@@ -76,19 +77,20 @@ export default function ProjectsList({
   const [selectedProjectForAction, setSelectedProjectForAction] = useState<ApiProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<ProjectPermissions | null>(null);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
     per_page: 15,
     total: 0,
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ProjectFilters>({
     search: "",
     statut: "",
-    type_projet_id: undefined as number | undefined,
+    type_projet_id: undefined,
     en_retard: false,
     sort_by: "date_creation",
-    sort_order: "desc" as "asc" | "desc",
+    sort_order: "desc",
   });
   const { toast } = useToast();
 
@@ -98,7 +100,7 @@ export default function ProjectsList({
       setLoading(true);
       setError(null);
       
-      const params: any = {
+      const params: ProjectFilters = {
         ...filters,
         page,
         per_page: pagination.per_page,
@@ -106,8 +108,8 @@ export default function ProjectsList({
 
       // Exclure les valeurs vides des paramètres
       Object.keys(params).forEach(key => {
-        if (params[key] === "" || params[key] === undefined || params[key] === null) {
-          delete params[key];
+        if (params[key as keyof ProjectFilters] === "" || params[key as keyof ProjectFilters] === undefined || params[key as keyof ProjectFilters] === null) {
+          delete params[key as keyof ProjectFilters];
         }
       });
 
@@ -120,10 +122,12 @@ export default function ProjectsList({
       
       console.log('API Response:', response);
       console.log('Pagination:', response.pagination);
+      console.log('Permissions:', response.permissions);
       
       setProjects(response.data || []);
       setFilteredProjects(response.data || []);
       setPagination(response.pagination);
+      setPermissions(response.permissions || null);
       
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des projets");
@@ -235,16 +239,6 @@ export default function ProjectsList({
     }
   };
 
-  const handleFilterChange = (key: string, value: any) => {
-    // Si la valeur est "all", on la remplace par une chaîne vide pour le filtre
-    const filterValue = value === "all" ? "" : value;
-    setFilters(prev => ({ ...prev, [key]: filterValue }));
-  };
-
-  const handleSearch = (value: string) => {
-    handleFilterChange('search', value);
-  };
-
   const handlePageChange = (page: number) => {
     loadProjects(page);
   };
@@ -344,45 +338,41 @@ export default function ProjectsList({
 
   return (
     <>
-      {/* Filtres et recherche */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Rechercher des projets..."
-              value={filters.search}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
+      {/* Informations de permissions */}
+      {permissions && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-800 font-medium">{permissions.description}</p>
+              <p className="text-xs text-blue-600 mt-1">
+                Filtres disponibles: {permissions.available_filters.basic.length + permissions.available_filters.date.length + permissions.available_filters.user.length + permissions.available_filters.entity.length}
+              </p>
+            </div>
+            <Badge variant="outline" className="text-blue-700 border-blue-300">
+              {permissions.level === 'all_projects' ? 'Administrateur' : 
+               permissions.level === 'entity_projects' ? 'Chef d\'entité' : 'Utilisateur'}
+            </Badge>
           </div>
         </div>
-        <div className="flex gap-2">
-                      <Select
-              value={filters.statut || "all"}
-              onValueChange={(value) => handleFilterChange('statut', value)}
-            >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-                          <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="a_faire">À faire</SelectItem>
-                <SelectItem value="en_cours">En cours</SelectItem>
-                <SelectItem value="demande_de_cloture">Demande de clôture</SelectItem>
-                <SelectItem value="termine">Terminé</SelectItem>
-                <SelectItem value="bloque">Bloqué</SelectItem>
-              </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreateModalOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau projet
-          </Button>
-        </div>
+      )}
+
+      {/* Filtres avancés */}
+      <ProjectsAdvancedFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        permissions={permissions || undefined}
+        className="mb-6"
+      />
+
+      {/* Bouton nouveau projet */}
+      <div className="flex justify-end mb-6">
+        <Button
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau projet
+        </Button>
       </div>
 
       {/* Liste des projets */}
