@@ -46,10 +46,6 @@ export default function MesTachesPage() {
                   Gérez vos tâches assignées avec le tableau Kanban
                 </p>
               </div>
-              <Button onClick={handleRefresh} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Actualiser
-              </Button>
             </div>
           </div>
 

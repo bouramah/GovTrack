@@ -34,7 +34,7 @@ import TaskStatusChangeModal from "./Shared/TaskStatusChangeModal";
 interface TacheKanbanCardProps {
   tache: Tache;
   onTaskUpdate?: (task: Tache) => void;
-  onTaskDelete?: () => void;
+  onTaskDelete?: (taskId: number) => void;
 }
 
 export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: TacheKanbanCardProps) {
@@ -292,10 +292,10 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
     />
 
     <DeleteTaskDialog
-      open={deleteDialogOpen}
-      onOpenChange={setDeleteDialogOpen}
+      isOpen={deleteDialogOpen}
+      onClose={() => setDeleteDialogOpen(false)}
       task={tache}
-      onSuccess={onTaskDelete}
+      onSuccess={(taskId) => onTaskDelete?.(taskId)}
     />
 
     <TaskHistoryModal

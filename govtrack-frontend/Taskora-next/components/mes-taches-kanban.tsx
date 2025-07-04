@@ -181,7 +181,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                 <div className="font-semibold text-blue-600 text-lg">
                   {getTachesByStatut('a_faire').length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">À faire</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((getTachesByStatut('a_faire').length / taches.length) * 100)}%`
                     : '0%'
@@ -192,7 +193,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                 <div className="font-semibold text-blue-600 text-lg">
                   {getTachesByStatut('en_cours').length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">En cours</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((getTachesByStatut('en_cours').length / taches.length) * 100)}%`
                     : '0%'
@@ -203,7 +205,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                 <div className="font-semibold text-red-600 text-lg">
                   {getTachesByStatut('bloque').length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">Bloquées</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((getTachesByStatut('bloque').length / taches.length) * 100)}%`
                     : '0%'
@@ -214,7 +217,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                 <div className="font-semibold text-yellow-600 text-lg">
                   {getTachesByStatut('demande_de_cloture').length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">En validation</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((getTachesByStatut('demande_de_cloture').length / taches.length) * 100)}%`
                     : '0%'
@@ -225,7 +229,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                 <div className="font-semibold text-green-600 text-lg">
                   {getTachesByStatut('termine').length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">Terminées</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((getTachesByStatut('termine').length / taches.length) * 100)}%`
                     : '0%'
@@ -241,7 +246,8 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                      tache.statut !== 'termine')
                   ).length}
                 </div>
-                <div className="text-gray-500 text-xs">
+                <div className="text-gray-500 text-xs">En retard</div>
+                <div className="text-gray-400 text-xs">
                   {taches.length > 0 
                     ? `${Math.round((taches.filter(tache => 
                         tache.est_en_retard || 
@@ -261,6 +267,7 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
                   }%
                 </div>
                 <div className="text-gray-500 text-xs">Progression</div>
+                <div className="text-gray-400 text-xs">Moyenne</div>
               </div>
             </div>
           </div>

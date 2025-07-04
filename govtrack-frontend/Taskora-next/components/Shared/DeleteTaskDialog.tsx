@@ -43,6 +43,7 @@ export default function DeleteTaskDialog({
       
       if (response.success) {
         onSuccess(task.id);
+        onClose();
         toast({
           title: "Succès",
           description: "Tâche supprimée avec succès",

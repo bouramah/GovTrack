@@ -48,14 +48,6 @@ export default function ToutesTachesPage() {
                 </p>
               </div>
               <div className="flex space-x-2">
-                <Button onClick={handleRefresh} variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Actualiser
-                </Button>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle Tâche
-                </Button>
               </div>
             </div>
           </div>

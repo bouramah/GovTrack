@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -292,21 +292,16 @@ export default function TaskAttachmentsModal({
               {/* Type de document */}
               <div>
                 <Label htmlFor="type_document">Type de document</Label>
-                <Select
+                <SearchableSelect
+                  options={ATTACHMENT_TYPES.map((type) => ({
+                    value: type.value,
+                    label: type.label
+                  }))}
                   value={uploadForm.type_document}
                   onValueChange={(value: any) => setUploadForm(prev => ({ ...prev, type_document: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ATTACHMENT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Sélectionner un type"
+                  searchPlaceholder="Rechercher un type..."
+                />
               </div>
 
               {/* Description */}

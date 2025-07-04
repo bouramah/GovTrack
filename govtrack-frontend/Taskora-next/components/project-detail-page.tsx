@@ -67,7 +67,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        setLoading(true);
+      setLoading(true);
         setError(null);
         
         const projectData = await apiClient.getProject(parseInt(id));
@@ -81,7 +81,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
         });
         // Rediriger vers la liste des projets après un délai
         setTimeout(() => {
-          router.push("/projects");
+        router.push("/projects");
         }, 3000);
       } finally {
         setLoading(false);
@@ -89,7 +89,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
     };
 
     if (id) {
-      fetchProject();
+    fetchProject();
     }
   }, [id, router, toast]);
 
@@ -359,14 +359,14 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 <Avatar className="h-8 w-8 mr-2">
                   <AvatarFallback className="bg-green-100 text-green-700 text-xs">
                     {getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}
-                  </AvatarFallback>
-                </Avatar>
+                      </AvatarFallback>
+                    </Avatar>
                 <div>
                   <div className="font-medium text-sm">
                     {project.donneur_ordre.prenom} {project.donneur_ordre.nom}
                   </div>
                   <div className="text-xs text-gray-500">{project.donneur_ordre.email}</div>
-                </div>
+              </div>
               </div>
             </div>
 
@@ -374,9 +374,9 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               <div className="text-sm text-gray-500 mb-1">Type de projet</div>
               <div className="font-medium">{project.type_projet.nom}</div>
               {project.type_projet.description && (
-                <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 mt-1">
                   {project.type_projet.description}
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -393,20 +393,20 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 <TabsTrigger value="timeline">Historique</TabsTrigger>
                 <TabsTrigger value="discussions">Discussions</TabsTrigger>
                 <TabsTrigger value="analytics">Analyses</TabsTrigger>
-              </TabsList>
+            </TabsList>
 
               <TabsContent value="overview">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Project Details */}
-                  <Card>
-                    <CardHeader>
+              <Card>
+                <CardHeader>
                       <CardTitle>Détails du projet</CardTitle>
-                    </CardHeader>
+                </CardHeader>
                     <CardContent className="space-y-4">
-                      <div>
+                    <div>
                         <label className="text-sm font-medium text-gray-500">Description</label>
                         <p className="mt-1 text-sm">{project.description}</p>
-                      </div>
+                  </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -432,16 +432,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                           <p className="mt-1 text-sm">{project.justification_modification_dates}</p>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
+                  </CardContent>
+                </Card>
 
                   {/* Project Timeline */}
-                  <Card>
-                    <CardHeader>
+                <Card>
+                  <CardHeader>
                       <CardTitle>Timeline du projet</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                         <div className="flex items-center">
                           <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
                           <div>
@@ -455,45 +455,45 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                         {project.date_debut_reelle && (
                           <div className="flex items-center">
                             <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                            <div>
+                        <div>
                               <div className="font-medium text-sm">Début réel</div>
                               <div className="text-sm text-gray-500">
                                 {new Date(project.date_debut_reelle).toLocaleDateString('fr-FR')}
-                              </div>
-                            </div>
-                          </div>
+                        </div>
+                      </div>
+                        </div>
                         )}
 
                         {project.date_fin_previsionnelle && (
                           <div className="flex items-center">
                             <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                            <div>
+                        <div>
                               <div className="font-medium text-sm">Fin prévisionnelle</div>
                               <div className="text-sm text-gray-500">
                                 {new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')}
-                              </div>
-                            </div>
-                          </div>
+                        </div>
+                      </div>
+                        </div>
                         )}
 
                         {project.date_fin_reelle && (
                           <div className="flex items-center">
                             <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                            <div>
+                        <div>
                               <div className="font-medium text-sm">Fin réelle</div>
                               <div className="text-sm text-gray-500">
                                 {new Date(project.date_fin_reelle).toLocaleDateString('fr-FR')}
-                              </div>
-                            </div>
+                        </div>
+                      </div>
                           </div>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-              <TabsContent value="tasks">
+            <TabsContent value="tasks">
                 <ProjectTasksTab 
                   project={project} 
                   onProjectUpdate={handleProjectUpdate}
@@ -501,39 +501,39 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               </TabsContent>
 
               <TabsContent value="attachments">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
                         <CardTitle>Pièces jointes du projet</CardTitle>
-                        <CardDescription>
+                      <CardDescription>
                           Fichiers et documents attachés au projet
-                        </CardDescription>
-                      </div>
-                      <Button onClick={() => setUploadModalOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter un fichier
-                      </Button>
+                      </CardDescription>
                     </div>
-                  </CardHeader>
-                  <CardContent>
+                      <Button onClick={() => setUploadModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un fichier
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
                     <ProjectAttachmentsList 
                       projectId={parseInt(id)} 
                       onRefresh={handleProjectUpdate}
                     />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
               <TabsContent value="timeline">
-                <Card>
-                  <CardHeader>
+              <Card>
+                <CardHeader>
                     <CardTitle>Historique des statuts</CardTitle>
-                    <CardDescription>
+                      <CardDescription>
                       Évolution du statut du projet
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                      </CardDescription>
+                </CardHeader>
+                <CardContent>
                     {project.historique_statuts && project.historique_statuts.length > 0 ? (
                       <div className="space-y-4">
                         {project.historique_statuts.map((historique, index) => (
@@ -573,30 +573,30 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">
+                  <p className="text-gray-500 text-center py-8">
                         Aucun historique disponible
-                      </p>
+                  </p>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              <TabsContent value="discussions">
+            <TabsContent value="discussions">
                 <ProjectDiscussionsList 
                   projectId={project.id} 
                   onRefresh={handleProjectUpdate}
                 />
-              </TabsContent>
+            </TabsContent>
 
-              <TabsContent value="analytics">
-                <Card>
-                  <CardHeader>
+            <TabsContent value="analytics">
+              <Card>
+                <CardHeader>
                     <CardTitle>Analyses du projet</CardTitle>
-                    <CardDescription>
+                  <CardDescription>
                       Métriques de performance et insights
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-blue-50 rounded-lg p-4">
                         <div className="text-sm text-blue-600 mb-1">Niveau d'exécution</div>
@@ -627,10 +627,10 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
           </div>
         </main>
       </div>

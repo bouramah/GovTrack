@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, User, FileText, MessageSquare, Clock, AlertTriangle, Download } from "lucide-react";
+import { Calendar, User, FileText, MessageSquare, Clock, AlertTriangle, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type { Tache } from "@/types/tache";
+import { apiClient } from "@/lib/api";
+import type { Tache, TacheHistoriqueStatut } from "@/types/tache";
 import { TACHE_STATUTS_KANBAN, TACHE_STATUT_COLORS } from "@/types/tache";
 import TaskDiscussionsList from "./Shared/TaskDiscussionsList";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TacheDetailModalProps {
   tache: Tache;
@@ -20,6 +22,9 @@ interface TacheDetailModalProps {
 
 export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [historiqueStatuts, setHistoriqueStatuts] = useState<TacheHistoriqueStatut[]>([]);
+  const [loadingHistorique, setLoadingHistorique] = useState(false);
+  const { toast } = useToast();
 
   // Fonction pour obtenir les initiales
   const getInitials = (name: string) => {
@@ -35,6 +40,33 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
     (tache.date_fin_previsionnelle && 
      new Date(tache.date_fin_previsionnelle) < new Date() && 
      tache.statut !== 'termine');
+
+  // Charger l'historique des statuts
+  const loadHistoriqueStatuts = async () => {
+    try {
+      setLoadingHistorique(true);
+      const response = await apiClient.getTacheHistoriqueStatuts(tache.id);
+      if (response.success && response.data) {
+        setHistoriqueStatuts(response.data);
+      }
+    } catch (error: any) {
+      console.error('Erreur lors du chargement de l\'historique:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger l'historique de la tâche",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingHistorique(false);
+    }
+  };
+
+  // Charger l'historique quand l'onglet historique est activé
+  useEffect(() => {
+    if (activeTab === "history" && historiqueStatuts.length === 0) {
+      loadHistoriqueStatuts();
+    }
+  }, [activeTab, tache.id]);
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto">
@@ -256,9 +288,14 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          {tache.historique_statuts && tache.historique_statuts.length > 0 ? (
+          {loadingHistorique ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
+              <span className="text-gray-600">Chargement de l'historique...</span>
+            </div>
+          ) : historiqueStatuts.length > 0 ? (
             <div className="space-y-3">
-              {tache.historique_statuts?.map((historique) => (
+              {historiqueStatuts.map((historique) => (
                 <div key={historique.id} className="p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-8 w-8">
@@ -276,10 +313,16 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
-                          {TACHE_STATUTS_KANBAN[historique.ancien_statut]}
-                        </Badge>
-                        <span className="text-gray-400">→</span>
+                        {historique.ancien_statut ? (
+                          <>
+                            <Badge variant="outline" className="text-xs">
+                              {TACHE_STATUTS_KANBAN[historique.ancien_statut]}
+                            </Badge>
+                            <span className="text-gray-400">→</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-green-600 font-medium">Création</span>
+                        )}
                         <Badge className={cn("text-xs", TACHE_STATUT_COLORS[historique.nouveau_statut])}>
                           {TACHE_STATUTS_KANBAN[historique.nouveau_statut]}
                         </Badge>
@@ -296,6 +339,7 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
             <div className="text-center py-8 text-gray-500">
               <Clock className="h-12 w-12 mx-auto mb-2 text-gray-300" />
               <p>Aucun historique</p>
+              <p className="text-xs text-gray-400 mt-1">L'historique des changements de statut apparaîtra ici</p>
             </div>
           )}
         </TabsContent>

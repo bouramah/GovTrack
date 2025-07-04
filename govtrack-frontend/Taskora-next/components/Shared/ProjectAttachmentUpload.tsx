@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -207,18 +207,17 @@ export default function ProjectAttachmentUpload({
           {/* Type de document */}
           <div className="space-y-2">
             <Label htmlFor="type-document">Type de document</Label>
-            <Select value={typeDocument} onValueChange={setTypeDocument} disabled={isUploading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {ATTACHMENT_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={ATTACHMENT_TYPES.map((type) => ({
+                value: type.value,
+                label: type.label
+              }))}
+              value={typeDocument}
+              onValueChange={setTypeDocument}
+              placeholder="Sélectionner un type"
+              searchPlaceholder="Rechercher un type..."
+              disabled={isUploading}
+            />
             {errors.type_document && (
               <Alert variant="destructive" className="py-2">
                 <AlertCircle className="h-4 w-4" />

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -241,37 +241,40 @@ export default function ProjectsAdvancedFilters({
               {/* Statut */}
               <div className="space-y-2">
                 <Label htmlFor="statut">Statut</Label>
-                <Select value={filters.statut || "all"} onValueChange={(value) => updateFilter('statut', value === "all" ? null : value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous les statuts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les statuts</SelectItem>
-                    <SelectItem value="a_faire">À faire</SelectItem>
-                    <SelectItem value="en_cours">En cours</SelectItem>
-                    <SelectItem value="demande_de_cloture">Demande de clôture</SelectItem>
-                    <SelectItem value="termine">Terminé</SelectItem>
-                    <SelectItem value="bloque">Bloqué</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={[
+                    { value: "all", label: "Tous les statuts" },
+                    { value: "a_faire", label: "À faire" },
+                    { value: "en_cours", label: "En cours" },
+                    { value: "demande_de_cloture", label: "Demande de clôture" },
+                    { value: "termine", label: "Terminé" },
+                    { value: "bloque", label: "Bloqué" }
+                  ]}
+                  value={filters.statut || "all"}
+                  onValueChange={(value) => updateFilter('statut', value === "all" ? null : value)}
+                  placeholder="Tous les statuts"
+                  searchPlaceholder="Rechercher un statut..."
+                />
               </div>
 
               {/* Type de projet */}
               <div className="space-y-2">
                 <Label htmlFor="type_projet">Type de projet</Label>
-                <Select value={filters.type_projet_id?.toString() || "all"} onValueChange={(value) => updateFilter('type_projet_id', value === "all" ? null : parseInt(value))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tous les types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les types</SelectItem>
-                    {typeProjets.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={[
+                    { value: "all", label: "Tous les types" },
+                    ...typeProjets.map((type) => ({
+                      value: type.id.toString(),
+                      label: type.nom,
+                      description: type.description,
+                      badge: `${type.duree_previsionnelle_jours} jours`
+                    }))
+                  ]}
+                  value={filters.type_projet_id?.toString() || "all"}
+                  onValueChange={(value) => updateFilter('type_projet_id', value === "all" ? null : parseInt(value))}
+                  placeholder="Tous les types"
+                  searchPlaceholder="Rechercher un type de projet..."
+                />
               </div>
 
               {/* En retard */}
@@ -300,36 +303,40 @@ export default function ProjectsAdvancedFilters({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="porteur">Porteur</Label>
-                      <Select value={filters.porteur_id?.toString() || "all"} onValueChange={(value) => updateFilter('porteur_id', value === "all" ? null : parseInt(value))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Tous les porteurs" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tous les porteurs</SelectItem>
-                          {users.map((user) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.display_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={[
+                          { value: "all", label: "Tous les porteurs" },
+                          ...users.map((user) => ({
+                            value: user.id.toString(),
+                            label: user.display_name,
+                            description: user.email,
+                            badge: user.matricule
+                          }))
+                        ]}
+                        value={filters.porteur_id?.toString() || "all"}
+                        onValueChange={(value) => updateFilter('porteur_id', value === "all" ? null : parseInt(value))}
+                        placeholder="Tous les porteurs"
+                        searchPlaceholder="Rechercher un porteur..."
+                      />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="donneur_ordre">Donneur d'ordre</Label>
-                      <Select value={filters.donneur_ordre_id?.toString() || "all"} onValueChange={(value) => updateFilter('donneur_ordre_id', value === "all" ? null : parseInt(value))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Tous les donneurs d'ordre" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tous les donneurs d'ordre</SelectItem>
-                          {users.map((user) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.display_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SearchableSelect
+                        options={[
+                          { value: "all", label: "Tous les donneurs d'ordre" },
+                          ...users.map((user) => ({
+                            value: user.id.toString(),
+                            label: user.display_name,
+                            description: user.email,
+                            badge: user.matricule
+                          }))
+                        ]}
+                        value={filters.donneur_ordre_id?.toString() || "all"}
+                        onValueChange={(value) => updateFilter('donneur_ordre_id', value === "all" ? null : parseInt(value))}
+                        placeholder="Tous les donneurs d'ordre"
+                        searchPlaceholder="Rechercher un donneur d'ordre..."
+                      />
                     </div>
                   </div>
                 </div>
@@ -347,19 +354,21 @@ export default function ProjectsAdvancedFilters({
                   </h4>
                   <div className="space-y-2">
                     <Label htmlFor="entite">Entité</Label>
-                    <Select value={filters.entite_id?.toString() || "all"} onValueChange={(value) => updateFilter('entite_id', value === "all" ? null : parseInt(value))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Toutes les entités" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Toutes les entités</SelectItem>
-                        {entities.map((entity) => (
-                          <SelectItem key={entity.id} value={entity.id.toString()}>
-                            {entity.nom} ({entity.type})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: "all", label: "Toutes les entités" },
+                        ...entities.map((entity) => ({
+                          value: entity.id.toString(),
+                          label: entity.nom,
+                          description: entity.type,
+                          badge: entity.type
+                        }))
+                      ]}
+                      value={filters.entite_id?.toString() || "all"}
+                      onValueChange={(value) => updateFilter('entite_id', value === "all" ? null : parseInt(value))}
+                      placeholder="Toutes les entités"
+                      searchPlaceholder="Rechercher une entité..."
+                    />
                   </div>
                 </div>
               </>

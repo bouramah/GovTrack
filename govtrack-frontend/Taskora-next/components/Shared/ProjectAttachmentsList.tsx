@@ -44,6 +44,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProjectAttachmentsListProps {
@@ -396,18 +397,16 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-type">Type de document</Label>
-              <Select value={editForm.type_document} onValueChange={(value) => setEditForm(prev => ({ ...prev, type_document: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ATTACHMENT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={ATTACHMENT_TYPES.map((type) => ({
+                  value: type.value,
+                  label: type.label
+                }))}
+                value={editForm.type_document}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, type_document: value }))}
+                placeholder="Sélectionner un type"
+                searchPlaceholder="Rechercher un type..."
+              />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>

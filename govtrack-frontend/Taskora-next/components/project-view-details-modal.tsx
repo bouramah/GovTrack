@@ -94,7 +94,7 @@ export function ProjectViewDetailsModal({ project, open, onOpenChange }: Project
               <Avatar className="h-8 w-8 border-2 border-white">
                 <AvatarImage src="/placeholder.svg" alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`} />
                 <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
-              </Avatar>
+                </Avatar>
             </div>
             <div className="text-xs text-gray-500">Donneur d'ordre</div>
           </div>

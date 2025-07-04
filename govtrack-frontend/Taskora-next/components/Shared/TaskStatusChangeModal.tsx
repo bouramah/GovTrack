@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, AlertCircle, FileText } from "lucide-react";
 import { apiClient } from "@/lib/api";
@@ -229,21 +229,18 @@ export default function TaskStatusChangeModal({
           {/* Sélection du statut */}
           <div className="space-y-2">
             <Label htmlFor="nouveau-statut">Nouveau statut</Label>
-            <Select value={nouveauStatut} onValueChange={handleStatutChange}>
-              <SelectTrigger className={serverErrors.nouveau_statut ? "border-red-500" : ""}>
-                <SelectValue placeholder="Sélectionner un statut" />
-              </SelectTrigger>
-              <SelectContent>
-                {TACHE_STATUSES.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{status.label}</span>
-                      <span className="text-xs text-gray-500">{status.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={TACHE_STATUSES.map((status) => ({
+                value: status.value,
+                label: status.label,
+                description: status.description
+              }))}
+              value={nouveauStatut}
+              onValueChange={handleStatutChange}
+              placeholder="Sélectionner un statut"
+              searchPlaceholder="Rechercher un statut..."
+              className={serverErrors.nouveau_statut ? "border-red-500" : ""}
+            />
             {serverErrors.nouveau_statut && (
               <div className="text-sm text-red-600">
                 {serverErrors.nouveau_statut.map((error, index) => (

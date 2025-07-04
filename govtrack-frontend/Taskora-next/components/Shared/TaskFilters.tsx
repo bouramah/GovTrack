@@ -12,6 +12,7 @@ import { Search, Filter, X, RefreshCw } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { TacheStatut } from "@/types/tache";
 import { TACHE_STATUTS_KANBAN } from "@/types/tache";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 
 export interface TaskFilters {
   search?: string;
@@ -29,30 +30,19 @@ interface TaskFiltersProps {
   onReset: () => void;
 }
 
-interface Project {
-  id: number;
-  titre: string;
-}
-
-interface User {
-  id: number;
-  nom: string;
-  prenom: string;
-}
-
 export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskFiltersProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Charger les projets
   useEffect(() => {
     const loadProjects = async () => {
       try {
         setLoadingProjects(true);
-        const response = await apiClient.getProjects();
+        const response = await apiClient.getProjects({ per_page: 1000 });
         if (response.success && response.data) {
           setProjects(response.data);
         }
@@ -86,56 +76,81 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
   }, []);
 
   const updateFilter = (key: keyof TaskFilters, value: any) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value,
+    });
+  };
+
+  const clearFilter = (key: keyof TaskFilters) => {
     const newFilters = { ...filters };
-    if (value === undefined || value === null || value === '') {
-      delete newFilters[key];
-    } else {
-      newFilters[key] = value;
-    }
+    delete newFilters[key];
     onFiltersChange(newFilters);
   };
 
   const getActiveFiltersCount = () => {
     return Object.keys(filters).filter(key => 
-      key !== 'sort_by' && key !== 'sort_order' && filters[key as keyof TaskFilters] !== undefined
+      filters[key as keyof TaskFilters] !== undefined && 
+      filters[key as keyof TaskFilters] !== null &&
+      filters[key as keyof TaskFilters] !== ''
     ).length;
   };
 
-  const clearAllFilters = () => {
-    onReset();
-  };
+  // Préparer les options pour les selects searchables
+  const projectOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Tous les projets' },
+    ...projects.map(project => ({
+      value: project.id.toString(),
+      label: project.titre
+    }))
+  ];
+
+  const userOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Tous les responsables' },
+    ...users.map(user => ({
+      value: user.id.toString(),
+      label: `${user.prenom} ${user.nom}`,
+      description: user.email,
+      badge: user.matricule
+    }))
+  ];
+
+  const statutOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Tous les statuts' },
+    ...Object.entries(TACHE_STATUTS_KANBAN).map(([key, value]) => ({
+      value: key,
+      label: value
+    }))
+  ];
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
+    <Card>
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
             Filtres
-            {getActiveFiltersCount() > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {getActiveFiltersCount()}
-              </Badge>
-            )}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-            >
-              {showAdvanced ? 'Filtres simples' : 'Filtres avancés'}
-            </Button>
             {getActiveFiltersCount() > 0 && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={clearAllFilters}
+                onClick={onReset}
+                className="h-8"
               >
-                <X className="h-4 w-4 mr-1" />
-                Effacer
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réinitialiser
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="h-8"
+            >
+              {showAdvanced ? 'Filtres simples' : 'Filtres avancés'}
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -162,99 +177,59 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
           {/* Statut */}
           <div className="space-y-2">
             <Label htmlFor="statut">Statut</Label>
-            <Select
+            <SearchableSelect
+              options={statutOptions}
               value={filters.statut || 'all'}
               onValueChange={(value) => updateFilter('statut', value === 'all' ? undefined : value)}
-            >
-              <SelectTrigger id="statut">
-                <SelectValue placeholder="Tous les statuts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                {Object.entries(TACHE_STATUTS_KANBAN).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Tous les statuts"
+              searchPlaceholder="Rechercher un statut..."
+              disabled={loadingProjects}
+            />
           </div>
 
           {/* Projet */}
           <div className="space-y-2">
             <Label htmlFor="projet">Projet</Label>
-            <Select
+            <SearchableSelect
+              options={projectOptions}
               value={filters.projet_id?.toString() || 'all'}
               onValueChange={(value) => updateFilter('projet_id', value === 'all' ? undefined : parseInt(value))}
-            >
-              <SelectTrigger id="projet">
-                <SelectValue placeholder="Tous les projets" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les projets</SelectItem>
-                {loadingProjects ? (
-                  <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                ) : (
-                  projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.titre}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              placeholder="Tous les projets"
+              searchPlaceholder="Rechercher un projet..."
+              disabled={loadingProjects}
+            />
           </div>
 
           {/* Responsable */}
           <div className="space-y-2">
             <Label htmlFor="responsable">Responsable</Label>
-            <Select
+            <SearchableSelect
+              options={userOptions}
               value={filters.responsable_id?.toString() || 'all'}
               onValueChange={(value) => updateFilter('responsable_id', value === 'all' ? undefined : parseInt(value))}
-            >
-              <SelectTrigger id="responsable">
-                <SelectValue placeholder="Tous les responsables" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les responsables</SelectItem>
-                {loadingUsers ? (
-                  <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                ) : (
-                  users.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.prenom} {user.nom}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              placeholder="Tous les responsables"
+              searchPlaceholder="Rechercher un responsable..."
+              disabled={loadingUsers}
+            />
           </div>
         </div>
 
         {/* Filtres avancés */}
         {showAdvanced && (
-          <div className="border-t pt-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4 pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* En retard */}
               <div className="space-y-2">
                 <Label>État d'échéance</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="en_retard"
-                      checked={filters.en_retard === true}
-                      onCheckedChange={(checked) => updateFilter('en_retard', checked ? true : undefined)}
-                    />
-                    <Label htmlFor="en_retard" className="text-sm">En retard</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="a_jour"
-                      checked={filters.en_retard === false}
-                      onCheckedChange={(checked) => updateFilter('en_retard', checked ? false : undefined)}
-                    />
-                    <Label htmlFor="a_jour" className="text-sm">À jour</Label>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="en_retard"
+                    checked={filters.en_retard === true}
+                    onCheckedChange={(checked) => updateFilter('en_retard', checked ? true : undefined)}
+                  />
+                  <Label htmlFor="en_retard" className="text-sm font-normal">
+                    En retard uniquement
+                  </Label>
                 </div>
               </div>
 
@@ -270,15 +245,15 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date_creation">Date de création</SelectItem>
-                    <SelectItem value="date_modification">Date de modification</SelectItem>
-                    <SelectItem value="titre">Titre</SelectItem>
-                    <SelectItem value="niveau_execution">Niveau d'exécution</SelectItem>
                     <SelectItem value="date_fin_previsionnelle">Date d'échéance</SelectItem>
+                    <SelectItem value="titre">Titre</SelectItem>
+                    <SelectItem value="statut">Statut</SelectItem>
+                    <SelectItem value="niveau_execution">Progression</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Ordre de tri */}
+              {/* Ordre */}
               <div className="space-y-2">
                 <Label htmlFor="sort_order">Ordre</Label>
                 <Select
@@ -298,7 +273,7 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
           </div>
         )}
 
-        {/* Résumé des filtres actifs */}
+        {/* Filtres actifs */}
         {getActiveFiltersCount() > 0 && (
           <div className="border-t pt-4">
             <div className="flex items-center gap-2 mb-2">
