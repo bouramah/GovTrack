@@ -127,12 +127,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // =================================================================
 
     // Types de projets
-    Route::get('type-projets', [TypeProjetController::class, 'index']); // Lecture libre
-    Route::get('type-projets/{id}', [TypeProjetController::class, 'show']); // Lecture libre
-    Route::get('type-projets/{id}/statistiques', [TypeProjetController::class, 'statistiques']); // Lecture libre
-    Route::post('type-projets', [TypeProjetController::class, 'store'])->middleware('permission:manage_entities');
-    Route::put('type-projets/{id}', [TypeProjetController::class, 'update'])->middleware('permission:manage_entities');
-    Route::delete('type-projets/{id}', [TypeProjetController::class, 'destroy'])->middleware('permission:manage_entities');
+    Route::get('type-projets', [TypeProjetController::class, 'index'])->middleware('permission:view_type_projets_list');
+    Route::get('type-projets/{id}', [TypeProjetController::class, 'show'])->middleware('permission:view_type_projet_details');
+    Route::get('type-projets/{id}/statistiques', [TypeProjetController::class, 'statistiques'])->middleware('permission:view_type_projet_stats');
+    Route::post('type-projets', [TypeProjetController::class, 'store'])->middleware('permission:create_type_projet');
+    Route::put('type-projets/{id}', [TypeProjetController::class, 'update'])->middleware('permission:edit_type_projet');
+    Route::delete('type-projets/{id}', [TypeProjetController::class, 'destroy'])->middleware('permission:delete_type_projet');
 
     // Projets (Instructions/Recommandations) - routes spéciales d'abord
     Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects

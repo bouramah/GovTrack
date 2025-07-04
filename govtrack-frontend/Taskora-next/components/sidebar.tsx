@@ -216,7 +216,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                     Rôles & Permissions
                   </NavItem>
                 )}
-                {permissions.canManageEntities() && (
+                {permissions.canViewTypeProjetsList() && (
                   <NavItem href="/type-projets" icon={FolderOpen}>
                     Types de Projets
                   </NavItem>

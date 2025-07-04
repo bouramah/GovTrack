@@ -57,24 +57,20 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react';
+import { useTypeProjetPermissions } from '@/hooks/useTypeProjetPermissions';
+import {
+  TypeProjetListGuard,
+  TypeProjetCreateGuard,
+  TypeProjetEditGuard,
+  TypeProjetDeleteGuard,
+  TypeProjetDetailsGuard,
+  TypeProjetStatsGuard
+} from '@/components/Shared/TypeProjetGuards';
+import { formatBackendErrors } from '@/lib/utils';
 
 interface TypeProjetWithDetails extends TypeProjet {
   projets_count?: number;
 }
-
-const formatBackendErrors = (error: any): string => {
-  if (error.response?.data?.errors) {
-    const errors = Object.values(error.response.data.errors).flat();
-    return errors.join(', ');
-  }
-  if (error.response?.data?.message) {
-    return error.response.data.message;
-  }
-  if (error.message) {
-    return error.message;
-  }
-  return 'Une erreur inattendue s\'est produite';
-};
 
 export default function TypeProjetsPage() {
   const { user, hasPermission } = useAuth();
@@ -111,6 +107,8 @@ export default function TypeProjetsPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const permissions = useTypeProjetPermissions();
+
   // Charger les données
   const loadData = async () => {
     try {
@@ -126,9 +124,25 @@ export default function TypeProjetsPage() {
       setTotalItems(response.pagination?.total || 0);
     } catch (error: any) {
       console.error('Erreur chargement types de projets:', error);
+      
+      // Si c'est une erreur de permission, rediriger vers la page d'accueil
+      if (error.name === 'PermissionError' || error.message?.includes('permission')) {
+        toast({
+          title: "❌ Accès refusé",
+          description: formatBackendErrors(error),
+          variant: "destructive"
+        });
+        // Rediriger vers la page d'accueil après un court délai
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        return;
+      }
+      
+      // Pour les autres erreurs, afficher le toast normalement
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les types de projets",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -246,7 +260,7 @@ export default function TypeProjetsPage() {
       console.error('Erreur détails type projet:', error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de récupérer les détails",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -261,7 +275,7 @@ export default function TypeProjetsPage() {
       console.error('Erreur statistiques type projet:', error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de récupérer les statistiques",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -295,6 +309,23 @@ export default function TypeProjetsPage() {
     }
   };
 
+  // Protection de la page entière
+  if (!permissions.canViewList) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-96">
+          <CardHeader className="text-center">
+            <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
+            <CardTitle>Accès refusé</CardTitle>
+            <CardDescription>
+              Vous n'avez pas la permission de voir les types de projets.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading && typeProjets.length === 0) {
     return (
       <div className="bg-gray-50">
@@ -327,11 +358,13 @@ export default function TypeProjetsPage() {
                 <h1 className="text-3xl font-bold text-gray-900">Types de Projets</h1>
                 <p className="text-gray-600">Gérer les catégories et types de projets du système</p>
               </div>
-              {hasPermission('manage_entities') && (
-                <Button onClick={openCreateModal}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau Type
-                </Button>
+              {permissions.canCreate && (
+                <TypeProjetCreateGuard>
+                  <Button onClick={openCreateModal}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau Type
+                  </Button>
+                </TypeProjetCreateGuard>
               )}
             </div>
 
@@ -467,27 +500,35 @@ export default function TypeProjetsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openDetailModal(typeProjet)}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Voir détails
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openStatistiquesModal(typeProjet)}>
-                                  <BarChart3 className="h-4 w-4 mr-2" />
-                                  Statistiques
-                                </DropdownMenuItem>
-                                {hasPermission('manage_entities') && (
+                                <TypeProjetDetailsGuard>
+                                  <DropdownMenuItem onClick={() => openDetailModal(typeProjet)}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Voir détails
+                                  </DropdownMenuItem>
+                                </TypeProjetDetailsGuard>
+                                <TypeProjetStatsGuard>
+                                  <DropdownMenuItem onClick={() => openStatistiquesModal(typeProjet)}>
+                                    <BarChart3 className="h-4 w-4 mr-2" />
+                                    Statistiques
+                                  </DropdownMenuItem>
+                                </TypeProjetStatsGuard>
+                                {(permissions.canEdit || permissions.canDelete) && (
                                   <>
-                                    <DropdownMenuItem onClick={() => openEditModal(typeProjet)}>
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Modifier
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => openDeleteDialog(typeProjet)}
-                                      className="text-red-600"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Supprimer
-                                    </DropdownMenuItem>
+                                    <TypeProjetEditGuard>
+                                      <DropdownMenuItem onClick={() => openEditModal(typeProjet)}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Modifier
+                                      </DropdownMenuItem>
+                                    </TypeProjetEditGuard>
+                                    <TypeProjetDeleteGuard>
+                                      <DropdownMenuItem 
+                                        onClick={() => openDeleteDialog(typeProjet)}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Supprimer
+                                      </DropdownMenuItem>
+                                    </TypeProjetDeleteGuard>
                                   </>
                                 )}
                               </DropdownMenuContent>

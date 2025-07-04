@@ -61,6 +61,9 @@ export const usePermissions = () => {
   // Permissions pour les entités
   const canManageEntities = (): boolean => hasPermission('manage_entities');
 
+  // Permission pour les types de projets
+  const canViewTypeProjetsList = (): boolean => hasPermission('view_type_projets_list');
+
   return {
     // Méthodes générales
     hasPermission,
@@ -94,5 +97,6 @@ export const usePermissions = () => {
     
     // Permissions entités
     canManageEntities,
+    canViewTypeProjetsList,
   };
 }; 
