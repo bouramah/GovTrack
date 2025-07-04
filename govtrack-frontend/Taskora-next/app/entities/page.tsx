@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Sidebar } from '@/components/sidebar';
 import Topbar from '@/components/Shared/Topbar';
+import { ProtectedPage } from '@/components/ProtectedPage';
+import { 
+  ViewEntitiesListGuard,
+  CreateEntityGuard,
+  EditEntityGuard,
+  DeleteEntityGuard,
+  ViewEntityDetailsGuard,
+  ViewEntityHierarchyGuard,
+  ViewEntityUsersGuard,
+  ManageEntityAssignmentsGuard,
+  ViewEntityChiefHistoryGuard,
+  useEntityPermissions
+} from '@/components/Shared/EntityGuards';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +62,14 @@ import {
 } from "lucide-react";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { apiClient, TypeEntite, Entite, User, Poste } from "@/lib/api";
+
+// Composant pour afficher conditionnellement un séparateur
+const ConditionalSeparator: React.FC<{ 
+  showIfAnyVisible: boolean;
+}> = ({ showIfAnyVisible }) => {
+  if (!showIfAnyVisible) return null;
+  return <Separator />;
+};
 
 interface EntiteWithDetails extends Entite {
   chef_actuel?: any;
@@ -97,13 +118,33 @@ interface OrganigrammeNodeData {
 }
 
 const formatBackendErrors = (error: any): string => {
+  // Gestion des erreurs de permission (422)
+  if (error.name === 'PermissionError') {
+    return error.message;
+  }
+  
+  // Gestion des erreurs de validation Laravel
   if (error.response?.data?.errors) {
     const errors = error.response.data.errors;
     return Object.values(errors).flat().join(', ');
   }
+  
+  // Gestion des messages d'erreur du serveur
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
+  
+  // Gestion des erreurs réseau
+  if (error.message && error.message.includes('Network Error')) {
+    return "Erreur de connexion au serveur. Vérifiez votre connexion internet.";
+  }
+  
+  // Gestion des erreurs de timeout
+  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    return "La requête a pris trop de temps. Veuillez réessayer.";
+  }
+  
+  // Erreur générique
   return "Une erreur inattendue s'est produite";
 };
 
@@ -121,6 +162,8 @@ export default function EntitiesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("tous");
   const [searchTermPostes, setSearchTermPostes] = useState("");
+  
+  const entityPermissions = useEntityPermissions();
   
   // Valeurs debounced pour éviter les appels API trop fréquents
   const debouncedSearchTerm = useDebounce(searchTerm, 1000);
@@ -175,7 +218,7 @@ export default function EntitiesPage() {
   const [typeEntiteToDelete, setTypeEntiteToDelete] = useState<TypeEntite | null>(null);
 
   // Données pour les modales postes
-  const [posteToDelete, setPosteToDelete] = useState<Poste | null>(null);
+  const [posteToDelete, setPosteToDelete] = useState<PosteWithDetails | null>(null);
 
   // États des formulaires
   const [formData, setFormData] = useState({
@@ -293,11 +336,18 @@ export default function EntitiesPage() {
       setTotalItemsPostes(postesResponse.pagination?.total || 0);
       
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur de chargement:", error);
+      console.error("Type d'erreur:", typeof error);
+      console.error("Nom de l'erreur:", error.name);
+      console.error("Message de l'erreur:", error.message);
+      console.error("Response:", error.response);
+      console.error("Status:", error.response?.status);
+      console.error("Data:", error.response?.data);
+      
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les données",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -313,7 +363,7 @@ export default function EntitiesPage() {
       console.error("Erreur organigramme:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger l'organigramme",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -425,7 +475,7 @@ export default function EntitiesPage() {
     } catch (error) {
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les détails",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -445,7 +495,7 @@ export default function EntitiesPage() {
     } catch (error) {
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger la hiérarchie",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -479,7 +529,7 @@ export default function EntitiesPage() {
       console.error("Erreur chefs actuels:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les chefs actuels",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -570,7 +620,7 @@ export default function EntitiesPage() {
       console.error("Erreur historique chefs:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger l'historique des chefs",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -595,7 +645,7 @@ export default function EntitiesPage() {
       console.error("Erreur utilisateurs entité:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les utilisateurs de l'entité",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -708,7 +758,7 @@ export default function EntitiesPage() {
     } catch (error) {
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les détails",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -799,7 +849,7 @@ export default function EntitiesPage() {
     }
   };
 
-  const handleViewPosteDetails = async (poste: Poste) => {
+  const handleViewPosteDetails = async (poste: PosteWithDetails) => {
     try {
       const response = await apiClient.getPoste(poste.id);
       setSelectedPoste(response);
@@ -814,7 +864,7 @@ export default function EntitiesPage() {
     }
   };
 
-  const openEditPosteModal = (poste: Poste) => {
+  const openEditPosteModal = (poste: PosteWithDetails) => {
     setSelectedPoste(poste);
     setPosteFormData({
       nom: poste.nom,
@@ -823,7 +873,7 @@ export default function EntitiesPage() {
     setShowEditPosteModal(true);
   };
 
-  const openDeletePosteDialog = (poste: Poste) => {
+  const openDeletePosteDialog = (poste: PosteWithDetails) => {
     setPosteToDelete(poste);
     setShowDeletePosteDialog(true);
   };
@@ -864,17 +914,18 @@ export default function EntitiesPage() {
   }
 
   return (
-    <div className="bg-gray-50">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+    <ProtectedPage permission="view_entities_list">
+      <div className="bg-gray-50">
+        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
-      <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
-        <Topbar
-          name="Gestion des Entités"
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+        <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
+          <Topbar
+            name="Gestion des Entités"
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
 
-        <main className="flex-1 overflow-y-auto p-3 lg:p-6">
+          <main className="flex-1 overflow-y-auto p-3 lg:p-6">
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -883,10 +934,12 @@ export default function EntitiesPage() {
             Gérer la structure organisationnelle et la hiérarchie
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Entité
-        </Button>
+        <CreateEntityGuard>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Entité
+          </Button>
+        </CreateEntityGuard>
       </div>
 
       {/* Statistiques */}
@@ -941,8 +994,12 @@ export default function EntitiesPage() {
             <Briefcase className="h-4 w-4 mr-2" />
             Postes
           </TabsTrigger>
-          <TabsTrigger value="organigramme" onClick={loadOrganigramme}>Organigramme</TabsTrigger>
-          <TabsTrigger value="chefs" onClick={loadChefsActuels}>Chefs Actuels</TabsTrigger>
+          <ViewEntityHierarchyGuard>
+            <TabsTrigger value="organigramme" onClick={loadOrganigramme}>Organigramme</TabsTrigger>
+          </ViewEntityHierarchyGuard>
+          <ManageEntityAssignmentsGuard>
+            <TabsTrigger value="chefs" onClick={loadChefsActuels}>Chefs Actuels</TabsTrigger>
+          </ManageEntityAssignmentsGuard>
         </TabsList>
 
         <TabsContent value="entites" className="space-y-4">
@@ -1052,42 +1109,55 @@ export default function EntitiesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewDetails(entite)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Voir détails
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditModal(entite)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Modifier
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewHierarchy(entite)}>
-                              <Network className="h-4 w-4 mr-2" />
-                              Voir hiérarchie
-                            </DropdownMenuItem>
-                            <Separator />
-                            <DropdownMenuItem onClick={() => loadUtilisateursEntite(entite)}>
-                              <Users className="h-4 w-4 mr-2" />
-                              Voir utilisateurs
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openChefModal(entite)}>
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Affecter chef
-                            </DropdownMenuItem>
-                            {entite.chef_actuel && (
-                              <DropdownMenuItem onClick={() => openTerminerMandatModal(entite)}>
-                                <Clock className="h-4 w-4 mr-2" />
-                                Terminer mandat
+                            <ViewEntityDetailsGuard>
+                              <DropdownMenuItem onClick={() => handleViewDetails(entite)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Voir détails
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => loadHistoriqueChefs(entite)}>
-                              <History className="h-4 w-4 mr-2" />
-                              Historique chefs
-                            </DropdownMenuItem>
-                            <Separator />
-                            <DropdownMenuItem onClick={() => openDeleteDialog(entite)} className="text-destructive">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
-                            </DropdownMenuItem>
+                            </ViewEntityDetailsGuard>
+                            <EditEntityGuard>
+                              <DropdownMenuItem onClick={() => openEditModal(entite)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                            </EditEntityGuard>
+                            <ViewEntityHierarchyGuard>
+                              <DropdownMenuItem onClick={() => handleViewHierarchy(entite)}>
+                                <Network className="h-4 w-4 mr-2" />
+                                Voir hiérarchie
+                              </DropdownMenuItem>
+                            </ViewEntityHierarchyGuard>
+                            <ViewEntityUsersGuard>
+                              <DropdownMenuItem onClick={() => loadUtilisateursEntite(entite)}>
+                                <Users className="h-4 w-4 mr-2" />
+                                Voir utilisateurs
+                              </DropdownMenuItem>
+                            </ViewEntityUsersGuard>
+                            <ManageEntityAssignmentsGuard>
+                              <DropdownMenuItem onClick={() => openChefModal(entite)}>
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Affecter chef
+                              </DropdownMenuItem>
+                              {entite.chef_actuel && (
+                                <DropdownMenuItem onClick={() => openTerminerMandatModal(entite)}>
+                                  <Clock className="h-4 w-4 mr-2" />
+                                  Terminer mandat
+                                </DropdownMenuItem>
+                              )}
+                            </ManageEntityAssignmentsGuard>
+                            <ViewEntityChiefHistoryGuard>
+                              <DropdownMenuItem onClick={() => loadHistoriqueChefs(entite)}>
+                                <History className="h-4 w-4 mr-2" />
+                                Historique chefs
+                              </DropdownMenuItem>
+                            </ViewEntityChiefHistoryGuard>
+                            <ConditionalSeparator showIfAnyVisible={entityPermissions.canDelete} />
+                            <DeleteEntityGuard>
+                              <DropdownMenuItem onClick={() => openDeleteDialog(entite)} className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DeleteEntityGuard>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1199,10 +1269,12 @@ export default function EntitiesPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Types d'Entité ({typeEntites.length})</CardTitle>
-              <Button onClick={() => setShowCreateTypeModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau type
-              </Button>
+              <CreateEntityGuard>
+                <Button onClick={() => setShowCreateTypeModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau type
+                </Button>
+              </CreateEntityGuard>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1218,23 +1290,29 @@ export default function EntitiesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewTypeDetails(type)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Voir détails
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditTypeModal(type)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Modifier
-                            </DropdownMenuItem>
-                            <Separator />
-                            <DropdownMenuItem 
-                              onClick={() => openDeleteTypeDialog(type)} 
-                              className="text-destructive"
-                              disabled={entites.filter(e => e.type_entite.id === type.id).length > 0}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
-                            </DropdownMenuItem>
+                            <ViewEntityDetailsGuard>
+                              <DropdownMenuItem onClick={() => handleViewTypeDetails(type)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Voir détails
+                              </DropdownMenuItem>
+                            </ViewEntityDetailsGuard>
+                            <EditEntityGuard>
+                              <DropdownMenuItem onClick={() => openEditTypeModal(type)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                            </EditEntityGuard>
+                            <ConditionalSeparator showIfAnyVisible={entityPermissions.canDelete} />
+                            <DeleteEntityGuard>
+                              <DropdownMenuItem 
+                                onClick={() => openDeleteTypeDialog(type)} 
+                                className="text-destructive"
+                                disabled={entites.filter(e => e.type_entite.id === type.id).length > 0}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DeleteEntityGuard>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1284,10 +1362,12 @@ export default function EntitiesPage() {
                 <Briefcase className="h-5 w-5" />
                 Postes ({postes.length})
               </CardTitle>
-              <Button onClick={() => setShowCreatePosteModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau Poste
-              </Button>
+              <CreateEntityGuard>
+                <Button onClick={() => setShowCreatePosteModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau Poste
+                </Button>
+              </CreateEntityGuard>
             </CardHeader>
             <CardContent>
               {/* Recherche */}
@@ -1374,22 +1454,28 @@ export default function EntitiesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewPosteDetails(poste)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Voir détails
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditPosteModal(poste)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Modifier
-                            </DropdownMenuItem>
+                            <ViewEntityDetailsGuard>
+                              <DropdownMenuItem onClick={() => handleViewPosteDetails(poste)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Voir détails
+                              </DropdownMenuItem>
+                            </ViewEntityDetailsGuard>
+                            <EditEntityGuard>
+                              <DropdownMenuItem onClick={() => openEditPosteModal(poste)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifier
+                              </DropdownMenuItem>
+                            </EditEntityGuard>
                             <Separator />
-                            <DropdownMenuItem 
-                              onClick={() => openDeletePosteDialog(poste)} 
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
-                            </DropdownMenuItem>
+                            <DeleteEntityGuard>
+                              <DropdownMenuItem 
+                                onClick={() => openDeletePosteDialog(poste)} 
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DeleteEntityGuard>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1512,110 +1598,114 @@ export default function EntitiesPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="organigramme" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TreePine className="h-5 w-5" />
-                Organigramme Organisationnel
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {organigramme ? (
-                <div className="space-y-4">
-                  {/* Statistiques globales */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{organigramme.statistiques?.total_entites || 0}</div>
-                      <div className="text-sm text-muted-foreground">Total entités</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{organigramme.statistiques?.total_employes_actifs || 0}</div>
-                      <div className="text-sm text-muted-foreground">Employés actifs</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{organigramme.statistiques?.total_chefs_actuels || 0}</div>
-                      <div className="text-sm text-muted-foreground">Chefs actuels</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">{organigramme.statistiques?.profondeur_max || 0}</div>
-                      <div className="text-sm text-muted-foreground">Niveaux max</div>
-                    </div>
-                  </div>
-
-                  {/* Arbre hiérarchique */}
-                  <div className="p-4 border rounded-lg">
-                    <h4 className="font-medium mb-4">Structure Hiérarchique</h4>
-                    {organigramme.organigramme && organigramme.organigramme.map((node: OrganigrammeNodeData) => (
-                      <OrganigrammeNode key={node.id} node={node} level={0} />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <TreePine className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p>Chargement de l'organigramme...</p>
-              </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="chefs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chefs Actuels ({chefsActuels.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {chefsActuels.length > 0 ? (
-                <div className="space-y-4">
-                  {chefsActuels.map((chef) => (
-                    <div key={chef.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Crown className="h-5 w-5 text-amber-600" />
-                            <h3 className="font-semibold text-lg">
-                              {chef.chef?.prenom} {chef.chef?.nom}
-                            </h3>
-                            <Badge variant="outline">{chef.chef?.matricule}</Badge>
-                          </div>
-                          
-                          <div className="space-y-1 text-sm text-muted-foreground">
-                            <p><strong>Entité:</strong> {chef.entite.nom}</p>
-                            <p><strong>Type:</strong> {chef.entite.type}</p>
-                            <p><strong>Email:</strong> {chef.chef?.email}</p>
-                            <p><strong>Depuis:</strong> {new Date(chef.date_debut).toLocaleDateString('fr-FR')}</p>
-                            <p><strong>Durée:</strong> {chef.duree_mandat}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openTerminerMandatModal({
-                              id: chef.entite.id,
-                              nom: chef.entite.nom,
-                              chef_actuel: chef.chef
-                            } as EntiteWithDetails)}
-                          >
-                            <Clock className="h-4 w-4 mr-2" />
-                            Terminer mandat
-                          </Button>
-                        </div>
+        <ViewEntityHierarchyGuard>
+          <TabsContent value="organigramme" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TreePine className="h-5 w-5" />
+                  Organigramme Organisationnel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {organigramme ? (
+                  <div className="space-y-4">
+                    {/* Statistiques globales */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{organigramme.statistiques?.total_entites || 0}</div>
+                        <div className="text-sm text-muted-foreground">Total entités</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{organigramme.statistiques?.total_employes_actifs || 0}</div>
+                        <div className="text-sm text-muted-foreground">Employés actifs</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{organigramme.statistiques?.total_chefs_actuels || 0}</div>
+                        <div className="text-sm text-muted-foreground">Chefs actuels</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold">{organigramme.statistiques?.profondeur_max || 0}</div>
+                        <div className="text-sm text-muted-foreground">Niveaux max</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
+
+                    {/* Arbre hiérarchique */}
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-medium mb-4">Structure Hiérarchique</h4>
+                      {organigramme.organigramme && organigramme.organigramme.map((node: OrganigrammeNodeData) => (
+                        <OrganigrammeNode key={node.id} node={node} level={0} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucun chef actuellement en poste
+                  <TreePine className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                    <p>Chargement de l'organigramme...</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </ViewEntityHierarchyGuard>
+
+        <ManageEntityAssignmentsGuard>
+          <TabsContent value="chefs" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Chefs Actuels ({chefsActuels.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {chefsActuels.length > 0 ? (
+                  <div className="space-y-4">
+                    {chefsActuels.map((chef) => (
+                      <div key={chef.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Crown className="h-5 w-5 text-amber-600" />
+                              <h3 className="font-semibold text-lg">
+                                {chef.chef?.prenom} {chef.chef?.nom}
+                              </h3>
+                              <Badge variant="outline">{chef.chef?.matricule}</Badge>
+                            </div>
+                            
+                            <div className="space-y-1 text-sm text-muted-foreground">
+                              <p><strong>Entité:</strong> {chef.entite.nom}</p>
+                              <p><strong>Type:</strong> {chef.entite.type}</p>
+                              <p><strong>Email:</strong> {chef.chef?.email}</p>
+                              <p><strong>Depuis:</strong> {new Date(chef.date_debut).toLocaleDateString('fr-FR')}</p>
+                              <p><strong>Durée:</strong> {chef.duree_mandat}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openTerminerMandatModal({
+                                id: chef.entite.id,
+                                nom: chef.entite.nom,
+                                chef_actuel: chef.chef
+                              } as EntiteWithDetails)}
+                            >
+                              <Clock className="h-4 w-4 mr-2" />
+                              Terminer mandat
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucun chef actuellement en poste
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </ManageEntityAssignmentsGuard>
       </Tabs>
 
       {/* Modal de création */}
@@ -2696,7 +2786,7 @@ export default function EntitiesPage() {
             <AlertDialogAction 
               onClick={handleDeletePoste}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={posteToDelete ? (posteToDelete.affectations_actuelles_count || 0) > 0 : false}
+                                            disabled={posteToDelete ? (posteToDelete.affectations_actuelles?.length || 0) > 0 : false}
             >
               Supprimer
             </AlertDialogAction>
@@ -2707,6 +2797,7 @@ export default function EntitiesPage() {
         </main>
       </div>
     </div>
+    </ProtectedPage>
   );
 }
 

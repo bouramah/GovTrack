@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
+import { usePermissions } from "@/hooks/usePermissions"
 import {
   LayoutDashboard,
   CheckSquare,
@@ -43,6 +44,7 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { hasPermission } = usePermissions()
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -53,9 +55,9 @@ export function AppSidebar() {
     { href: "/contacts", label: "Contacts", icon: Users },
     { href: "/messages", label: "Messages", icon: MessageSquare },
     { href: "/notifications", label: "Notifications", icon: Bell },
-    { href: "/users", label: "Gestion Utilisateurs", icon: UserCog },
-    { href: "/entities", label: "Entités", icon: Building },
-    { href: "/roles", label: "Rôles & Permissions", icon: Shield },
+    ...(hasPermission('view_users_list') ? [{ href: "/users", label: "Gestion Utilisateurs", icon: UserCog }] : []),
+    ...(hasPermission('view_entities_list') ? [{ href: "/entities", label: "Entités", icon: Building }] : []),
+    ...(hasPermission('manage_user_roles') ? [{ href: "/roles", label: "Rôles & Permissions", icon: Shield }] : []),
     { href: "/settings", label: "Paramètres", icon: Settings },
   ]
 

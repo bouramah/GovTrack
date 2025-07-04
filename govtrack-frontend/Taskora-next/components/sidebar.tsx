@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   Home,
   CheckSquare,
@@ -120,6 +121,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
   const pathname = usePathname();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const { user, logout } = useAuth();
+  const permissions = usePermissions();
 
   const [showAllProjects, setShowAllProjects] = useState(false);
   const visiableProjects = showAllProjects ? projects : projects.slice(0, 3);
@@ -199,18 +201,26 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
                   Administration
                 </p>
-                <NavItem href="/users" icon={UserCog}>
-                  Gestion Utilisateurs
-                </NavItem>
-                <NavItem href="/entities" icon={Building}>
-                  Entités
-                </NavItem>
-                <NavItem href="/roles" icon={Shield}>
-                  Rôles & Permissions
-                </NavItem>
-                <NavItem href="/type-projets" icon={FolderOpen}>
-                  Types de Projets
-                </NavItem>
+                {permissions.canViewUsersList() && (
+                  <NavItem href="/users" icon={UserCog}>
+                    Gestion Utilisateurs
+                  </NavItem>
+                )}
+                {permissions.canManageEntities() && (
+                  <NavItem href="/entities" icon={Building}>
+                    Entités
+                  </NavItem>
+                )}
+                {permissions.canManageUserRoles() && (
+                  <NavItem href="/roles" icon={Shield}>
+                    Rôles & Permissions
+                  </NavItem>
+                )}
+                {permissions.canManageEntities() && (
+                  <NavItem href="/type-projets" icon={FolderOpen}>
+                    Types de Projets
+                  </NavItem>
+                )}
               </div>
 
               {/* <NavItem

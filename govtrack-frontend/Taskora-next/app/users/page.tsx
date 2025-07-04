@@ -9,6 +9,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  UsersListGuard, 
+  CreateUserGuard, 
+  EditUserGuard, 
+  DeleteUserGuard, 
+  UserDetailsGuard,
+  UserAssignmentsGuard,
+  UserRolesGuard,
+  UserStatsGuard 
+} from '@/components/PermissionGuard';
+import { ProtectedPage } from '@/components/ProtectedPage';
 import {
   Table,
   TableBody,
@@ -172,10 +185,27 @@ export default function UsersPage() {
   });
 
   const { toast } = useToast();
+  const permissions = usePermissions();
+  const { user } = useAuth();
+
+
 
   useEffect(() => {
+    // Attendre que l'utilisateur soit chargé avant de vérifier les permissions
+    if (!user) return;
+    
+    // Vérifier si l'utilisateur a la permission de voir la liste des utilisateurs
+    if (!permissions.canViewUsersList()) {
+      toast({
+        title: "❌ Accès refusé",
+        description: "Vous n'avez pas la permission de voir la liste des utilisateurs",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     loadData();
-  }, [currentPage, itemsPerPage, debouncedSearchTerm, statusFilter]);
+  }, [currentPage, itemsPerPage, debouncedSearchTerm, statusFilter, user]);
 
   const loadData = async () => {
     try {
@@ -204,11 +234,11 @@ export default function UsersPage() {
       setRoles(rolesData.data || []);
       setEntites(entitesData.data || []);
       setPostes(postesData.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur de chargement:', error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les données",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -244,7 +274,7 @@ export default function UsersPage() {
     } catch (error: any) {
       toast({
         title: "❌ Erreur",
-        description: error.message || "Impossible de charger les détails de l'utilisateur",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -260,7 +290,7 @@ export default function UsersPage() {
     } catch (error: any) {
       toast({
         title: "❌ Erreur",
-        description: error.message || "Impossible de charger l'historique des affectations",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -405,7 +435,7 @@ export default function UsersPage() {
     } catch (error: any) {
       toast({
         title: "❌ Erreur",
-        description: error.message || "Impossible de charger les rôles",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -541,8 +571,45 @@ export default function UsersPage() {
 
   // Fonction pour formater les erreurs du backend
   const formatBackendErrors = (error: any): string => {
+    // Erreurs de permissions (422)
+    if (error.name === 'PermissionError') {
+      return error.message;
+    }
+    
+    // Erreurs 422 (permissions insuffisantes)
+    if (error.response?.status === 422) {
+      const errorData = error.response.data;
+      
+      if (errorData.message) {
+        return errorData.message;
+      }
+      
+      if (errorData.error) {
+        return errorData.error;
+      }
+      
+      if (errorData.errors) {
+        // Erreurs de validation Laravel
+        const backendErrors = errorData.errors;
+        const errorMessages: string[] = [];
+        
+        Object.keys(backendErrors).forEach(field => {
+          const fieldErrors = backendErrors[field];
+          if (Array.isArray(fieldErrors)) {
+            errorMessages.push(...fieldErrors);
+          } else {
+            errorMessages.push(fieldErrors);
+          }
+        });
+        
+        return errorMessages.join(", ");
+      }
+      
+      return "Accès refusé - Permissions insuffisantes";
+    }
+    
+    // Erreurs de validation Laravel (autres codes)
     if (error.response?.data?.errors) {
-      // Erreurs de validation Laravel
       const backendErrors = error.response.data.errors;
       const errorMessages: string[] = [];
       
@@ -718,17 +785,18 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <ProtectedPage permission="view_users_list">
+      <div className="bg-gray-50">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
-        <Topbar
-          name="Gestion Utilisateurs"
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+          <Topbar
+            name="Gestion Utilisateurs"
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
 
-        <main className="flex-1 overflow-y-auto p-3 lg:p-6">
+          <main className="flex-1 overflow-y-auto p-3 lg:p-6">
           <div className="space-y-6">
             {/* En-tête avec action */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -738,13 +806,14 @@ export default function UsersPage() {
                   Gérer les comptes utilisateurs, rôles et affectations ({totalUsers} utilisateurs)
                 </p>
               </div>
-              <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Nouvel Utilisateur
-                  </Button>
-                </DialogTrigger>
+              <CreateUserGuard>
+                <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      Nouvel Utilisateur
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Créer un Utilisateur</DialogTitle>
@@ -862,76 +931,79 @@ export default function UsersPage() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </CreateUserGuard>
             </div>
 
             {/* Dashboard statistiques */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card key="total" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
-                      <Users className="h-6 w-6 text-white" />
+            <UserStatsGuard>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <Card key="total" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-600 rounded-lg">
+                        <Users className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-blue-700">Total Utilisateurs</p>
+                        <p className="text-2xl font-bold text-blue-900">{totalUsers}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-blue-700">Total Utilisateurs</p>
-                      <p className="text-2xl font-bold text-blue-900">{totalUsers}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card key="active" className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-green-50">Utilisateurs Actifs</CardTitle>
-                  <UserIcon className="h-5 w-5 text-green-100" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{activeUsers}</div>
-                  <p className="text-xs text-green-100 mt-1">
-                    {totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}% du total
-                  </p>
-                </CardContent>
-              </Card>
+                <Card key="active" className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-green-50">Utilisateurs Actifs</CardTitle>
+                    <UserIcon className="h-5 w-5 text-green-100" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{activeUsers}</div>
+                    <p className="text-xs text-green-100 mt-1">
+                      {totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}% du total
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card key="inactive" className="bg-gradient-to-r from-red-500 to-red-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-red-50">Utilisateurs Inactifs</CardTitle>
-                  <UserIcon className="h-5 w-5 text-red-100" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{inactiveUsers}</div>
-                  <p className="text-xs text-red-100 mt-1">
-                    {totalUsers > 0 ? Math.round((inactiveUsers / totalUsers) * 100) : 0}% du total
-                  </p>
-                </CardContent>
-              </Card>
+                <Card key="inactive" className="bg-gradient-to-r from-red-500 to-red-600 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-red-50">Utilisateurs Inactifs</CardTitle>
+                    <UserIcon className="h-5 w-5 text-red-100" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{inactiveUsers}</div>
+                    <p className="text-xs text-red-100 mt-1">
+                      {totalUsers > 0 ? Math.round((inactiveUsers / totalUsers) * 100) : 0}% du total
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card key="with-roles" className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-purple-50">Avec Rôles</CardTitle>
-                  <Shield className="h-5 w-5 text-purple-100" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{usersWithRoles}</div>
-                  <p className="text-xs text-purple-100 mt-1">
-                    {totalUsers > 0 ? Math.round((usersWithRoles / totalUsers) * 100) : 0}% assignés
-                  </p>
-                </CardContent>
-              </Card>
+                <Card key="with-roles" className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-purple-50">Avec Rôles</CardTitle>
+                    <Shield className="h-5 w-5 text-purple-100" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{usersWithRoles}</div>
+                    <p className="text-xs text-purple-100 mt-1">
+                      {totalUsers > 0 ? Math.round((usersWithRoles / totalUsers) * 100) : 0}% assignés
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card key="with-affectations" className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-orange-50">Avec Affectations</CardTitle>
-                  <Building className="h-5 w-5 text-orange-100" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{usersWithAffectations}</div>
-                  <p className="text-xs text-orange-100 mt-1">
-                    {totalUsers > 0 ? Math.round((usersWithAffectations / totalUsers) * 100) : 0}% affectés
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                <Card key="with-affectations" className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-orange-50">Avec Affectations</CardTitle>
+                    <Building className="h-5 w-5 text-orange-100" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{usersWithAffectations}</div>
+                    <p className="text-xs text-orange-100 mt-1">
+                      {totalUsers > 0 ? Math.round((usersWithAffectations / totalUsers) * 100) : 0}% affectés
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </UserStatsGuard>
 
             {/* Filtres et recherche */}
             <Card>
@@ -1108,33 +1180,42 @@ export default function UsersPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem key="view" onClick={() => handleViewDetails(user)}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  Voir détails
-                                </DropdownMenuItem>
-                                <DropdownMenuItem key="edit" onClick={() => openEditModal(user)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Modifier
-                                </DropdownMenuItem>
-                                <DropdownMenuItem key="affectations" onClick={() => handleOpenAffectationsModal(user)}>
-                                  <Building className="mr-2 h-4 w-4" />
-                                  Gérer affectations
-                                </DropdownMenuItem>
-                                <DropdownMenuItem key="roles" onClick={() => handleOpenRolesModal(user)}>
-                                  <Shield className="mr-2 h-4 w-4" />
-                                  Gérer rôles
-                                </DropdownMenuItem>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem 
-                                      key="delete"
-                                      onSelect={(e) => e.preventDefault()}
-                                      className="text-red-600"
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Supprimer
-                                    </DropdownMenuItem>
-                                  </AlertDialogTrigger>
+                                <UserDetailsGuard>
+                                  <DropdownMenuItem key="view" onClick={() => handleViewDetails(user)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Voir détails
+                                  </DropdownMenuItem>
+                                </UserDetailsGuard>
+                                <EditUserGuard>
+                                  <DropdownMenuItem key="edit" onClick={() => openEditModal(user)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Modifier
+                                  </DropdownMenuItem>
+                                </EditUserGuard>
+                                <UserAssignmentsGuard>
+                                  <DropdownMenuItem key="affectations" onClick={() => handleOpenAffectationsModal(user)}>
+                                    <Building className="mr-2 h-4 w-4" />
+                                    Gérer affectations
+                                  </DropdownMenuItem>
+                                </UserAssignmentsGuard>
+                                <UserRolesGuard>
+                                  <DropdownMenuItem key="roles" onClick={() => handleOpenRolesModal(user)}>
+                                    <Shield className="mr-2 h-4 w-4" />
+                                    Gérer rôles
+                                  </DropdownMenuItem>
+                                </UserRolesGuard>
+                                <DeleteUserGuard>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem 
+                                        key="delete"
+                                        onSelect={(e) => e.preventDefault()}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Supprimer
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
@@ -1155,6 +1236,7 @@ export default function UsersPage() {
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
+                                </DeleteUserGuard>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -1182,6 +1264,7 @@ export default function UsersPage() {
                               if (currentPage > 1) handlePageChange(currentPage - 1);
                             }}
                             className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                            size="default"
                           />
                         </PaginationItem>
                         
@@ -1207,6 +1290,7 @@ export default function UsersPage() {
                                   handlePageChange(pageNum);
                                 }}
                                 isActive={currentPage === pageNum}
+                                size="default"
                               >
                                 {pageNum}
                               </PaginationLink>
@@ -1229,6 +1313,7 @@ export default function UsersPage() {
                               if (currentPage < totalPages) handlePageChange(currentPage + 1);
                             }}
                             className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                            size="default"
                           />
                         </PaginationItem>
                       </PaginationContent>
@@ -1992,5 +2077,6 @@ export default function UsersPage() {
         </main>
       </div>
     </div>
+    </ProtectedPage>
   );
 } 

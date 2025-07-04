@@ -30,11 +30,12 @@ class CheckPermission
         // Vérifier si l'utilisateur a la permission requise
         if (!$user->hasPermission($permission)) {
             return response()->json([
-                'message' => 'Permission insuffisante pour effectuer cette action',
+                'message' => "Vous n'avez pas la permission '{$permission}' pour effectuer cette action",
                 'success' => false,
+                'error' => 'Permission insuffisante',
                 'required_permission' => $permission,
                 'user_permissions' => $user->getAllPermissions()->pluck('nom')
-            ], 403);
+            ], 422);
         }
 
         return $next($request);
@@ -46,43 +47,52 @@ class CheckPermission
     public static function getPermissionForAction(string $action): ?string
     {
         $permissions = [
-            // Gestion des utilisateurs
-            'users.store' => 'manage_users',
-            'users.update' => 'manage_users',
-            'users.destroy' => 'manage_users',
-            'users.affecter' => 'manage_users',
-            'users.terminer-affectation' => 'manage_users',
-            'users.assign-role' => 'manage_users',
-            'users.remove-role' => 'manage_users',
+            // Gestion des utilisateurs - Permissions granulaires
+            'users.index' => 'view_users_list',
+            'users.show' => 'view_user_details',
+            'users.store' => 'create_user',
+            'users.update' => 'edit_user',
+            'users.destroy' => 'delete_user',
+            'users.affecter' => 'manage_user_assignments',
+            'users.terminer-affectation' => 'manage_user_assignments',
+            'users.assign-role' => 'manage_user_roles',
+            'users.remove-role' => 'manage_user_roles',
+            'users.stats' => 'view_user_stats',
 
-            // Gestion des entités
-            'entites.store' => 'manage_entities',
-            'entites.update' => 'manage_entities',
-            'entites.destroy' => 'manage_entities',
-            'entites.affecter-chef' => 'manage_entities',
-            'entites.terminer-mandat-chef' => 'manage_entities',
+            // Gestion des entités - Permissions granulaires
+            'entites.index' => 'view_entities_list',
+            'entites.show' => 'view_entity_details',
+            'entites.store' => 'create_entity',
+            'entites.update' => 'edit_entity',
+            'entites.destroy' => 'delete_entity',
+            'entites.hierarchy' => 'view_entity_hierarchy',
+            'entites.users' => 'view_entity_users',
+            'entites.affecter-chef' => 'manage_entity_assignments',
+            'entites.terminer-mandat-chef' => 'manage_entity_assignments',
+            'entites.historique-chefs' => 'view_entity_chief_history',
+            'entites.organigramme' => 'view_entity_hierarchy',
 
             // Gestion des postes
-            'postes.store' => 'manage_users',
-            'postes.update' => 'manage_users',
-            'postes.destroy' => 'manage_users',
+            'postes.store' => 'create_user',
+            'postes.update' => 'edit_user',
+            'postes.destroy' => 'delete_user',
 
             // Gestion des types d'entités
-            'type-entites.store' => 'manage_entities',
-            'type-entites.update' => 'manage_entities',
-            'type-entites.destroy' => 'manage_entities',
+            'type-entites.store' => 'create_entity',
+            'type-entites.update' => 'edit_entity',
+            'type-entites.destroy' => 'delete_entity',
 
             // Gestion des rôles
-            'roles.store' => 'manage_users',
-            'roles.update' => 'manage_users',
-            'roles.destroy' => 'manage_users',
-            'roles.assign-permission' => 'manage_users',
-            'roles.remove-permission' => 'manage_users',
+            'roles.store' => 'manage_user_roles',
+            'roles.update' => 'manage_user_roles',
+            'roles.destroy' => 'manage_user_roles',
+            'roles.assign-permission' => 'manage_user_roles',
+            'roles.remove-permission' => 'manage_user_roles',
 
             // Gestion des permissions
-            'permissions.store' => 'manage_users',
-            'permissions.update' => 'manage_users',
-            'permissions.destroy' => 'manage_users',
+            'permissions.store' => 'manage_user_roles',
+            'permissions.update' => 'manage_user_roles',
+            'permissions.destroy' => 'manage_user_roles',
         ];
 
         return $permissions[$action] ?? null;

@@ -541,6 +541,30 @@ class ApiClient {
             window.location.href = '/login';
           }
         }
+        
+        // Gestion des erreurs 422 (permissions insuffisantes)
+        if (error.response?.status === 422) {
+          const errorData = error.response.data;
+          let errorMessage = 'Accès refusé';
+          
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.errors) {
+            // Erreurs de validation Laravel
+            const errorMessages = Object.values(errorData.errors)
+              .flat()
+              .join(', ');
+            errorMessage = errorMessages;
+          }
+          
+          // Créer une erreur personnalisée avec le message approprié
+          const customError = new Error(errorMessage);
+          customError.name = 'PermissionError';
+          return Promise.reject(customError);
+        }
+        
         return Promise.reject(error);
       }
     );
