@@ -12,23 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Edit, Plus, Eye, Search, Calendar, User, Building, TrendingUp, MoreHorizontal } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { api } from '@/lib/api';
+import { apiClient, Poste } from '@/lib/api';
 import { Sidebar } from '@/components/sidebar';
-import { Topbar } from '@/components/Shared/Topbar';
+import Topbar from '@/components/Shared/Topbar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-
-interface Poste {
-  id: number;
-  nom: string;
-  description: string;
-  date_creation: string;
-  date_modification: string;
-  creer_par: string;
-  modifier_par: string;
-  affectations_count?: number;
-  affectations_actuelles_count?: number;
-}
 
 interface PosteFormData {
   nom: string;
@@ -72,15 +60,36 @@ export default function PostesPage() {
   const fetchPostes = async () => {
     try {
       setLoading(true);
-      const response = await api.getPostes();
-      setPostes(response.data);
+      const response = await apiClient.getPostes();
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+      
+      const postesData = response.data || [];
+      console.log('Postes data:', postesData);
+      
+      setPostes(postesData);
       
       // Calculer les statistiques
-      const totalPostes = response.data.length;
-      const postesAvecAffectations = response.data.filter(poste => poste.affectations_actuelles_count > 0).length;
-      const totalAffectations = response.data.reduce((sum, poste) => sum + (poste.affectations_count || 0), 0);
+      const totalPostes = postesData.length;
+      console.log('Total postes:', totalPostes);
+      
+      const postesAvecAffectations = postesData.filter(poste => (poste.affectations_actuelles_count || 0) > 0).length;
+      console.log('Postes avec affectations:', postesAvecAffectations);
+      
+      const totalAffectations = postesData.reduce((sum, poste) => {
+        console.log(`Poste ${poste.nom}: affectations_count = ${poste.affectations_count}, affectations_actuelles_count = ${poste.affectations_actuelles_count}`);
+        return sum + (poste.affectations_count || 0);
+      }, 0);
+      console.log('Total affectations calculé:', totalAffectations);
       
       setStats({
+        total_postes: totalPostes,
+        postes_avec_affectations: postesAvecAffectations,
+        postes_sans_affectations: totalPostes - postesAvecAffectations,
+        total_affectations: totalAffectations
+      });
+      
+      console.log('Stats finales:', {
         total_postes: totalPostes,
         postes_avec_affectations: postesAvecAffectations,
         postes_sans_affectations: totalPostes - postesAvecAffectations,
@@ -122,7 +131,7 @@ export default function PostesPage() {
         return;
       }
       
-      const response = await api.createPoste(formData);
+      const response = await apiClient.createPoste(formData);
       
       await fetchPostes();
       setIsModalOpen(false);
@@ -173,7 +182,7 @@ export default function PostesPage() {
         return;
       }
       
-      const response = await api.updatePoste(selectedPoste.id, formData);
+      const response = await apiClient.updatePoste(selectedPoste.id, formData);
       
       await fetchPostes();
       setIsModalOpen(false);
@@ -203,7 +212,7 @@ export default function PostesPage() {
     if (!posteToDelete) return;
     
     try {
-      await api.deletePoste(posteToDelete.id);
+      await apiClient.deletePoste(posteToDelete.id);
       await fetchPostes();
       setPosteToDelete(null);
       
@@ -240,7 +249,7 @@ export default function PostesPage() {
     setSelectedPoste(poste);
     setFormData({
       nom: poste.nom,
-      description: poste.description
+      description: poste.description || ''
     });
     setIsEditMode(true);
     setIsModalOpen(true);
@@ -248,8 +257,8 @@ export default function PostesPage() {
 
   const openDetailsModal = async (poste: Poste) => {
     try {
-      const response = await api.getPoste(poste.id);
-      setSelectedPoste(response.data);
+      const response = await apiClient.getPoste(poste.id);
+      setSelectedPoste(response);
       setIsDetailsModalOpen(true);
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error);
@@ -263,7 +272,8 @@ export default function PostesPage() {
 
   const filteredPostes = postes.filter(poste =>
     poste.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    poste.description.toLowerCase().includes(searchTerm.toLowerCase())
+    poste.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    poste.description === null
   );
 
   const formatDate = (dateString: string) => {
@@ -402,12 +412,12 @@ export default function PostesPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <CardTitle className="text-lg">{poste.nom}</CardTitle>
-                            <Badge variant={poste.affectations_actuelles_count > 0 ? "default" : "secondary"}>
-                              {poste.affectations_actuelles_count > 0 ? "Occupé" : "Disponible"}
+                            <Badge variant={(poste.affectations_actuelles_count || 0) > 0 ? "default" : "secondary"}>
+                              {(poste.affectations_actuelles_count || 0) > 0 ? "Occupé" : "Disponible"}
                             </Badge>
                           </div>
                           <CardDescription className="text-sm text-gray-600">
-                            {poste.description}
+                            {poste.description || 'N/A'}
                           </CardDescription>
                         </div>
                         <DropdownMenu>
@@ -525,14 +535,14 @@ export default function PostesPage() {
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Statut</Label>
-                  <Badge variant={selectedPoste.affectations_actuelles_count > 0 ? "default" : "secondary"}>
-                    {selectedPoste.affectations_actuelles_count > 0 ? "Occupé" : "Disponible"}
+                  <Badge variant={(selectedPoste.affectations_actuelles_count || 0) > 0 ? "default" : "secondary"}>
+                    {(selectedPoste.affectations_actuelles_count || 0) > 0 ? "Occupé" : "Disponible"}
                   </Badge>
                 </div>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-500">Description</Label>
-                <p className="text-sm">{selectedPoste.description}</p>
+                <p className="text-sm">{selectedPoste.description || 'N/A'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

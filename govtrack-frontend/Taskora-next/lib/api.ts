@@ -295,6 +295,8 @@ export interface Poste {
   id: number;
   nom: string;
   description?: string;
+  affectations_count?: number;
+  affectations_actuelles_count?: number;
   nombre_affectations_actives?: number;
   employes_actuels?: {
     user: {

@@ -1471,7 +1471,7 @@ export default function EntitiesPage() {
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4" />
-                              <span>{poste.statistiques?.total_affectations || 0} affectations totales</span>
+                              <span>{poste.affectations_actuelles_count || 0} affectations actuelles</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
