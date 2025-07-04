@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import {
   Calendar,
   Clock,
@@ -39,6 +40,10 @@ import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
 import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
 import ProjectStatusChangeModal from "@/components/Shared/ProjectStatusChangeModal";
+import ProjectAttachmentsModal from "@/components/Shared/ProjectAttachmentsModal";
+import ProjectAttachmentsList from "@/components/Shared/ProjectAttachmentsList";
+import ProjectAttachmentUploadModal from "@/components/Shared/ProjectAttachmentUploadModal";
+import ProjectDiscussionsList from "@/components/Shared/ProjectDiscussionsList";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -55,6 +60,8 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [executionLevelModalOpen, setExecutionLevelModalOpen] = useState(false);
   const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
+  const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -234,6 +241,13 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 Changer statut
               </Button>
               <Button 
+                variant="outline"
+                onClick={() => setAttachmentsModalOpen(true)}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Pièces jointes
+              </Button>
+              <Button 
                 variant="destructive"
                 onClick={() => setDeleteDialogOpen(true)}
                 disabled={project?.statut === 'en_cours'}
@@ -374,6 +388,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               <TabsList>
                 <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
                 <TabsTrigger value="tasks">Tâches</TabsTrigger>
+                <TabsTrigger value="attachments">Pièces jointes</TabsTrigger>
                 <TabsTrigger value="timeline">Historique</TabsTrigger>
                 <TabsTrigger value="discussions">Discussions</TabsTrigger>
                 <TabsTrigger value="analytics">Analyses</TabsTrigger>
@@ -546,6 +561,31 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="attachments">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Pièces jointes du projet</CardTitle>
+                        <CardDescription>
+                          Fichiers et documents attachés au projet
+                        </CardDescription>
+                      </div>
+                      <Button onClick={() => setUploadModalOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter un fichier
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ProjectAttachmentsList 
+                      projectId={parseInt(id)} 
+                      onRefresh={handleProjectUpdate}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="timeline">
                 <Card>
                   <CardHeader>
@@ -603,85 +643,10 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               </TabsContent>
 
               <TabsContent value="discussions">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Discussions du projet</CardTitle>
-                        <CardDescription>
-                          Conversations et commentaires
-                        </CardDescription>
-                      </div>
-                      <Button>
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Nouvelle discussion
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {project.discussions && project.discussions.length > 0 ? (
-                      <div className="space-y-4">
-                        {project.discussions
-                          .filter(discussion => !discussion.parent_id) // Seulement les messages principaux
-                          .map((discussion) => (
-                            <div key={discussion.id} className="space-y-3">
-                              {/* Message principal */}
-                              <div className="border rounded-lg p-4">
-                                <div className="flex items-start space-x-3">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="bg-gray-100 text-gray-700 text-xs">
-                                      {discussion.user ? getInitials(`${discussion.user.prenom} ${discussion.user.nom}`) : 'U'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <div className="font-medium">
-                                        {discussion.user ? `${discussion.user.prenom} ${discussion.user.nom}` : 'Utilisateur'}
-                                      </div>
-                                      <div className="text-sm text-gray-500">
-                                        {new Date(discussion.date_creation).toLocaleDateString('fr-FR')}
-                                      </div>
-                                    </div>
-                                    <div className="text-sm mt-1">{discussion.message}</div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Réponses */}
-                              {project.discussions
-                                ?.filter(reply => reply.parent_id === discussion.id)
-                                .map((reply) => (
-                                  <div key={reply.id} className="border rounded-lg p-3 ml-8 bg-gray-50">
-                                    <div className="flex items-start space-x-3">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
-                                          {reply.user ? getInitials(`${reply.user.prenom} ${reply.user.nom}`) : 'U'}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                          <div className="font-medium text-sm">
-                                            {reply.user ? `${reply.user.prenom} ${reply.user.nom}` : 'Utilisateur'}
-                                          </div>
-                                          <div className="text-xs text-gray-500">
-                                            {new Date(reply.date_creation).toLocaleDateString('fr-FR')}
-                                          </div>
-                                        </div>
-                                        <div className="text-sm mt-1">{reply.message}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        Aucune discussion pour ce projet
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                <ProjectDiscussionsList 
+                  projectId={project.id} 
+                  onRefresh={handleProjectUpdate}
+                />
               </TabsContent>
 
               <TabsContent value="analytics">
@@ -759,6 +724,25 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
         project={project}
         onSuccess={handleProjectUpdate}
       />
+
+      <ProjectAttachmentsModal
+        projectId={project.id}
+        projectTitle={project.titre}
+        open={attachmentsModalOpen}
+        onOpenChange={setAttachmentsModalOpen}
+        onRefresh={handleProjectUpdate}
+      />
+
+      <ProjectAttachmentUploadModal
+        projectId={project.id}
+        projectTitle={project.titre}
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        onRefresh={handleProjectUpdate}
+      />
+
+      {/* Toast notifications */}
+      <Toaster />
     </div>
   );
 }

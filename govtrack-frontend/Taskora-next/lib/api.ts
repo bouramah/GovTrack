@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { ProjectAttachment, TaskAttachment, AttachmentStats } from '@/types/attachment';
+import { ProjectDiscussion, TaskDiscussion, DiscussionCreateRequest, DiscussionUpdateRequest, DiscussionStats } from '@/types/discussion';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -1576,6 +1578,300 @@ class ApiClient {
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des utilisateurs pour filtres');
     }
+  }
+
+  // =================================================================
+  // PIÈCES JOINTES DES PROJETS
+  // =================================================================
+
+  async getProjectAttachments(
+    projectId: number,
+    params?: {
+      est_justificatif?: boolean;
+      type_document?: string;
+      per_page?: number;
+    }
+  ): Promise<ApiResponse<ProjectAttachment[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.est_justificatif !== undefined) {
+      queryParams.append('est_justificatif', params.est_justificatif.toString());
+    }
+    if (params?.type_document) {
+      queryParams.append('type_document', params.type_document);
+    }
+    if (params?.per_page) {
+      queryParams.append('per_page', params.per_page.toString());
+    }
+
+    const url = `/v1/projets/${projectId}/pieces-jointes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.client.get(url);
+    return response.data;
+  }
+
+  async uploadProjectAttachment(
+    projectId: number,
+    formData: FormData
+  ): Promise<ApiResponse<ProjectAttachment>> {
+    const response = await this.client.post(`/v1/projets/${projectId}/pieces-jointes`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  async getProjectAttachmentDetails(
+    projectId: number,
+    attachmentId: number
+  ): Promise<ApiResponse<ProjectAttachment>> {
+    const response = await this.client.get(`/v1/projets/${projectId}/pieces-jointes/${attachmentId}`);
+    return response.data;
+  }
+
+  async downloadProjectAttachment(
+    projectId: number,
+    attachmentId: number
+  ): Promise<Blob> {
+    const response = await this.client.get(`/v1/projets/${projectId}/pieces-jointes/${attachmentId}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  async updateProjectAttachment(
+    projectId: number,
+    attachmentId: number,
+    data: {
+      description?: string;
+      type_document?: 'rapport' | 'justificatif' | 'piece_jointe' | 'documentation' | 'autre';
+    }
+  ): Promise<ApiResponse<ProjectAttachment>> {
+    const response = await this.client.put(`/v1/projets/${projectId}/pieces-jointes/${attachmentId}`, data);
+    return response.data;
+  }
+
+  async deleteProjectAttachment(
+    projectId: number,
+    attachmentId: number
+  ): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/projets/${projectId}/pieces-jointes/${attachmentId}`);
+    return response.data;
+  }
+
+  async getProjectAttachmentsStats(
+    projectId: number
+  ): Promise<ApiResponse<{
+    total_fichiers: number;
+    total_justificatifs: number;
+    taille_totale: number;
+    types_documents: Array<{ type_document: string; count: number }>;
+    dernier_upload: ProjectAttachment | null;
+  }>> {
+    const response = await this.client.get(`/v1/projets/${projectId}/pieces-jointes/statistiques`);
+    return response.data;
+  }
+
+  // =================================================================
+  // PIÈCES JOINTES DES TÂCHES
+  // =================================================================
+
+  async getTaskAttachments(
+    taskId: number,
+    params?: {
+      est_justificatif?: boolean;
+      type_document?: string;
+      per_page?: number;
+    }
+  ): Promise<ApiResponse<TaskAttachment[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.est_justificatif !== undefined) {
+      queryParams.append('est_justificatif', params.est_justificatif.toString());
+    }
+    if (params?.type_document) {
+      queryParams.append('type_document', params.type_document);
+    }
+    if (params?.per_page) {
+      queryParams.append('per_page', params.per_page.toString());
+    }
+
+    const url = `/v1/taches/${taskId}/pieces-jointes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.client.get(url);
+    return response.data;
+  }
+
+  async uploadTaskAttachment(
+    taskId: number,
+    formData: FormData
+  ): Promise<ApiResponse<TaskAttachment>> {
+    const response = await this.client.post(`/v1/taches/${taskId}/pieces-jointes`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  async getTaskAttachmentDetails(
+    taskId: number,
+    attachmentId: number
+  ): Promise<ApiResponse<TaskAttachment>> {
+    const response = await this.client.get(`/v1/taches/${taskId}/pieces-jointes/${attachmentId}`);
+    return response.data;
+  }
+
+  async downloadTaskAttachment(
+    taskId: number,
+    attachmentId: number
+  ): Promise<Blob> {
+    const response = await this.client.get(`/v1/taches/${taskId}/pieces-jointes/${attachmentId}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  async updateTaskAttachment(
+    taskId: number,
+    attachmentId: number,
+    data: {
+      description?: string;
+      type_document?: 'rapport' | 'justificatif' | 'piece_jointe' | 'documentation' | 'autre';
+    }
+  ): Promise<ApiResponse<TaskAttachment>> {
+    const response = await this.client.put(`/v1/taches/${taskId}/pieces-jointes/${attachmentId}`, data);
+    return response.data;
+  }
+
+  async deleteTaskAttachment(
+    taskId: number,
+    attachmentId: number
+  ): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/taches/${taskId}/pieces-jointes/${attachmentId}`);
+    return response.data;
+  }
+
+  async getTaskAttachmentsStats(
+    taskId: number
+  ): Promise<ApiResponse<{
+    total_fichiers: number;
+    total_justificatifs: number;
+    taille_totale: number;
+    types_documents: Array<{ type_document: string; count: number }>;
+    dernier_upload: TaskAttachment | null;
+  }>> {
+    const response = await this.client.get(`/v1/taches/${taskId}/pieces-jointes/statistiques`);
+    return response.data;
+  }
+
+  // =================================================================
+  // DISCUSSIONS DES PROJETS
+  // =================================================================
+
+  async getProjectDiscussions(
+    projectId: number,
+    params?: {
+      sort_order?: 'asc' | 'desc';
+      per_page?: number;
+      page?: number;
+    }
+  ): Promise<PaginatedResponse<ProjectDiscussion>> {
+    const response = await this.client.get(`/v1/projets/${projectId}/discussions`, { params });
+    return response.data;
+  }
+
+  async createProjectDiscussion(
+    projectId: number,
+    data: DiscussionCreateRequest
+  ): Promise<ApiResponse<ProjectDiscussion>> {
+    const response = await this.client.post(`/v1/projets/${projectId}/discussions`, data);
+    return response.data;
+  }
+
+  async getProjectDiscussion(
+    projectId: number,
+    discussionId: number
+  ): Promise<ApiResponse<ProjectDiscussion>> {
+    const response = await this.client.get(`/v1/projets/${projectId}/discussions/${discussionId}`);
+    return response.data;
+  }
+
+  async updateProjectDiscussion(
+    projectId: number,
+    discussionId: number,
+    data: DiscussionUpdateRequest
+  ): Promise<ApiResponse<ProjectDiscussion>> {
+    const response = await this.client.put(`/v1/projets/${projectId}/discussions/${discussionId}`, data);
+    return response.data;
+  }
+
+  async deleteProjectDiscussion(
+    projectId: number,
+    discussionId: number
+  ): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/projets/${projectId}/discussions/${discussionId}`);
+    return response.data;
+  }
+
+  async getProjectDiscussionsStats(
+    projectId: number
+  ): Promise<ApiResponse<DiscussionStats>> {
+    const response = await this.client.get(`/v1/projets/${projectId}/discussions/statistiques`);
+    return response.data;
+  }
+
+  // =================================================================
+  // DISCUSSIONS DES TÂCHES
+  // =================================================================
+
+  async getTaskDiscussions(
+    taskId: number,
+    params?: {
+      sort_order?: 'asc' | 'desc';
+      per_page?: number;
+      page?: number;
+    }
+  ): Promise<PaginatedResponse<TaskDiscussion>> {
+    const response = await this.client.get(`/v1/taches/${taskId}/discussions`, { params });
+    return response.data;
+  }
+
+  async createTaskDiscussion(
+    taskId: number,
+    data: DiscussionCreateRequest
+  ): Promise<ApiResponse<TaskDiscussion>> {
+    const response = await this.client.post(`/v1/taches/${taskId}/discussions`, data);
+    return response.data;
+  }
+
+  async getTaskDiscussion(
+    taskId: number,
+    discussionId: number
+  ): Promise<ApiResponse<TaskDiscussion>> {
+    const response = await this.client.get(`/v1/taches/${taskId}/discussions/${discussionId}`);
+    return response.data;
+  }
+
+  async updateTaskDiscussion(
+    taskId: number,
+    discussionId: number,
+    data: DiscussionUpdateRequest
+  ): Promise<ApiResponse<TaskDiscussion>> {
+    const response = await this.client.put(`/v1/taches/${taskId}/discussions/${discussionId}`, data);
+    return response.data;
+  }
+
+  async deleteTaskDiscussion(
+    taskId: number,
+    discussionId: number
+  ): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/taches/${taskId}/discussions/${discussionId}`);
+    return response.data;
+  }
+
+  async getTaskDiscussionsStats(
+    taskId: number
+  ): Promise<ApiResponse<DiscussionStats>> {
+    const response = await this.client.get(`/v1/taches/${taskId}/discussions/statistiques`);
+    return response.data;
   }
 }
 

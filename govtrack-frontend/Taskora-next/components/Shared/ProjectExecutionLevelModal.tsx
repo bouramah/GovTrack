@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { apiClient, Project, ProjectExecutionLevelRequest } from '@/lib/api';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ProjectExecutionLevelModalProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ export default function ProjectExecutionLevelModal({
   project, 
   onSuccess 
 }: ProjectExecutionLevelModalProps) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [niveauExecution, setNiveauExecution] = useState<number>(0);
   const [commentaire, setCommentaire] = useState('');
@@ -47,7 +48,11 @@ export default function ProjectExecutionLevelModal({
     
     // Validation côté client
     if (niveauExecution < 0 || niveauExecution > 99) {
-      toast.error('Le niveau d\'exécution doit être entre 0 et 99%');
+      toast({
+        variant: "destructive",
+        title: "Erreur de validation",
+        description: "Le niveau d'exécution doit être entre 0 et 99%",
+      });
       return;
     }
 
@@ -59,9 +64,26 @@ export default function ProjectExecutionLevelModal({
         commentaire: commentaire.trim() || undefined
       };
 
-      await apiClient.updateProjectExecutionLevel(project.id, data);
+      const updatedProject = await apiClient.updateProjectExecutionLevel(project.id, data);
       
-      toast.success('Niveau d\'exécution mis à jour avec succès');
+      // Message de succès adaptatif selon la progression
+      const progression = niveauExecution - project.niveau_execution;
+      let successMessage = '';
+      
+      if (progression > 0) {
+        successMessage = `Niveau d'exécution augmenté avec succès (${project.niveau_execution}% → ${niveauExecution}%)`;
+      } else if (progression < 0) {
+        successMessage = `Niveau d'exécution diminué avec succès (${project.niveau_execution}% → ${niveauExecution}%)`;
+      } else {
+        successMessage = niveauExecution === 100 
+          ? 'Niveau d\'exécution confirmé à 100%'
+          : 'Niveau d\'exécution confirmé avec succès';
+      }
+      
+      toast({
+        title: "Succès",
+        description: successMessage,
+      });
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -70,11 +92,23 @@ export default function ProjectExecutionLevelModal({
       // Gestion des erreurs de validation du serveur
       if (error.message === 'Erreur de validation' && error.response?.data?.errors) {
         setServerErrors(error.response.data.errors);
-        toast.error('Veuillez corriger les erreurs de validation ci-dessous');
+        toast({
+          variant: "destructive",
+          title: "Erreur de validation",
+          description: "Veuillez corriger les erreurs de validation ci-dessous",
+        });
       } else if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: error.response.data.message,
+        });
       } else {
-        toast.error(error.message || 'Erreur lors de la mise à jour du niveau d\'exécution');
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: error.message || 'Erreur lors de la mise à jour du niveau d\'exécution',
+        });
       }
     } finally {
       setLoading(false);
@@ -194,6 +228,17 @@ export default function ProjectExecutionLevelModal({
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <p className="text-sm text-green-800">
                   <span className="font-medium">Progression :</span> +{progression}%
+                </p>
+              </div>
+            )}
+
+            {progression < 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <p className="text-sm text-orange-800">
+                  <span className="font-medium">Diminution :</span> {progression}%
+                </p>
+                <p className="text-xs text-orange-700 mt-1">
+                  Le niveau d'exécution sera diminué. Assurez-vous que c'est justifié.
                 </p>
               </div>
             )}

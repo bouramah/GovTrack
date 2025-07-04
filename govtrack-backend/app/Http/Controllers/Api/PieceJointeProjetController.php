@@ -8,6 +8,8 @@ use App\Models\Projet;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -69,18 +71,40 @@ class PieceJointeProjetController extends Controller
             $validated = $request->validate([
                 'fichier' => 'required|file|max:10240', // 10MB max
                 'description' => 'nullable|string|max:500',
-                'est_justificatif' => 'boolean',
+                'est_justificatif' => 'nullable|in:1,true,on',
                 'type_document' => 'nullable|string|in:rapport,justificatif,piece_jointe,documentation,autre',
             ]);
 
             $fichier = $request->file('fichier');
 
-            // Générer un nom unique pour le fichier
-            $nomFichier = time() . '_' . $fichier->getClientOriginalName();
+            // Générer un nom unique pour le fichier (nettoyer les caractères spéciaux)
+            $nomOriginal = $fichier->getClientOriginalName();
+            $extension = pathinfo($nomOriginal, PATHINFO_EXTENSION);
+            $nomSansExtension = pathinfo($nomOriginal, PATHINFO_FILENAME);
+
+            // Nettoyer le nom du fichier (enlever accents et caractères spéciaux)
+            $nomNettoye = $this->nettoyerNomFichier($nomSansExtension);
+            $nomFichier = time() . '_' . $nomNettoye . '.' . $extension;
             $cheminFichier = 'projets/' . $projetId . '/' . $nomFichier;
 
-            // Stocker le fichier
-            $path = $fichier->storeAs('public/' . dirname($cheminFichier), basename($cheminFichier));
+            // Stocker le fichier avec putFileAs (plus fiable)
+            $path = Storage::disk('public')->putFileAs(
+                dirname($cheminFichier),
+                $fichier,
+                basename($cheminFichier)
+            );
+
+            // Debug: Afficher les informations de stockage
+            Log::info('File upload attempt', [
+                'nom_original' => $nomOriginal,
+                'nom_nettoye' => $nomNettoye,
+                'nom_fichier_final' => $nomFichier,
+                'chemin_fichier' => $cheminFichier,
+                'path_returned' => $path,
+                'dirname' => dirname($cheminFichier),
+                'basename' => basename($cheminFichier),
+                'file_exists' => Storage::disk('public')->exists($path)
+            ]);
 
             if (!$path) {
                 return response()->json([
@@ -93,12 +117,12 @@ class PieceJointeProjetController extends Controller
             $pieceJointe = PieceJointeProjet::create([
                 'projet_id' => $projetId,
                 'user_id' => $request->user()->id,
-                'fichier_path' => $cheminFichier,
+                'fichier_path' => asset('storage/' . $path), // Stocker l'URL complète comme dans AuthController
                 'nom_original' => $fichier->getClientOriginalName(),
                 'mime_type' => $fichier->getMimeType(),
                 'taille' => $fichier->getSize(),
                 'description' => $validated['description'],
-                'est_justificatif' => $validated['est_justificatif'] ?? false,
+                'est_justificatif' => !empty($validated['est_justificatif']),
                 'type_document' => $validated['type_document'] ?? 'piece_jointe',
                 'date_creation' => now(),
             ]);
@@ -134,16 +158,35 @@ class PieceJointeProjetController extends Controller
         try {
             $pieceJointe = PieceJointeProjet::where('projet_id', $projetId)->findOrFail($id);
 
-            $cheminComplet = storage_path('app/public/' . $pieceJointe->fichier_path);
+            // Debug: Afficher les informations du fichier
+            Log::info('Download attempt', [
+                'piece_jointe_id' => $pieceJointe->id,
+                'fichier_path' => $pieceJointe->fichier_path,
+                'nom_original' => $pieceJointe->nom_original
+            ]);
+
+            // Extraire le chemin relatif depuis l'URL stockée
+            $urlParts = parse_url($pieceJointe->fichier_path);
+            $cheminRelatif = str_replace('/storage/', '', $urlParts['path']);
+            $cheminComplet = storage_path('app/public/' . $cheminRelatif);
 
             if (!file_exists($cheminComplet)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Fichier non trouvé sur le serveur'
+                    'message' => 'Fichier non trouvé sur le serveur',
+                    'debug' => [
+                        'fichier_path' => $pieceJointe->fichier_path,
+                        'chemin_relatif' => $cheminRelatif,
+                        'chemin_complet' => $cheminComplet,
+                        'exists' => file_exists($cheminComplet)
+                    ]
                 ], 404);
             }
 
-            return response()->download($cheminComplet, $pieceJointe->nom_original);
+            // Nettoyer le nom original pour le téléchargement
+            $nomTelechargement = $this->nettoyerNomFichier(pathinfo($pieceJointe->nom_original, PATHINFO_FILENAME)) . '.' . pathinfo($pieceJointe->nom_original, PATHINFO_EXTENSION);
+
+            return response()->download($cheminComplet, $nomTelechargement);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -240,7 +283,7 @@ class PieceJointeProjetController extends Controller
 
             // Empêcher la suppression des justificatifs utilisés dans l'historique
             if ($pieceJointe->est_justificatif) {
-                $utiliseEnHistorique = \DB::table('projet_historique_statuts')
+                $utiliseEnHistorique = DB::table('projet_historique_statuts')
                     ->where('justificatif_path', $pieceJointe->fichier_path)
                     ->exists();
 
@@ -252,10 +295,14 @@ class PieceJointeProjetController extends Controller
                 }
             }
 
+            // Extraire le chemin relatif depuis l'URL stockée pour la suppression
+            $urlParts = parse_url($pieceJointe->fichier_path);
+            $cheminRelatif = str_replace('/storage/', '', $urlParts['path']);
+            $cheminComplet = storage_path('app/public/' . $cheminRelatif);
+
             // Supprimer le fichier physique
-            $cheminComplet = 'public/' . $pieceJointe->fichier_path;
-            if (Storage::exists($cheminComplet)) {
-                Storage::delete($cheminComplet);
+            if (file_exists($cheminComplet)) {
+                unlink($cheminComplet);
             }
 
             // Supprimer l'enregistrement
@@ -311,5 +358,57 @@ class PieceJointeProjetController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Nettoyer le nom d'un fichier (enlever accents et caractères spéciaux)
+     */
+    private function nettoyerNomFichier(string $nom): string
+    {
+        // Convertir les accents en caractères ASCII
+        $nom = $this->transliterate($nom);
+
+        // Remplacer les caractères spéciaux par des underscores
+        $nom = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $nom);
+
+        // Supprimer les underscores multiples
+        $nom = preg_replace('/_+/', '_', $nom);
+
+        // Supprimer les underscores au début et à la fin
+        $nom = trim($nom, '_');
+
+        // Limiter la longueur
+        if (strlen($nom) > 50) {
+            $nom = substr($nom, 0, 50);
+        }
+
+        // Si le nom est vide après nettoyage, utiliser un nom par défaut
+        if (empty($nom)) {
+            $nom = 'fichier';
+        }
+
+        return $nom;
+    }
+
+    /**
+     * Translittérer les caractères accentués
+     */
+    private function transliterate(string $string): string
+    {
+        $search = [
+            'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ',
+            'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý',
+            'é', 'è', 'ê', 'ë', 'à', 'â', 'ä', 'î', 'ï', 'ô', 'ö', 'ù', 'û', 'ü', 'ÿ', 'ñ', 'ç',
+            'É', 'È', 'Ê', 'Ë', 'À', 'Â', 'Ä', 'Î', 'Ï', 'Ô', 'Ö', 'Ù', 'Û', 'Ü', 'Ñ', 'Ç'
+        ];
+
+        $replace = [
+            'a', 'a', 'a', 'a', 'a', 'a', 'ae', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i', 'n', 'o', 'o', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'u', 'y', 'y',
+            'A', 'A', 'A', 'A', 'A', 'A', 'AE', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'N', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'Y',
+            'e', 'e', 'e', 'e', 'a', 'a', 'a', 'i', 'i', 'o', 'o', 'u', 'u', 'u', 'y', 'n', 'c',
+            'E', 'E', 'E', 'E', 'A', 'A', 'A', 'I', 'I', 'O', 'O', 'U', 'U', 'U', 'N', 'C'
+        ];
+
+        return str_replace($search, $replace, $string);
     }
 }

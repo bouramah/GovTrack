@@ -408,14 +408,8 @@ class ProjetController extends Controller
                     ], 422);
                 }
 
-                // Règle 3 : Empêcher la régression (optionnel - peut être commenté si pas souhaité)
-                if ($validated['niveau_execution'] < $projet->niveau_execution) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Le niveau d\'exécution ne peut pas être diminué (de ' . $projet->niveau_execution . '% à ' . $validated['niveau_execution'] . '%)',
-                        'niveau_actuel' => $projet->niveau_execution
-                    ], 422);
-                }
+                // Règle 3 : Permettre la diminution du niveau d'exécution (suppression de la restriction)
+                // Note: L'utilisateur peut maintenant diminuer le niveau d'exécution si nécessaire
             }
 
             $projet->update([
@@ -779,15 +773,8 @@ class ProjetController extends Controller
                 ], 422);
             }
 
-            // Règle 3 : Empêcher la régression
-            if ($validated['niveau_execution'] < $projet->niveau_execution) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Le niveau d\'exécution ne peut pas être diminué (actuellement à ' . $projet->niveau_execution . '%, tentative de passage à ' . $validated['niveau_execution'] . '%)',
-                    'niveau_actuel' => $projet->niveau_execution,
-                    'niveau_minimum' => $projet->niveau_execution
-                ], 422);
-            }
+            // Règle 3 : Permettre la diminution du niveau d'exécution (suppression de la restriction)
+            // Note: L'utilisateur peut maintenant diminuer le niveau d'exécution si nécessaire
 
             // Règle 4 : Empêcher les changements redondants (même niveau sans commentaire)
             if ($validated['niveau_execution'] == $projet->niveau_execution && empty($validated['commentaire'])) {
@@ -822,9 +809,14 @@ class ProjetController extends Controller
             $projet->load(['typeProjet', 'porteur', 'donneurOrdre']);
 
             // Message adapté selon le type de mise à jour
-            $message = $validated['niveau_execution'] == $ancienNiveau
-                ? 'Commentaire ajouté avec succès pour le niveau d\'exécution'
-                : 'Niveau d\'exécution mis à jour avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+            $progression = $validated['niveau_execution'] - $ancienNiveau;
+            if ($validated['niveau_execution'] == $ancienNiveau) {
+                $message = 'Commentaire ajouté avec succès pour le niveau d\'exécution';
+            } elseif ($progression > 0) {
+                $message = 'Niveau d\'exécution augmenté avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+            } else {
+                $message = 'Niveau d\'exécution diminué avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+            }
 
             return response()->json([
                 'success' => true,
