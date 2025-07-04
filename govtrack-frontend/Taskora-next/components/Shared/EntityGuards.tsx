@@ -57,6 +57,37 @@ export const ViewEntityChiefHistoryGuard: React.FC<{ children: React.ReactNode }
   </PermissionGuard>
 );
 
+// Guards pour les types d'entités
+export const ViewEntityTypesListGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PermissionGuard permission="view_entity_types_list" fallback={null}>
+    {children}
+  </PermissionGuard>
+);
+
+export const CreateEntityTypeGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PermissionGuard permission="create_entity_type" fallback={null}>
+    {children}
+  </PermissionGuard>
+);
+
+export const EditEntityTypeGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PermissionGuard permission="edit_entity_type" fallback={null}>
+    {children}
+  </PermissionGuard>
+);
+
+export const DeleteEntityTypeGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PermissionGuard permission="delete_entity_type" fallback={null}>
+    {children}
+  </PermissionGuard>
+);
+
+export const ViewEntityTypeDetailsGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PermissionGuard permission="view_entity_type_details" fallback={null}>
+    {children}
+  </PermissionGuard>
+);
+
 // Hook personnalisé pour les permissions d'entités
 export const useEntityPermissions = () => {
   const { hasPermission } = usePermissions();
@@ -71,5 +102,11 @@ export const useEntityPermissions = () => {
     canViewUsers: hasPermission('view_entity_users'),
     canManageAssignments: hasPermission('manage_entity_assignments'),
     canViewChiefHistory: hasPermission('view_entity_chief_history'),
+    // Permissions pour les types d'entités
+    canViewTypesList: hasPermission('view_entity_types_list'),
+    canCreateType: hasPermission('create_entity_type'),
+    canEditType: hasPermission('edit_entity_type'),
+    canDeleteType: hasPermission('delete_entity_type'),
+    canViewTypeDetails: hasPermission('view_entity_type_details'),
   };
 }; 

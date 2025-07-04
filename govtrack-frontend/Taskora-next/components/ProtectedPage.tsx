@@ -27,6 +27,28 @@ export const ProtectedPage: React.FC<ProtectedPageProps> = ({
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  let hasAccess = false;
+
+  if (permission) {
+    hasAccess = hasPermission(permission);
+  } else if (permissions && permissions.length > 0) {
+    if (requireAll) {
+      hasAccess = hasAllPermissions(permissions);
+    } else {
+      hasAccess = hasAnyPermission(permissions);
+    }
+  } else {
+    // Si aucune permission n'est spécifiée, on autorise l'accès
+    hasAccess = true;
+  }
+
+  // Hook useEffect doit être appelé avant tous les returns
+  useEffect(() => {
+    if (!hasAccess && redirectTo && !loading && user) {
+      router.push(redirectTo);
+    }
+  }, [hasAccess, redirectTo, router, loading, user]);
+
   // Afficher un loader pendant le chargement de l'utilisateur
   if (loading || !user) {
     return (
@@ -47,27 +69,6 @@ export const ProtectedPage: React.FC<ProtectedPageProps> = ({
       </div>
     );
   }
-
-  let hasAccess = false;
-
-  if (permission) {
-    hasAccess = hasPermission(permission);
-  } else if (permissions && permissions.length > 0) {
-    if (requireAll) {
-      hasAccess = hasAllPermissions(permissions);
-    } else {
-      hasAccess = hasAnyPermission(permissions);
-    }
-  } else {
-    // Si aucune permission n'est spécifiée, on autorise l'accès
-    hasAccess = true;
-  }
-
-  useEffect(() => {
-    if (!hasAccess && redirectTo) {
-      router.push(redirectTo);
-    }
-  }, [hasAccess, redirectTo, router]);
 
   if (!hasAccess) {
     if (fallback) {

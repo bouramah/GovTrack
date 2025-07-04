@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserManagementSeeder::class,
             TerminateProjectPermissionSeeder::class,
+            EntityTypePermissionsSeeder::class,
         ]);
     }
 }

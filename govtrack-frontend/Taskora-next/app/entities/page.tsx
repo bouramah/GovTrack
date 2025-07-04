@@ -15,6 +15,11 @@ import {
   ViewEntityUsersGuard,
   ManageEntityAssignmentsGuard,
   ViewEntityChiefHistoryGuard,
+  ViewEntityTypesListGuard,
+  CreateEntityTypeGuard,
+  EditEntityTypeGuard,
+  DeleteEntityTypeGuard,
+  ViewEntityTypeDetailsGuard,
   useEntityPermissions
 } from '@/components/Shared/EntityGuards';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,10 +63,28 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronFirst,
-  ChevronLast
+  ChevronLast,
+  Download,
+  Printer
 } from "lucide-react";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { apiClient, TypeEntite, Entite, User, Poste } from "@/lib/api";
+import {
+  ViewPostsListGuard,
+  CreatePostGuard,
+  EditPostGuard,
+  DeletePostGuard,
+  ViewPostDetailsGuard,
+  ViewPostsStatsGuard,
+  usePostPermissions
+} from '@/components/Shared/PosteGuards';
+import {
+  ViewOrganigrammeGuard,
+  ExportOrganigrammeGuard,
+  PrintOrganigrammeGuard,
+  ViewOrganigrammeDetailsGuard,
+  useOrganigrammePermissions
+} from '@/components/Shared/OrganigrammeGuards';
 
 // Composant pour afficher conditionnellement un séparateur
 const ConditionalSeparator: React.FC<{ 
@@ -164,6 +187,8 @@ export default function EntitiesPage() {
   const [searchTermPostes, setSearchTermPostes] = useState("");
   
   const entityPermissions = useEntityPermissions();
+  const postPermissions = usePostPermissions();
+  const organigrammePermissions = useOrganigrammePermissions();
   
   // Valeurs debounced pour éviter les appels API trop fréquents
   const debouncedSearchTerm = useDebounce(searchTerm, 1000);
@@ -260,6 +285,13 @@ export default function EntitiesPage() {
   useEffect(() => {
     loadData();
   }, [currentPage, itemsPerPage, debouncedSearchTerm, selectedTypeFilter, currentPagePostes, itemsPerPagePostes, debouncedSearchTermPostes]);
+
+  // Charger l'organigramme quand l'onglet est sélectionné
+  useEffect(() => {
+    if (activeTab === "organigramme" && organigrammePermissions.canView) {
+      loadOrganigramme();
+    }
+  }, [activeTab, organigrammePermissions.canView]);
 
   // Gestionnaires de pagination
   const handlePageChange = (page: number) => {
@@ -989,17 +1021,15 @@ export default function EntitiesPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="entites">Entités</TabsTrigger>
-          <TabsTrigger value="types">Types d'Entité</TabsTrigger>
-          <TabsTrigger value="postes">
-            <Briefcase className="h-4 w-4 mr-2" />
-            Postes
-          </TabsTrigger>
-          <ViewEntityHierarchyGuard>
-            <TabsTrigger value="organigramme" onClick={loadOrganigramme}>Organigramme</TabsTrigger>
-          </ViewEntityHierarchyGuard>
-          <ManageEntityAssignmentsGuard>
-            <TabsTrigger value="chefs" onClick={loadChefsActuels}>Chefs Actuels</TabsTrigger>
-          </ManageEntityAssignmentsGuard>
+          {entityPermissions.canViewTypesList && (
+            <TabsTrigger value="types">Types d'entité</TabsTrigger>
+          )}
+          {postPermissions.canViewList && (
+            <TabsTrigger value="postes">Postes</TabsTrigger>
+          )}
+          {organigrammePermissions.canView && (
+            <TabsTrigger value="organigramme">Organigramme</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="entites" className="space-y-4">
@@ -1266,15 +1296,16 @@ export default function EntitiesPage() {
         </TabsContent>
 
         <TabsContent value="types" className="space-y-4">
+          <ViewEntityTypesListGuard>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Types d'Entité ({typeEntites.length})</CardTitle>
-              <CreateEntityGuard>
+              <CreateEntityTypeGuard>
                 <Button onClick={() => setShowCreateTypeModal(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nouveau type
                 </Button>
-              </CreateEntityGuard>
+              </CreateEntityTypeGuard>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1290,20 +1321,20 @@ export default function EntitiesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <ViewEntityDetailsGuard>
+                            <ViewEntityTypeDetailsGuard>
                               <DropdownMenuItem onClick={() => handleViewTypeDetails(type)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Voir détails
                               </DropdownMenuItem>
-                            </ViewEntityDetailsGuard>
-                            <EditEntityGuard>
+                            </ViewEntityTypeDetailsGuard>
+                            <EditEntityTypeGuard>
                               <DropdownMenuItem onClick={() => openEditTypeModal(type)}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Modifier
                               </DropdownMenuItem>
-                            </EditEntityGuard>
-                            <ConditionalSeparator showIfAnyVisible={entityPermissions.canDelete} />
-                            <DeleteEntityGuard>
+                            </EditEntityTypeGuard>
+                            <ConditionalSeparator showIfAnyVisible={entityPermissions.canDeleteType} />
+                            <DeleteEntityTypeGuard>
                               <DropdownMenuItem 
                                 onClick={() => openDeleteTypeDialog(type)} 
                                 className="text-destructive"
@@ -1312,22 +1343,19 @@ export default function EntitiesPage() {
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer
                               </DropdownMenuItem>
-                            </DeleteEntityGuard>
+                            </DeleteEntityTypeGuard>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      
-                    {type.description && (
+                      {type.description && (
                         <p className="text-sm text-muted-foreground mb-3">
                         {type.description}
                       </p>
                     )}
-                      
                       <div className="flex justify-between items-center">
                         <Badge variant="secondary">
                           {entites.filter(e => e.type_entite.id === type.id).length} entités
                         </Badge>
-                        
                         <div className="text-xs text-muted-foreground">
                           Créé le {new Date(type.date_creation).toLocaleDateString('fr-FR')}
                     </div>
@@ -1336,11 +1364,11 @@ export default function EntitiesPage() {
                   </Card>
                 ))}
               </div>
-              
               {typeEntites.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
                   <p>Aucun type d'entité trouvé</p>
+                  <CreateEntityTypeGuard>
                   <Button 
                     variant="outline" 
                     className="mt-4"
@@ -1349,25 +1377,28 @@ export default function EntitiesPage() {
                     <Plus className="h-4 w-4 mr-2" />
                     Créer le premier type
                   </Button>
+                  </CreateEntityTypeGuard>
                 </div>
               )}
             </CardContent>
           </Card>
+          </ViewEntityTypesListGuard>
         </TabsContent>
 
         <TabsContent value="postes" className="space-y-4">
+          <ViewPostsListGuard>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5" />
                 Postes ({postes.length})
               </CardTitle>
-              <CreateEntityGuard>
+              <CreatePostGuard>
                 <Button onClick={() => setShowCreatePosteModal(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nouveau Poste
                 </Button>
-              </CreateEntityGuard>
+              </CreatePostGuard>
             </CardHeader>
             <CardContent>
               {/* Recherche */}
@@ -1384,6 +1415,7 @@ export default function EntitiesPage() {
               </div>
 
               {/* Statistiques des postes */}
+              <ViewPostsStatsGuard>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <Card>
                   <CardContent className="pt-4">
@@ -1414,6 +1446,7 @@ export default function EntitiesPage() {
                   </CardContent>
                 </Card>
               </div>
+              </ViewPostsStatsGuard>
 
               {/* Liste des postes */}
               <div className="space-y-4">
@@ -1454,20 +1487,20 @@ export default function EntitiesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <ViewEntityDetailsGuard>
+                            <ViewPostDetailsGuard>
                               <DropdownMenuItem onClick={() => handleViewPosteDetails(poste)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 Voir détails
                               </DropdownMenuItem>
-                            </ViewEntityDetailsGuard>
-                            <EditEntityGuard>
+                            </ViewPostDetailsGuard>
+                            <EditPostGuard>
                               <DropdownMenuItem onClick={() => openEditPosteModal(poste)}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Modifier
                               </DropdownMenuItem>
-                            </EditEntityGuard>
-                            <Separator />
-                            <DeleteEntityGuard>
+                            </EditPostGuard>
+                            <ConditionalSeparator showIfAnyVisible={postPermissions.canDelete} />
+                            <DeletePostGuard>
                               <DropdownMenuItem 
                                 onClick={() => openDeletePosteDialog(poste)} 
                                 className="text-destructive"
@@ -1475,7 +1508,7 @@ export default function EntitiesPage() {
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer
                               </DropdownMenuItem>
-                            </DeleteEntityGuard>
+                            </DeletePostGuard>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1494,6 +1527,7 @@ export default function EntitiesPage() {
                     }
                   </p>
                   {!searchTermPostes && (
+                    <CreatePostGuard>
                     <Button 
                       variant="outline" 
                       className="mt-4"
@@ -1502,6 +1536,7 @@ export default function EntitiesPage() {
                       <Plus className="h-4 w-4 mr-2" />
                       Créer le premier poste
                     </Button>
+                    </CreatePostGuard>
                   )}
                 </div>
               )}
@@ -1596,9 +1631,10 @@ export default function EntitiesPage() {
               )}
             </CardContent>
           </Card>
+          </ViewPostsListGuard>
         </TabsContent>
 
-        <ViewEntityHierarchyGuard>
+        <ViewOrganigrammeGuard>
           <TabsContent value="organigramme" className="space-y-4">
             <Card>
               <CardHeader>
@@ -1606,11 +1642,13 @@ export default function EntitiesPage() {
                   <TreePine className="h-5 w-5" />
                   Organigramme Organisationnel
                 </CardTitle>
+
               </CardHeader>
               <CardContent>
                 {organigramme ? (
                   <div className="space-y-4">
                     {/* Statistiques globales */}
+                    <ViewOrganigrammeDetailsGuard>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
                       <div className="text-center">
                         <div className="text-2xl font-bold">{organigramme.statistiques?.total_entites || 0}</div>
@@ -1629,6 +1667,7 @@ export default function EntitiesPage() {
                         <div className="text-sm text-muted-foreground">Niveaux max</div>
                       </div>
                     </div>
+                    </ViewOrganigrammeDetailsGuard>
 
                     {/* Arbre hiérarchique */}
                     <div className="p-4 border rounded-lg">
@@ -1647,7 +1686,7 @@ export default function EntitiesPage() {
               </CardContent>
             </Card>
           </TabsContent>
-        </ViewEntityHierarchyGuard>
+        </ViewOrganigrammeGuard>
 
         <ManageEntityAssignmentsGuard>
           <TabsContent value="chefs" className="space-y-4">
