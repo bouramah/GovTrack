@@ -13,22 +13,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { Tache } from "@/types/tache";
 
 interface DeleteTaskDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   task: Tache | null;
-  onSuccess?: () => void;
+  onSuccess: (taskId: number) => void;
 }
 
 export default function DeleteTaskDialog({
-  open,
-  onOpenChange,
+  isOpen,
+  onClose,
   task,
-  onSuccess
+  onSuccess,
 }: DeleteTaskDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -42,19 +42,17 @@ export default function DeleteTaskDialog({
       const response = await apiClient.deleteTache(task.id);
       
       if (response.success) {
+        onSuccess(task.id);
         toast({
           title: "Succès",
           description: "Tâche supprimée avec succès",
         });
-        
-        onSuccess?.();
-        onOpenChange(false);
       }
     } catch (error: any) {
-      console.error('Erreur lors de la suppression de la tâche:', error);
+      console.error('Erreur suppression tâche:', error);
       toast({
         title: "Erreur",
-        description: error.response?.data?.message || "Erreur lors de la suppression de la tâche",
+        description: error.message || "Erreur lors de la suppression de la tâche",
         variant: "destructive",
       });
     } finally {
@@ -65,18 +63,18 @@ export default function DeleteTaskDialog({
   if (!task) return null;
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-red-500" />
+            <AlertTriangle className="h-5 w-5 text-red-500" />
             Supprimer la tâche
           </AlertDialogTitle>
           <AlertDialogDescription>
             Êtes-vous sûr de vouloir supprimer la tâche "{task.titre}" ?
             <br />
             <br />
-            <strong>Attention :</strong> Cette action est irréversible et supprimera définitivement la tâche ainsi que toutes ses données associées (historique, discussions, pièces jointes).
+            <strong>Attention :</strong> Cette action est irréversible. Toutes les données associées à cette tâche (pièces jointes, discussions, historique) seront également supprimées.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -86,13 +84,9 @@ export default function DeleteTaskDialog({
           <AlertDialogAction
             onClick={handleDelete}
             disabled={loading}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700"
           >
-            {loading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Supprimer définitivement
           </AlertDialogAction>
         </AlertDialogFooter>

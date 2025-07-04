@@ -44,6 +44,7 @@ import ProjectAttachmentsModal from "@/components/Shared/ProjectAttachmentsModal
 import ProjectAttachmentsList from "@/components/Shared/ProjectAttachmentsList";
 import ProjectAttachmentUploadModal from "@/components/Shared/ProjectAttachmentUploadModal";
 import ProjectDiscussionsList from "@/components/Shared/ProjectDiscussionsList";
+import ProjectTasksTab from "@/components/Shared/ProjectTasksTab";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -493,72 +494,10 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               </TabsContent>
 
               <TabsContent value="tasks">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Tâches du projet</CardTitle>
-                        <CardDescription>
-                          Gestion des tâches et sous-tâches
-                        </CardDescription>
-                      </div>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Nouvelle tâche
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-4 text-sm text-gray-600">
-                      Nombre total de tâches : {project.taches_count || 0}
-                    </div>
-                    {project.taches && project.taches.length > 0 ? (
-                      <div className="space-y-4">
-                        {project.taches.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                            <div className="flex items-center space-x-3">
-                              <CheckSquare className="h-5 w-5 text-gray-400" />
-                              <div>
-                                <div className="font-medium">{task.titre}</div>
-                                <div className="text-sm text-gray-500">{task.description}</div>
-                                <div className="text-xs text-gray-400 mt-1 space-y-1">
-                                  {task.date_fin_previsionnelle && (
-                                    <div>Échéance : {new Date(task.date_fin_previsionnelle).toLocaleDateString('fr-FR')}</div>
-                                  )}
-                                  {task.responsable && (
-                                    <div>Responsable : {task.responsable.prenom} {task.responsable.nom}</div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge className={cn(
-                                "font-medium",
-                                task.statut === "a_faire" && "bg-gray-100 text-gray-800",
-                                task.statut === "en_cours" && "bg-blue-100 text-blue-800",
-                                task.statut === "termine" && "bg-green-100 text-green-800",
-                                task.statut === "bloque" && "bg-red-100 text-red-800"
-                              )}>
-                                {getTaskStatusLabel(task.statut)}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {task.niveau_execution}%
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <CheckSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 mb-2">Aucune tâche pour ce projet</p>
-                        <p className="text-sm text-gray-400">
-                          Les tâches apparaîtront ici une fois qu'elles seront créées
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <ProjectTasksTab 
+                  project={project} 
+                  onProjectUpdate={handleProjectUpdate}
+                />
               </TabsContent>
 
               <TabsContent value="attachments">

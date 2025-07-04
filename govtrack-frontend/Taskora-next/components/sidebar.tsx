@@ -184,15 +184,15 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/toutes-taches" icon={LayoutGrid}>
                 Toutes les Tâches
               </NavItem>
-              <NavItem href="/calendar" icon={Calendar}>
+              {/* <NavItem href="/calendar" icon={Calendar}>
                 Calendrier
-              </NavItem>
-              <NavItem href="/contacts" icon={ContactRound}>
+              </NavItem> */}
+              {/* <NavItem href="/contacts" icon={ContactRound}>
                 Contacts
-              </NavItem>
-              <NavItem href="/notifications" icon={Bell}>
+              </NavItem> */}
+              {/* <NavItem href="/notifications" icon={Bell}>
                 Notifications
-              </NavItem>
+              </NavItem> */}
 
               {/* Section Administration */}
               <div className="pt-4 border-t border-gray-200 mt-4">
@@ -213,7 +213,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 </NavItem>
               </div>
 
-              <NavItem
+              {/* <NavItem
                 href="#"
                 icon={Search}
                 onClick={(e) => {
@@ -222,11 +222,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 }}
               >
                 Rechercher
-              </NavItem>
+              </NavItem> */}
             </nav>
 
             {/* Projects section */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <div className="flex items-center justify-between px-3 mb-2">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Projets Récents
@@ -269,10 +269,10 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   )}
                 </Button>
               </div>
-            </div>
+            </div> */}
 
             {/* Messages section */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <div className="flex items-center justify-between px-3 mb-2">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Messages
@@ -313,7 +313,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   )}
                 </Button>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Menu utilisateur - fixé en bas */}

@@ -29,6 +29,7 @@ import TaskHistoryModal from "./Shared/TaskHistoryModal";
 import TaskExecutionLevelModal from "./Shared/TaskExecutionLevelModal";
 import TaskAttachmentsModal from "./Shared/TaskAttachmentsModal";
 import TaskDiscussionsModal from "./TaskDiscussionsModal";
+import TaskStatusChangeModal from "./Shared/TaskStatusChangeModal";
 
 interface TacheKanbanCardProps {
   tache: Tache;
@@ -45,6 +46,7 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
   const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
   const [discussionsModalOpen, setDiscussionsModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
   const [tacheDetail, setTacheDetail] = useState<Tache | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   // Configuration du drag source
@@ -147,10 +149,10 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    setExecutionLevelModalOpen(true);
+                    setStatusChangeModalOpen(true);
                   }}>
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    Niveau d'exécution
+                    Changer le statut
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
@@ -321,6 +323,16 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
       onClose={() => setDiscussionsModalOpen(false)}
       tacheId={tache.id}
       tacheTitre={tache.titre}
+    />
+
+    <TaskStatusChangeModal
+      isOpen={statusChangeModalOpen}
+      onClose={() => setStatusChangeModalOpen(false)}
+      task={tache}
+      onSuccess={(updatedTask) => {
+        onTaskUpdate?.(updatedTask);
+        setStatusChangeModalOpen(false);
+      }}
     />
     </div>
   );

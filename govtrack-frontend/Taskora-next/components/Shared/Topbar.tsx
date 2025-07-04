@@ -98,11 +98,11 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
 
         {/* Right: Notifications, New Project Button and Profile */}
         <div className="flex items-center space-x-4">
-          <Link href="/notifications" className="relative">
+          {/* <Link href="/notifications" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-[-6px] -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             <span className="sr-only">Notifications</span>
-          </Link>
+          </Link> */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -179,10 +179,10 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
                   <span>Profil</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />

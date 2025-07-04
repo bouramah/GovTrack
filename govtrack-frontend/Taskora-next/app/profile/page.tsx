@@ -576,7 +576,7 @@ export default function ProfilePage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <Label className="text-sm font-medium">Rafraîchir la session</Label>
                         <p className="text-xs text-muted-foreground">
                           Renouveler votre token d'authentification pour maintenir une session sécurisée
@@ -590,7 +590,7 @@ export default function ProfilePage() {
                           <RefreshCw className="h-4 w-4 mr-2" />
                           Rafraîchir la session
                         </Button>
-                      </div>
+                      </div> */}
 
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Déconnexion de tous les appareils</Label>

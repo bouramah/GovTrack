@@ -252,7 +252,6 @@ class TacheController extends Controller
                 'nouveau_statut' => 'required|in:' . implode(',', array_keys(Tache::STATUTS)),
                 'niveau_execution' => 'sometimes|integer|min:0|max:100',
                 'commentaire' => 'nullable|string',
-                'justificatif_path' => 'nullable|string',
             ]);
 
             $nouveauStatut = $validated['nouveau_statut'];
@@ -317,23 +316,15 @@ class TacheController extends Controller
 
             // Validation spécifique selon le changement de statut
             if ($nouveauStatut === Tache::STATUT_DEMANDE_CLOTURE) {
-                if (empty($validated['justificatif_path'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Un justificatif est obligatoire pour demander la clôture de la tâche'
-                    ], 422);
-                }
-
-                // Vérifier que le justificatif existe en tant que pièce jointe
-                $justificatifExiste = PieceJointeTache::where('tache_id', $id)
-                    ->where('fichier_path', $validated['justificatif_path'])
+                // Vérifier qu'il y a au moins un justificatif (pièce jointe marquée comme justificatif)
+                $aUnJustificatif = \App\Models\PieceJointeTache::where('tache_id', $id)
                     ->where('est_justificatif', true)
                     ->exists();
 
-                if (!$justificatifExiste) {
+                if (!$aUnJustificatif) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Le justificatif spécifié doit être un fichier valide marqué comme justificatif'
+                        'message' => 'Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture de la tâche'
                     ], 422);
                 }
             }
@@ -359,7 +350,7 @@ class TacheController extends Controller
             $historiqueStatut->ancien_statut = $ancienStatut;
             $historiqueStatut->nouveau_statut = $nouveauStatut;
             $historiqueStatut->commentaire = $commentaire;
-            $historiqueStatut->justificatif_path = $validated['justificatif_path'] ?? null;
+            $historiqueStatut->justificatif_path = null; // Plus utilisé, on garde null
             $historiqueStatut->date_changement = now();
             $historiqueStatut->save();
 
