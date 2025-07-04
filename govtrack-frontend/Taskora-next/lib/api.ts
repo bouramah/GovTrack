@@ -1552,11 +1552,7 @@ class ApiClient {
     }
   }
 
-  async getProjectDashboard(params?: {
-    statut?: string;
-    type_projet_id?: number;
-    en_retard?: boolean;
-  }): Promise<ProjectDashboard> {
+  async getProjectDashboard(params?: ProjectFilters): Promise<ProjectDashboard> {
     try {
       const response: AxiosResponse<ApiResponse<ProjectDashboard>> = 
         await this.client.get('/v1/projets/tableau-bord', { params });

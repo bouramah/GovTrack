@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useDebounce } from '@/hooks/use-debounce';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,10 +19,11 @@ import {
   RefreshCw,
   Plus
 } from 'lucide-react';
-import { apiClient, ProjectDashboard as DashboardData, Project } from '@/lib/api';
+import { apiClient, ProjectDashboard as DashboardData, Project, ProjectFilters, ProjectPermissions } from '@/lib/api';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from "next/link";
+import DashboardFilters from './DashboardFilters';
 
 interface ProjectDashboardProps {
   className?: string;
@@ -31,14 +33,46 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProjectFilters>({});
+  const [permissions, setPermissions] = useState<ProjectPermissions | null>(null);
+  
+  // Debounce les filtres pour éviter les appels API trop fréquents
+  const debouncedFilters = useDebounce(filters, 1000);
+  
+  // Référence pour stocker les filtres précédents et éviter les appels API inutiles
+  const previousFiltersRef = useRef<ProjectFilters>({});
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const data = await apiClient.getProjectDashboard();
+      // Nettoyer les filtres vides avant l'appel API
+      const cleanFilters = Object.fromEntries(
+        Object.entries(debouncedFilters).filter(([_, value]) => 
+          value !== null && value !== undefined && value !== ""
+        )
+      );
+      
+      const data = await apiClient.getProjectDashboard(cleanFilters);
       setDashboardData(data);
+      
+      // Récupérer les permissions depuis la réponse des projets
+      if (data.permissions_info) {
+        setPermissions({
+          level: data.permissions_info.level,
+          can_filter_by_user: data.permissions_info.level === 'all_projects' || data.permissions_info.level === 'entity_projects',
+          can_filter_by_entity: data.permissions_info.level === 'all_projects',
+          can_filter_by_date: true,
+          available_filters: {
+            basic: ['statut', 'type_projet_id', 'en_retard', 'niveau_execution_min', 'niveau_execution_max', 'search'],
+            date: ['date_debut_previsionnelle_debut', 'date_debut_previsionnelle_fin', 'date_fin_previsionnelle_debut', 'date_fin_previsionnelle_fin', 'date_creation_debut', 'date_creation_fin'],
+            user: data.permissions_info.level === 'all_projects' || data.permissions_info.level === 'entity_projects' ? ['porteur_id', 'donneur_ordre_id'] : [],
+            entity: data.permissions_info.level === 'all_projects' ? ['entite_id'] : []
+          },
+          description: data.permissions_info.description
+        });
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement du tableau de bord');
       toast.error(err.message || 'Impossible de charger le tableau de bord');
@@ -47,9 +81,28 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
     }
   };
 
+  // Chargement initial
   useEffect(() => {
-    loadDashboard();
+    if (!dashboardData) {
+      loadDashboard();
+    }
   }, []);
+
+  // Chargement lors des changements de filtres
+  useEffect(() => {
+    // Éviter les appels API inutiles si les filtres sont identiques
+    const filtersChanged = JSON.stringify(debouncedFilters) !== JSON.stringify(previousFiltersRef.current);
+    
+    // Charger le dashboard si les filtres ont changé (même s'ils sont vides)
+    if (filtersChanged) {
+      previousFiltersRef.current = debouncedFilters;
+      loadDashboard();
+    }
+  }, [debouncedFilters]);
+
+  const handleFiltersChange = (newFilters: ProjectFilters) => {
+    setFilters(newFilters);
+  };
 
   const getStatusColor = (statut: string) => {
     switch (statut) {
@@ -131,6 +184,17 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
           </Link>
         </div>
       </div>
+
+      {/* Filtres du tableau de bord */}
+      {permissions && (
+        <div className="mb-8">
+          <DashboardFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            permissions={permissions}
+          />
+        </div>
+      )}
 
       {/* Statistiques principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

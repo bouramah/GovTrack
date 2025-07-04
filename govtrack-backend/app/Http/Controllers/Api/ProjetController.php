@@ -685,6 +685,107 @@ class ProjetController extends Controller
                 ], 403);
             }
 
+            // ========================================
+            // FILTRES AVANCÉS SELON LES PERMISSIONS
+            // ========================================
+
+            // Filtres de base (disponibles pour tous)
+            if ($request->filled('statut')) {
+                $query->byStatut($request->statut);
+            }
+
+            if ($request->filled('type_projet_id')) {
+                $query->where('type_projet_id', $request->type_projet_id);
+            }
+
+            if ($request->filled('en_retard') && $request->boolean('en_retard')) {
+                $query->enRetard();
+            }
+
+            if ($request->filled('niveau_execution_min')) {
+                $query->where('niveau_execution', '>=', $request->niveau_execution_min);
+            }
+
+            if ($request->filled('niveau_execution_max')) {
+                $query->where('niveau_execution', '<=', $request->niveau_execution_max);
+            }
+
+            // Filtres de date
+            if ($request->filled('date_debut_previsionnelle_debut')) {
+                $query->where('date_debut_previsionnelle', '>=', $request->date_debut_previsionnelle_debut);
+            }
+
+            if ($request->filled('date_debut_previsionnelle_fin')) {
+                $query->where('date_debut_previsionnelle', '<=', $request->date_debut_previsionnelle_fin);
+            }
+
+            if ($request->filled('date_fin_previsionnelle_debut')) {
+                $query->where('date_fin_previsionnelle', '>=', $request->date_fin_previsionnelle_debut);
+            }
+
+            if ($request->filled('date_fin_previsionnelle_fin')) {
+                $query->where('date_fin_previsionnelle', '<=', $request->date_fin_previsionnelle_fin);
+            }
+
+            if ($request->filled('date_creation_debut')) {
+                $query->where('created_at', '>=', $request->date_creation_debut);
+            }
+
+            if ($request->filled('date_creation_fin')) {
+                $query->where('created_at', '<=', $request->date_creation_fin);
+            }
+
+            // Filtres par utilisateur (selon les permissions)
+            if ($request->filled('porteur_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byPorteur($request->porteur_id);
+                }
+            }
+
+            if ($request->filled('donneur_ordre_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->byDonneurOrdre($request->donneur_ordre_id);
+                }
+            }
+
+            // Filtre par entité (seulement pour view_all_projects)
+            if ($request->filled('entite_id') && $user->hasPermission('view_all_projects')) {
+                $entiteId = $request->entite_id;
+
+                // Récupérer tous les utilisateurs de cette entité
+                $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                    ->distinct()
+                    ->pluck('user_id');
+
+                // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
+                $query->where(function ($q) use ($utilisateursEntite) {
+                    $q->whereIn('porteur_id', $utilisateursEntite)
+                      ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
+                      ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
+                          $tq->whereIn('responsable_id', $utilisateursEntite);
+                      });
+                });
+            }
+
+            // Recherche textuelle
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('titre', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereHas('porteur', function ($pq) use ($search) {
+                          $pq->where('nom', 'like', "%{$search}%")
+                             ->orWhere('prenom', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('donneurOrdre', function ($dq) use ($search) {
+                          $dq->where('nom', 'like', "%{$search}%")
+                             ->orWhere('prenom', 'like', "%{$search}%");
+                      });
+                });
+            }
+
             // Calculer les statistiques
             $totalProjets = $query->count();
 
