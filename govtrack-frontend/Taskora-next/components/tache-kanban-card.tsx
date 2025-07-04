@@ -1,0 +1,329 @@
+"use client";
+
+import { useState, Fragment, useEffect } from "react";
+import { useDrag } from "react-dnd";
+import { Calendar, Paperclip, MessageSquare, User, AlertTriangle, MoreHorizontal, Edit, Trash2, History, Plus, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { apiClient } from "@/lib/api";
+import type { Tache } from "@/types/tache";
+import { TACHE_STATUT_COLORS } from "@/types/tache";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import TacheDetailModal from "./tache-detail-modal";
+import NewTaskModal from "./Shared/NewTaskModal";
+import DeleteTaskDialog from "./Shared/DeleteTaskDialog";
+import TaskHistoryModal from "./Shared/TaskHistoryModal";
+import TaskExecutionLevelModal from "./Shared/TaskExecutionLevelModal";
+import TaskAttachmentsModal from "./Shared/TaskAttachmentsModal";
+import TaskDiscussionsModal from "./TaskDiscussionsModal";
+
+interface TacheKanbanCardProps {
+  tache: Tache;
+  onTaskUpdate?: (task: Tache) => void;
+  onTaskDelete?: () => void;
+}
+
+export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: TacheKanbanCardProps) {
+  const { toast } = useToast();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [executionLevelModalOpen, setExecutionLevelModalOpen] = useState(false);
+  const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+  const [discussionsModalOpen, setDiscussionsModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [tacheDetail, setTacheDetail] = useState<Tache | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  // Configuration du drag source
+  const [{ isDragging }, drag] = useDrag({
+    type: "tache-card",
+    item: { id: tache.id },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
+
+  // Fonction pour obtenir les initiales
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  // Vérifier si la tâche est en retard
+  const isEnRetard = tache.est_en_retard || 
+    (tache.date_fin_previsionnelle && 
+     new Date(tache.date_fin_previsionnelle) < new Date() && 
+     tache.statut !== 'termine');
+
+  // Charger les détails complets de la tâche
+  const loadTacheDetail = async () => {
+    try {
+      setLoadingDetail(true);
+      const response = await apiClient.getTache(tache.id);
+      if (response.success && response.data) {
+        setTacheDetail(response.data);
+      }
+    } catch (error: any) {
+      console.error('Erreur chargement détails tâche:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les détails de la tâche",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  // Charger les détails quand le modal s'ouvre
+  useEffect(() => {
+    if (detailModalOpen && !tacheDetail) {
+      loadTacheDetail();
+    }
+  }, [detailModalOpen]);
+
+  return (
+    <div>
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogTrigger asChild>
+        <div
+          ref={drag as any}
+          className={cn(
+            "bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-grab",
+            isDragging ? "opacity-50" : "opacity-100"
+          )}
+          style={{ opacity: isDragging ? 0.5 : 1 }}
+        >
+          <div className="p-3">
+            {/* En-tête avec projet, statut et menu d'actions */}
+            <div className="flex flex-wrap gap-2 items-center justify-between mb-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <Badge
+                  variant="outline"
+                  className="text-xs font-medium text-gray-700 bg-gray-50"
+                >
+                  {tache.projet?.titre || 'Projet inconnu'}
+                </Badge>
+                <Badge className={cn("text-xs font-medium border", TACHE_STATUT_COLORS[tache.statut])}>
+                  {tache.niveau_execution}%
+                </Badge>
+              </div>
+              
+              {/* Menu d'actions */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-gray-100"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setEditModalOpen(true);
+                  }}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setExecutionLevelModalOpen(true);
+                  }}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Niveau d'exécution
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setHistoryModalOpen(true);
+                  }}>
+                    <History className="h-4 w-4 mr-2" />
+                    Historique
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setAttachmentsModalOpen(true);
+                  }}>
+                    <Paperclip className="h-4 w-4 mr-2" />
+                    Pièces jointes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    setDiscussionsModalOpen(true);
+                  }}>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Discussions
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      setDeleteDialogOpen(true);
+                    }}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Titre de la tâche */}
+            <h4 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
+              {tache.titre}
+            </h4>
+
+            {/* Description (optionnelle) */}
+            {tache.description && (
+              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                {tache.description}
+              </p>
+            )}
+
+            {/* Métadonnées */}
+            <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 mb-3">
+              {/* Date d'échéance */}
+              {tache.date_fin_previsionnelle && (
+                <div className={cn(
+                  "flex items-center",
+                  isEnRetard ? "text-red-600" : ""
+                )}>
+                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  <span>
+                    {format(new Date(tache.date_fin_previsionnelle), "dd MMM", { locale: fr })}
+                  </span>
+                  {isEnRetard && <AlertTriangle className="h-3.5 w-3.5 ml-1" />}
+                </div>
+              )}
+
+              {/* Pièces jointes */}
+              {tache.pieces_jointes && tache.pieces_jointes.length > 0 && (
+                <div className="flex items-center">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <span>{tache.pieces_jointes.length}</span>
+                </div>
+              )}
+
+              {/* Discussions */}
+              {tache.discussions && tache.discussions.length > 0 && (
+                <div className="flex items-center">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>{tache.discussions.length}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Responsable */}
+            <div className="flex items-center justify-between">
+              {tache.responsable ? (
+                <div className="flex items-center">
+                  <Avatar className="h-6 w-6 mr-2">
+                    <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                      {getInitials(`${tache.responsable.prenom} ${tache.responsable.nom}`)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-xs text-gray-600">
+                    {tache.responsable.prenom} {tache.responsable.nom}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-xs text-gray-500">
+                  <User className="h-3.5 w-3.5 mr-1" />
+                  <span>Non assignée</span>
+                </div>
+              )}
+            </div>
+
+            {/* Indicateur de retard */}
+            {isEnRetard && (
+              <div className="mt-2 p-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                ⚠️ En retard
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogTrigger>
+      
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>{tache.titre}</DialogTitle>
+          <DialogDescription>
+            {tache.projet?.titre} • {tache.responsable ? `${tache.responsable.prenom} ${tache.responsable.nom}` : 'Non assignée'}
+          </DialogDescription>
+        </DialogHeader>
+        {loadingDetail ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <TacheDetailModal tache={tacheDetail || tache} />
+        )}
+      </DialogContent>
+    </Dialog>
+
+    {/* Modals d'actions */}
+    <NewTaskModal
+      open={editModalOpen}
+      onOpenChange={setEditModalOpen}
+      task={tache}
+      onSuccess={onTaskUpdate}
+    />
+
+    <DeleteTaskDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      task={tache}
+      onSuccess={onTaskDelete}
+    />
+
+    <TaskHistoryModal
+      open={historyModalOpen}
+      onOpenChange={setHistoryModalOpen}
+      task={tache}
+    />
+
+    <TaskExecutionLevelModal
+      open={executionLevelModalOpen}
+      onOpenChange={setExecutionLevelModalOpen}
+      task={tache}
+      onSuccess={onTaskUpdate}
+    />
+
+    <TaskAttachmentsModal
+      open={attachmentsModalOpen}
+      onOpenChange={setAttachmentsModalOpen}
+      task={tache}
+      onSuccess={() => onTaskUpdate?.(tache)}
+    />
+
+    <TaskDiscussionsModal
+      isOpen={discussionsModalOpen}
+      onClose={() => setDiscussionsModalOpen(false)}
+      tacheId={tache.id}
+      tacheTitre={tache.titre}
+    />
+    </div>
+  );
+}
+
+ 

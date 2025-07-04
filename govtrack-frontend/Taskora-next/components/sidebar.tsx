@@ -178,11 +178,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/projects" icon={FolderKanban}>
                 Projets
               </NavItem>
-              <NavItem href="/my-tasks" icon={CheckSquare}>
+              <NavItem href="/mes-taches" icon={CheckSquare}>
                 Mes Tâches
               </NavItem>
-              <NavItem href="/kanban" icon={LayoutGrid}>
-                Kanban
+              <NavItem href="/toutes-taches" icon={LayoutGrid}>
+                Toutes les Tâches
               </NavItem>
               <NavItem href="/calendar" icon={Calendar}>
                 Calendrier

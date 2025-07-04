@@ -20,7 +20,7 @@ class TacheController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Tache::with(['projet', 'responsable']);
+            $query = Tache::with(['projet', 'responsable', 'piecesJointes.user']);
 
             // Filtres
             if ($request->filled('projet_id')) {
@@ -398,7 +398,7 @@ class TacheController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => $tache->fresh(['historiqueStatuts.user'])
+                'data' => $tache->fresh(['projet.typeProjet', 'responsable', 'piecesJointes.user', 'historiqueStatuts.user'])
             ]);
 
         } catch (ValidationException $e) {
@@ -424,7 +424,7 @@ class TacheController extends Controller
         try {
             $user = $request->user();
 
-            $query = Tache::with(['projet.typeProjet'])
+            $query = Tache::with(['projet.typeProjet', 'responsable', 'piecesJointes.user'])
                 ->where('responsable_id', $user->id);
 
             // Filtres

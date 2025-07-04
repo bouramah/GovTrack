@@ -193,6 +193,18 @@ export interface ProjectDashboard {
   };
 }
 
+// Import des types de tâches
+import type { 
+  Tache, 
+  CreateTacheRequest, 
+  UpdateTacheRequest, 
+  ChangeTacheStatutRequest,
+  TacheFilters,
+  TachePieceJointe,
+  TacheDiscussion,
+  TacheHistoriqueStatut
+} from '@/types/tache';
+
 export interface Task {
   id: number;
   titre: string;
@@ -1672,6 +1684,139 @@ class ApiClient {
   }
 
   // =================================================================
+  // TÂCHES - GESTION COMPLÈTE
+  // =================================================================
+
+  // Récupérer toutes les tâches (avec filtres)
+  async getTaches(filters?: TacheFilters): Promise<ApiResponse<Tache[]>> {
+    const queryParams = new URLSearchParams();
+    
+    if (filters?.projet_id) {
+      queryParams.append('projet_id', filters.projet_id.toString());
+    }
+    if (filters?.statut) {
+      queryParams.append('statut', filters.statut);
+    }
+    if (filters?.responsable_id) {
+      queryParams.append('responsable_id', filters.responsable_id.toString());
+    }
+    if (filters?.en_retard !== undefined && filters.en_retard !== null) {
+      queryParams.append('en_retard', filters.en_retard.toString());
+    }
+    if (filters?.search) {
+      queryParams.append('search', filters.search);
+    }
+    if (filters?.sort_by) {
+      queryParams.append('sort_by', filters.sort_by);
+    }
+    if (filters?.sort_order) {
+      queryParams.append('sort_order', filters.sort_order);
+    }
+    if (filters?.per_page) {
+      queryParams.append('per_page', filters.per_page.toString());
+    }
+
+    const url = `/v1/taches${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.client.get(url);
+    return response.data;
+  }
+
+  // Récupérer les tâches de l'utilisateur connecté
+  async getMesTaches(filters?: Pick<TacheFilters, 'statut' | 'en_retard' | 'sort_by' | 'sort_order'>): Promise<ApiResponse<Tache[]>> {
+    const queryParams = new URLSearchParams();
+    
+    if (filters?.statut) {
+      queryParams.append('statut', filters.statut);
+    }
+    if (filters?.en_retard !== undefined && filters.en_retard !== null) {
+      queryParams.append('en_retard', filters.en_retard.toString());
+    }
+    if (filters?.sort_by) {
+      queryParams.append('sort_by', filters.sort_by);
+    }
+    if (filters?.sort_order) {
+      queryParams.append('sort_order', filters.sort_order);
+    }
+
+    const url = `/v1/taches/mes-taches${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.client.get(url);
+    return response.data;
+  }
+
+  // Récupérer une tâche spécifique
+  async getTache(id: number): Promise<ApiResponse<Tache>> {
+    const response = await this.client.get(`/v1/taches/${id}`);
+    return response.data;
+  }
+
+  // Créer une nouvelle tâche
+  async createTache(data: CreateTacheRequest): Promise<ApiResponse<Tache>> {
+    const response = await this.client.post('/v1/taches', data);
+    return response.data;
+  }
+
+  // Mettre à jour une tâche
+  async updateTache(id: number, data: UpdateTacheRequest): Promise<ApiResponse<Tache>> {
+    const response = await this.client.put(`/v1/taches/${id}`, data);
+    return response.data;
+  }
+
+  // Supprimer une tâche
+  async deleteTache(id: number): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/taches/${id}`);
+    return response.data;
+  }
+
+  // Changer le statut d'une tâche
+  async changeTacheStatut(id: number, data: ChangeTacheStatutRequest): Promise<ApiResponse<Tache>> {
+    const response = await this.client.post(`/v1/taches/${id}/changer-statut`, data);
+    return response.data;
+  }
+
+  // Récupérer l'historique des statuts d'une tâche
+  async getTacheHistoriqueStatuts(id: number): Promise<ApiResponse<TacheHistoriqueStatut[]>> {
+    const response = await this.client.get(`/v1/taches/${id}/historique-statuts`);
+    return response.data;
+  }
+
+  // =================================================================
+  // DISCUSSIONS DES TÂCHES
+  // =================================================================
+
+  // Récupérer les discussions d'une tâche
+  async getTacheDiscussions(
+    tacheId: number,
+    params?: {
+      sort_order?: 'asc' | 'desc';
+      per_page?: number;
+    }
+  ): Promise<ApiResponse<TacheDiscussion[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.sort_order) {
+      queryParams.append('sort_order', params.sort_order);
+    }
+    if (params?.per_page) {
+      queryParams.append('per_page', params.per_page.toString());
+    }
+
+    const url = `/v1/taches/${tacheId}/discussions${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await this.client.get(url);
+    return response.data;
+  }
+
+  // Créer une discussion pour une tâche
+  async createTacheDiscussion(
+    tacheId: number,
+    data: {
+      message: string;
+      parent_id?: number;
+    }
+  ): Promise<ApiResponse<TacheDiscussion>> {
+    const response = await this.client.post(`/v1/taches/${tacheId}/discussions`, data);
+    return response.data;
+  }
+
+  // =================================================================
   // PIÈCES JOINTES DES TÂCHES
   // =================================================================
 
@@ -1682,7 +1827,7 @@ class ApiClient {
       type_document?: string;
       per_page?: number;
     }
-  ): Promise<ApiResponse<TaskAttachment[]>> {
+  ): Promise<ApiResponse<TachePieceJointe[]>> {
     const queryParams = new URLSearchParams();
     if (params?.est_justificatif !== undefined) {
       queryParams.append('est_justificatif', params.est_justificatif.toString());
