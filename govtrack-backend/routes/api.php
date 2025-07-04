@@ -98,23 +98,29 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('users/{userId}/roles/{roleId}', [UserController::class, 'removeRole'])->middleware('permission:manage_user_roles');
 
     // Rôles
-    Route::get('roles', [RoleController::class, 'index']); // Lecture libre
-    Route::get('roles/{id}', [RoleController::class, 'show']); // Lecture libre
-    Route::get('roles/{id}/available-permissions', [RoleController::class, 'availablePermissions']); // Lecture libre
-    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:manage_user_roles');
-    Route::put('roles/{id}', [RoleController::class, 'update'])->middleware('permission:manage_user_roles');
-    Route::delete('roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:manage_user_roles');
-    Route::post('roles/{id}/assign-permission', [RoleController::class, 'assignPermission'])->middleware('permission:manage_user_roles');
-    Route::delete('roles/{roleId}/permissions/{permissionId}', [RoleController::class, 'removePermission'])->middleware('permission:manage_user_roles');
+    Route::get('roles', [RoleController::class, 'index'])->middleware('permission:view_roles_list');
+    Route::get('roles/{id}', [RoleController::class, 'show'])->middleware('permission:view_role_details');
+    Route::get('roles/{id}/available-permissions', [RoleController::class, 'availablePermissions'])->middleware('permission:view_role_details');
+    Route::get('roles/{id}/users', [RoleController::class, 'users'])->middleware('permission:view_role_users');
+    Route::get('roles/{id}/stats', [RoleController::class, 'stats'])->middleware('permission:view_role_stats');
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:create_role');
+    Route::put('roles/{id}', [RoleController::class, 'update'])->middleware('permission:edit_role');
+    Route::delete('roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:delete_role');
+    Route::post('roles/{id}/assign-permission', [RoleController::class, 'assignPermission'])->middleware('permission:assign_permissions_to_role');
+    Route::delete('roles/{roleId}/permissions/{permissionId}', [RoleController::class, 'removePermission'])->middleware('permission:remove_permissions_from_role');
+    Route::post('roles/{id}/assign-to-user', [RoleController::class, 'assignToUser'])->middleware('permission:assign_role_to_user');
+    Route::delete('roles/{roleId}/users/{userId}', [RoleController::class, 'removeFromUser'])->middleware('permission:remove_role_from_user');
 
     // Permissions
-    Route::get('permissions', [PermissionController::class, 'index']); // Lecture libre
-    Route::get('permissions/{id}', [PermissionController::class, 'show']); // Lecture libre
-    Route::get('permissions/{id}/users', [PermissionController::class, 'users']); // Lecture libre
-    Route::get('permissions/{id}/available-roles', [PermissionController::class, 'availableRoles']); // Lecture libre
-    Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:manage_user_roles');
-    Route::put('permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:manage_user_roles');
-    Route::delete('permissions/{id}', [PermissionController::class, 'destroy'])->middleware('permission:manage_user_roles');
+    Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:view_permissions_list');
+    Route::get('permissions/{id}', [PermissionController::class, 'show'])->middleware('permission:view_permission_details');
+    Route::get('permissions/{id}/users', [PermissionController::class, 'users'])->middleware('permission:view_permission_users');
+    Route::get('permissions/{id}/roles', [PermissionController::class, 'roles'])->middleware('permission:view_permission_roles');
+    Route::get('permissions/{id}/stats', [PermissionController::class, 'stats'])->middleware('permission:view_permission_stats');
+    Route::get('permissions/{id}/available-roles', [PermissionController::class, 'availableRoles'])->middleware('permission:view_permission_details');
+    Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:create_permission');
+    Route::put('permissions/{id}', [PermissionController::class, 'update'])->middleware('permission:edit_permission');
+    Route::delete('permissions/{id}', [PermissionController::class, 'destroy'])->middleware('permission:delete_permission');
 
     // =================================================================
     // PARTIE 2 - GESTION DES PROJETS ET INSTRUCTIONS

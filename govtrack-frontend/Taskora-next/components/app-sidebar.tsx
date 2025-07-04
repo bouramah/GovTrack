@@ -5,7 +5,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
-import { usePermissions } from "@/hooks/usePermissions"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useRolePermissions } from "@/hooks/useRolePermissions"
+import { usePermissionPermissions } from "@/hooks/usePermissionPermissions"
 import {
   LayoutDashboard,
   CheckSquare,
@@ -39,12 +41,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const { hasPermission } = usePermissions()
+  const rolePermissions = useRolePermissions()
+  const permissionPermissions = usePermissionPermissions()
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -57,7 +62,7 @@ export function AppSidebar() {
     { href: "/notifications", label: "Notifications", icon: Bell },
     ...(hasPermission('view_users_list') ? [{ href: "/users", label: "Gestion Utilisateurs", icon: UserCog }] : []),
     ...(hasPermission('view_entities_list') ? [{ href: "/entities", label: "Entités", icon: Building }] : []),
-    ...(hasPermission('manage_user_roles') ? [{ href: "/roles", label: "Rôles & Permissions", icon: Shield }] : []),
+    ...((rolePermissions.canViewList || permissionPermissions.canViewList) ? [{ href: "/roles", label: "Rôles & Permissions", icon: Shield }] : []),
     { href: "/settings", label: "Paramètres", icon: Settings },
   ]
 

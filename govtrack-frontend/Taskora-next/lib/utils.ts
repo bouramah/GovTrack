@@ -5,6 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Fonction pour formater les erreurs du backend
+export function formatBackendErrors(error: any): string {
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
+  }
+  
+  if (error?.response?.data?.error) {
+    return error.response.data.error;
+  }
+  
+  if (error?.message) {
+    return error.message;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  return 'Une erreur inattendue s\'est produite';
+}
+
 // Fonction pour formater la taille des fichiers
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';

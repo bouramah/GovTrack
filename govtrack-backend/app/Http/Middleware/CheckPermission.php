@@ -82,17 +82,28 @@ class CheckPermission
             'type-entites.update' => 'edit_entity',
             'type-entites.destroy' => 'delete_entity',
 
-            // Gestion des rôles
-            'roles.store' => 'manage_user_roles',
-            'roles.update' => 'manage_user_roles',
-            'roles.destroy' => 'manage_user_roles',
-            'roles.assign-permission' => 'manage_user_roles',
-            'roles.remove-permission' => 'manage_user_roles',
+            // Gestion des rôles - Permissions granulaires
+            'roles.index' => 'view_roles_list',
+            'roles.show' => 'view_role_details',
+            'roles.store' => 'create_role',
+            'roles.update' => 'edit_role',
+            'roles.destroy' => 'delete_role',
+            'roles.assign-permission' => 'assign_permissions_to_role',
+            'roles.remove-permission' => 'remove_permissions_from_role',
+            'roles.users' => 'view_role_users',
+            'roles.assign-to-user' => 'assign_role_to_user',
+            'roles.remove-from-user' => 'remove_role_from_user',
+            'roles.stats' => 'view_role_stats',
 
-            // Gestion des permissions
-            'permissions.store' => 'manage_user_roles',
-            'permissions.update' => 'manage_user_roles',
-            'permissions.destroy' => 'manage_user_roles',
+            // Gestion des permissions - Permissions granulaires
+            'permissions.index' => 'view_permissions_list',
+            'permissions.show' => 'view_permission_details',
+            'permissions.store' => 'create_permission',
+            'permissions.update' => 'edit_permission',
+            'permissions.destroy' => 'delete_permission',
+            'permissions.users' => 'view_permission_users',
+            'permissions.roles' => 'view_permission_roles',
+            'permissions.stats' => 'view_permission_stats',
         ];
 
         return $permissions[$action] ?? null;

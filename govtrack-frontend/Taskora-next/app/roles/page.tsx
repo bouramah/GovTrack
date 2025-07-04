@@ -39,30 +39,56 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronFirst,
-  ChevronLast
+  ChevronLast,
+  BarChart3
 } from "lucide-react";
 import { apiClient, Role, Permission, User } from "@/lib/api";
+import { useRolePermissions } from "@/hooks/useRolePermissions";
+import { usePermissionPermissions } from "@/hooks/usePermissionPermissions";
+import { ProtectedPage } from "@/components/ProtectedPage";
+import {
+  RoleListGuard,
+  RoleCreateGuard,
+  RoleEditGuard,
+  RoleDeleteGuard,
+  RoleDetailsGuard,
+  RoleAssignPermissionsGuard,
+  RoleRemovePermissionsGuard,
+  RoleUsersGuard,
+  RoleAssignToUserGuard,
+  RoleRemoveFromUserGuard,
+  RoleStatsGuard,
+} from "@/components/Shared/RoleGuards";
+import {
+  PermissionListGuard,
+  PermissionCreateGuard,
+  PermissionEditGuard,
+  PermissionDeleteGuard,
+  PermissionDetailsGuard,
+  PermissionUsersGuard,
+  PermissionRolesGuard,
+  PermissionStatsGuard,
+} from "@/components/Shared/PermissionGuards";
+import { ConditionalSeparator } from "@/components/Shared/ConditionalSeparator";
+import { formatBackendErrors } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface RoleWithDetails extends Role {
   permissions_count?: number;
   users_count?: number;
+  nombre_permissions?: number;
+  nombre_utilisateurs?: number;
+  utilisateurs?: any[];
+  permissions?: Permission[];
 }
 
 interface PermissionWithDetails extends Permission {
   roles_count?: number;
   users_count?: number;
+  nombre_roles?: number;
+  roles?: Role[];
+  utilisateurs?: any[];
 }
-
-const formatBackendErrors = (error: any): string => {
-  if (error.response?.data?.errors) {
-    const errors = error.response.data.errors;
-    return Object.values(errors).flat().join(', ');
-  }
-  if (error.response?.data?.message) {
-    return error.response.data.message;
-  }
-  return "Une erreur inattendue s'est produite";
-};
 
 export default function RolesPermissionsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -129,6 +155,9 @@ export default function RolesPermissionsPage() {
   const [selectedRolesForPermission, setSelectedRolesForPermission] = useState<number[]>([]);
 
   const { toast } = useToast();
+
+  const rolePermissions = useRolePermissions();
+  const permissionPermissions = usePermissionPermissions();
 
   useEffect(() => {
     loadData();
@@ -207,7 +236,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur de chargement:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les données",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     } finally {
@@ -295,7 +324,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur détails rôle:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de récupérer les détails du rôle",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -331,7 +360,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur chargement permissions:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les permissions",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -463,7 +492,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur détails permission:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de récupérer les détails de la permission",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -499,7 +528,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur chargement rôles:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les rôles",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -516,7 +545,7 @@ export default function RolesPermissionsPage() {
       console.error("Erreur chargement utilisateurs:", error);
       toast({
         title: "❌ Erreur",
-        description: "Impossible de charger les utilisateurs",
+        description: formatBackendErrors(error),
         variant: "destructive"
       });
     }
@@ -541,6 +570,20 @@ export default function RolesPermissionsPage() {
       year: 'numeric'
     });
   };
+
+  // Vérifier si l'utilisateur a au moins une permission pour voir cette page
+  const hasAnyPermission = rolePermissions.canViewList || permissionPermissions.canViewList;
+
+  if (!hasAnyPermission) {
+    return (
+      <ProtectedPage 
+        permissions={['view_roles_list', 'view_permissions_list']}
+        redirectTo="/"
+      >
+        <div>Contenu protégé</div>
+      </ProtectedPage>
+    );
+  }
 
   if (loading) {
     return (
@@ -626,18 +669,22 @@ export default function RolesPermissionsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-                <TabsTrigger value="roles">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Rôles
-                </TabsTrigger>
-                <TabsTrigger value="permissions">
-                  <Key className="h-4 w-4 mr-2" />
-                  Permissions
-                </TabsTrigger>
-                <TabsTrigger value="overview">
-                  <Users className="h-4 w-4 mr-2" />
-                  Vue d'ensemble
-                </TabsTrigger>
+          <RoleListGuard>
+            <TabsTrigger value="roles">
+              <Shield className="h-4 w-4 mr-2" />
+              Rôles
+            </TabsTrigger>
+          </RoleListGuard>
+          <PermissionListGuard>
+            <TabsTrigger value="permissions">
+              <Key className="h-4 w-4 mr-2" />
+              Permissions
+            </TabsTrigger>
+          </PermissionListGuard>
+          <TabsTrigger value="overview">
+            <Users className="h-4 w-4 mr-2" />
+            Vue d'ensemble
+          </TabsTrigger>
         </TabsList>
 
               {/* Onglet Rôles */}
@@ -648,11 +695,13 @@ export default function RolesPermissionsPage() {
                       <Shield className="h-5 w-5" />
                       Rôles ({roles.length})
                     </CardTitle>
-                    <Button onClick={() => setShowCreateRoleModal(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nouveau Rôle
-                    </Button>
-            </CardHeader>
+                    <RoleCreateGuard>
+                      <Button onClick={() => setShowCreateRoleModal(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Nouveau Rôle
+                      </Button>
+                    </RoleCreateGuard>
+                  </CardHeader>
             <CardContent>
                     {/* Recherche */}
                     <div className="mb-4">
@@ -705,26 +754,34 @@ export default function RolesPermissionsPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewRoleDetails(role)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Voir détails
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openEditRoleModal(role)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Modifier
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openManagePermissionsModal(role)}>
-                                    <Settings className="h-4 w-4 mr-2" />
-                                    Gérer permissions
-                                  </DropdownMenuItem>
-                                  <Separator />
-                                  <DropdownMenuItem 
-                                    onClick={() => openDeleteRoleDialog(role)} 
-                                    className="text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Supprimer
-                                  </DropdownMenuItem>
+                                  <RoleDetailsGuard>
+                                    <DropdownMenuItem onClick={() => handleViewRoleDetails(role)}>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      Voir détails
+                                    </DropdownMenuItem>
+                                  </RoleDetailsGuard>
+                                  <RoleEditGuard>
+                                    <DropdownMenuItem onClick={() => openEditRoleModal(role)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Modifier
+                                    </DropdownMenuItem>
+                                  </RoleEditGuard>
+                                  <RoleAssignPermissionsGuard>
+                                    <DropdownMenuItem onClick={() => openManagePermissionsModal(role)}>
+                                      <Settings className="h-4 w-4 mr-2" />
+                                      Gérer permissions
+                                    </DropdownMenuItem>
+                                  </RoleAssignPermissionsGuard>
+                                  <ConditionalSeparator showIfAnyVisible={rolePermissions.canDelete} />
+                                  <RoleDeleteGuard>
+                                    <DropdownMenuItem 
+                                      onClick={() => openDeleteRoleDialog(role)} 
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Supprimer
+                                    </DropdownMenuItem>
+                                  </RoleDeleteGuard>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -743,14 +800,16 @@ export default function RolesPermissionsPage() {
                           }
                         </p>
                         {!searchTerm && (
-                          <Button 
-                            variant="outline" 
-                            className="mt-4"
-                            onClick={() => setShowCreateRoleModal(true)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Créer le premier rôle
-                          </Button>
+                          <RoleCreateGuard>
+                            <Button 
+                              variant="outline" 
+                              className="mt-4"
+                              onClick={() => setShowCreateRoleModal(true)}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Créer le premier rôle
+                            </Button>
+                          </RoleCreateGuard>
                         )}
                       </div>
                     )}
@@ -854,10 +913,12 @@ export default function RolesPermissionsPage() {
                       <Key className="h-5 w-5" />
                       Permissions ({permissions.length})
                     </CardTitle>
-                    <Button onClick={() => setShowCreatePermissionModal(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nouvelle Permission
-                    </Button>
+                    <PermissionCreateGuard>
+                      <Button onClick={() => setShowCreatePermissionModal(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Nouvelle Permission
+                      </Button>
+                    </PermissionCreateGuard>
             </CardHeader>
             <CardContent>
                     {/* Recherche */}
@@ -908,30 +969,40 @@ export default function RolesPermissionsPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewPermissionDetails(permission)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    Voir détails
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openEditPermissionModal(permission)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Modifier
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openManageRolesModal(permission)}>
-                                    <Settings className="h-4 w-4 mr-2" />
-                                    Gérer rôles
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openPermissionUsersModal(permission)}>
-                                    <Users className="h-4 w-4 mr-2" />
-                                    Voir utilisateurs
-                                  </DropdownMenuItem>
-                                  <Separator />
-                                  <DropdownMenuItem 
-                                    onClick={() => openDeletePermissionDialog(permission)} 
-                                    className="text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Supprimer
-                                  </DropdownMenuItem>
+                                  <PermissionDetailsGuard>
+                                    <DropdownMenuItem onClick={() => handleViewPermissionDetails(permission)}>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      Voir détails
+                                    </DropdownMenuItem>
+                                  </PermissionDetailsGuard>
+                                  <PermissionEditGuard>
+                                    <DropdownMenuItem onClick={() => openEditPermissionModal(permission)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Modifier
+                                    </DropdownMenuItem>
+                                  </PermissionEditGuard>
+                                  <PermissionRolesGuard>
+                                    <DropdownMenuItem onClick={() => openManageRolesModal(permission)}>
+                                      <Settings className="h-4 w-4 mr-2" />
+                                      Gérer rôles
+                                    </DropdownMenuItem>
+                                  </PermissionRolesGuard>
+                                  <PermissionUsersGuard>
+                                    <DropdownMenuItem onClick={() => openPermissionUsersModal(permission)}>
+                                      <Users className="h-4 w-4 mr-2" />
+                                      Voir utilisateurs
+                                    </DropdownMenuItem>
+                                  </PermissionUsersGuard>
+                                  <ConditionalSeparator showIfAnyVisible={permissionPermissions.canDelete} />
+                                  <PermissionDeleteGuard>
+                                    <DropdownMenuItem 
+                                      onClick={() => openDeletePermissionDialog(permission)} 
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Supprimer
+                                    </DropdownMenuItem>
+                                  </PermissionDeleteGuard>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -950,14 +1021,16 @@ export default function RolesPermissionsPage() {
                           }
                         </p>
                         {!searchTermPermissions && (
-                          <Button 
-                            variant="outline" 
-                            className="mt-4"
-                            onClick={() => setShowCreatePermissionModal(true)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Créer la première permission
-                          </Button>
+                          <PermissionCreateGuard>
+                            <Button 
+                              variant="outline" 
+                              className="mt-4"
+                              onClick={() => setShowCreatePermissionModal(true)}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Créer la première permission
+                            </Button>
+                          </PermissionCreateGuard>
                         )}
                       </div>
                     )}
