@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from "next/link";
 import DashboardFilters from './DashboardFilters';
-import { AuditStatsCard } from './AuditStatsCard';
+// import { AuditStatsCard } from './AuditStatsCard';
 
 interface ProjectDashboardProps {
   className?: string;
@@ -248,9 +248,9 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
       </div>
 
       {/* Statistiques d'audit */}
-      <div className="mb-10">
+      {/* <div className="mb-10">
         <AuditStatsCard />
-      </div>
+      </div> */}
 
       {/* Section Projets récents */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-10">

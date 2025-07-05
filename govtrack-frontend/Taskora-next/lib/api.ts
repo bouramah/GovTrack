@@ -590,30 +590,17 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
-        // Si token expiré, essayer de le rafraîchir
+        // Si token expiré, déconnecter directement l'utilisateur
         if (error.response?.status === 401) {
-          const originalRequest = error.config;
+          // Déconnecter l'utilisateur sans essayer de rafraîchir le token
+          this.clearToken();
           
-          // Éviter les boucles infinies
-          if (!originalRequest._retry) {
-            originalRequest._retry = true;
-            
-            try {
-              // Essayer de rafraîchir le token
-              const response = await this.refresh();
-              // Retenter la requête originale avec le nouveau token
-              originalRequest.headers.Authorization = `Bearer ${response.token}`;
-              return this.client(originalRequest);
-            } catch (refreshError) {
-              // Si le refresh échoue, déconnecter
-              this.clearToken();
-              window.location.href = '/login';
-            }
-          } else {
-            // Si on a déjà essayé de rafraîchir, déconnecter
-            this.clearToken();
+          // Rediriger vers la page de connexion
+          if (typeof window !== 'undefined') {
             window.location.href = '/login';
           }
+          
+          return Promise.reject(error);
         }
         
         // Gestion des erreurs 422 (permissions insuffisantes)

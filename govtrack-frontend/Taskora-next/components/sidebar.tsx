@@ -178,15 +178,21 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               <NavItem href="/" icon={Home}>
                 Accueil
               </NavItem>
-              <NavItem href="/projects" icon={FolderKanban}>
-                Projets
-              </NavItem>
-              <NavItem href="/mes-taches" icon={CheckSquare}>
-                Mes Tâches
-              </NavItem>
-              <NavItem href="/toutes-taches" icon={LayoutGrid}>
-                Toutes les Tâches
-              </NavItem>
+              {permissions.canViewProjectsList() && (
+                <NavItem href="/projects" icon={FolderKanban}>
+                  Projets
+                </NavItem>
+              )}
+              {permissions.canViewMyTasks() && (
+                <NavItem href="/mes-taches" icon={CheckSquare}>
+                  Mes Tâches
+                </NavItem>
+              )}
+              {permissions.canViewTasksList() && (
+                <NavItem href="/toutes-taches" icon={LayoutGrid}>
+                  Toutes les Tâches
+                </NavItem>
+              )}
               {/* <NavItem href="/calendar" icon={Calendar}>
                 Calendrier
               </NavItem> */}

@@ -195,24 +195,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleRefreshToken = async () => {
-    try {
-      await refresh();
-      toast({
-        title: '✅ Token rafraîchi',
-        description: 'Votre session a été rafraîchie avec succès.',
-        variant: 'default',
-      });
-    } catch (error: any) {
-      console.error('Erreur rafraîchissement token:', error);
-      toast({
-        title: '❌ Erreur',
-        description: 'Impossible de rafraîchir votre session.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleLogoutAll = async () => {
     try {
       await logoutAll();

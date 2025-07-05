@@ -10,7 +10,6 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
-  refresh: () => Promise<void>;
   isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
   getUserRole: () => string;
@@ -62,8 +61,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     } catch (error) {
       console.error('Erreur de vérification auth:', error);
-      // Token invalide, le supprimer
+      // Token invalide, le supprimer et déconnecter
       apiClient.clearToken();
+      setUser(null);
+      
+      // Afficher une notification si on est côté client
+      if (typeof window !== 'undefined') {
+        // Utiliser une notification simple car toast n'est pas encore disponible
+        const event = new CustomEvent('showNotification', {
+          detail: {
+            title: 'Session expirée',
+            message: 'Votre session a expiré. Veuillez vous reconnecter.',
+            type: 'warning'
+          }
+        });
+        window.dispatchEvent(event);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +103,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error('Erreur de déconnexion:', error);
     } finally {
       setUser(null);
+      apiClient.clearToken();
       router.push('/login');
     }
   };
@@ -101,18 +115,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error('Erreur de déconnexion de tous les appareils:', error);
     } finally {
       setUser(null);
-      router.push('/login');
-    }
-  };
-
-  const refresh = async () => {
-    try {
-      const response = await apiClient.refresh();
-      setUser(response.user);
-    } catch (error) {
-      console.error('Erreur de rafraîchissement du token:', error);
-      // Token invalide, déconnecter l'utilisateur
-      setUser(null);
+      apiClient.clearToken();
       router.push('/login');
     }
   };
@@ -206,7 +209,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     logoutAll,
-    refresh,
     isAuthenticated: !!user,
     hasPermission,
     getUserRole,
