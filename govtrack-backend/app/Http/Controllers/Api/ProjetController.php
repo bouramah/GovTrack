@@ -994,49 +994,29 @@ class ProjetController extends Controller
     {
         try {
             $user = $request->user();
+            $query = User::select('id', 'nom', 'prenom', 'email')
+                        ->orderBy('nom')
+                        ->orderBy('prenom');
 
-            // Seuls les utilisateurs avec view_all_projects ou view_my_entity_projects peuvent filtrer par utilisateur
-            if (!$user->hasPermission('view_all_projects') && !$user->hasPermission('view_my_entity_projects')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vous n\'avez pas les permissions nécessaires pour filtrer par utilisateur'
-                ], 403);
-            }
-
-            $query = User::select('id', 'nom', 'prenom', 'email', 'matricule');
-
-            // Si l'utilisateur a view_my_entity_projects, limiter aux utilisateurs de son entité
-            if ($user->hasPermission('view_my_entity_projects') && !$user->hasPermission('view_all_projects')) {
+            // Filtrer selon les permissions
+            if ($user->hasPermission('view_all_projects')) {
+                // Tous les utilisateurs
+            } elseif ($user->hasPermission('view_my_entity_projects')) {
+                // Utilisateurs de son entité
                 $affectationActuelle = $user->affectations()->where('statut', true)->first();
-
                 if ($affectationActuelle) {
                     $entiteId = $affectationActuelle->service_id;
-
-                    // Récupérer tous les utilisateurs de cette entité
                     $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
                         ->distinct()
                         ->pluck('user_id');
-
                     $query->whereIn('id', $utilisateursEntite);
-                } else {
-                    // Si pas d'affectation, retourner seulement l'utilisateur lui-même
-                    $query->where('id', $user->id);
                 }
+            } else {
+                // Seulement l'utilisateur connecté
+                $query->where('id', $user->id);
             }
 
-            $users = $query->orderBy('nom')
-                ->orderBy('prenom')
-                ->get()
-                ->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'nom' => $user->nom,
-                        'prenom' => $user->prenom,
-                        'email' => $user->email,
-                        'matricule' => $user->matricule,
-                        'display_name' => $user->prenom . ' ' . $user->nom . ($user->matricule ? ' (' . $user->matricule . ')' : '')
-                    ];
-                });
+            $users = $query->get();
 
             return response()->json([
                 'success' => true,
@@ -1047,6 +1027,108 @@ class ProjetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des utilisateurs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer l'historique des changements de statut d'un projet
+     */
+    public function historique(int $id): JsonResponse
+    {
+        try {
+            $projet = Projet::with(['typeProjet', 'porteur', 'donneurOrdre'])->findOrFail($id);
+
+            // Récupérer l'historique des changements de statut
+            $historique = $projet->historiqueStatuts()
+                ->with('user:id,nom,prenom,email')
+                ->orderBy('date_changement', 'desc')
+                ->get();
+
+            // Récupérer l'historique des pièces jointes
+            $piecesJointes = $projet->piecesJointes()
+                ->with('user:id,nom,prenom,email')
+                ->orderBy('date_creation', 'desc')
+                ->get();
+
+            // Récupérer l'historique des discussions
+            $discussions = $projet->discussions()
+                ->with('user:id,nom,prenom,email')
+                ->orderBy('date_creation', 'desc')
+                ->get();
+
+            // Combiner tous les événements dans un historique chronologique
+            $evenements = collect();
+
+            // Ajouter les changements de statut
+            foreach ($historique as $changement) {
+                $evenements->push([
+                    'type' => 'statut_change',
+                    'date' => $changement->date_changement,
+                    'user' => $changement->user,
+                    'titre' => 'Changement de statut',
+                    'description' => $changement->commentaire,
+                    'ancien_statut' => $changement->ancien_statut,
+                    'nouveau_statut' => $changement->nouveau_statut,
+                    'data' => $changement
+                ]);
+            }
+
+            // Ajouter les ajouts de pièces jointes
+            foreach ($piecesJointes as $piece) {
+                $evenements->push([
+                    'type' => 'attachment_added',
+                    'date' => $piece->date_creation,
+                    'user' => $piece->user,
+                    'titre' => 'Pièce jointe ajoutée',
+                    'description' => "Fichier : {$piece->nom_original}",
+                    'data' => $piece
+                ]);
+            }
+
+            // Ajouter les commentaires
+            foreach ($discussions as $commentaire) {
+                $evenements->push([
+                    'type' => 'comment_added',
+                    'date' => $commentaire->date_creation,
+                    'user' => $commentaire->user,
+                    'titre' => 'Commentaire ajouté',
+                    'description' => $commentaire->contenu,
+                    'data' => $commentaire
+                ]);
+            }
+
+            // Trier par date (plus récent en premier)
+            $evenements = $evenements->sortByDesc('date')->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'projet' => [
+                        'id' => $projet->id,
+                        'titre' => $projet->titre,
+                        'type_projet' => $projet->typeProjet,
+                        'porteur' => $projet->porteur,
+                        'donneur_ordre' => $projet->donneurOrdre,
+                        'statut_actuel' => $projet->statut,
+                        'niveau_execution' => $projet->niveau_execution,
+                        'date_creation' => $projet->date_creation
+                    ],
+                    'historique' => $evenements,
+                    'statistiques' => [
+                        'total_evenements' => $evenements->count(),
+                        'changements_statut' => $historique->count(),
+                        'pieces_jointes' => $piecesJointes->count(),
+                        'commentaires' => $discussions->count()
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'historique',
                 'error' => $e->getMessage()
             ], 500);
         }

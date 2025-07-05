@@ -68,8 +68,17 @@ export default function TaskDiscussionsList({ taskId, onRefresh }: TaskDiscussio
       if (response.success && response.data) {
         setStats(response.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement statistiques:', error);
+      
+      // Afficher l'erreur comme un toast si c'est une erreur de permission
+      if (error.name === 'PermissionError' || error.response?.status === 422) {
+        toast({
+          title: '❌ Permission refusée',
+          description: error.message || 'Vous n\'avez pas les permissions nécessaires pour voir les statistiques des discussions.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 

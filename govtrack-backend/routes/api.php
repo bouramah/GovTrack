@@ -135,38 +135,41 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('type-projets/{id}', [TypeProjetController::class, 'destroy'])->middleware('permission:delete_type_projet');
 
     // Projets (Instructions/Recommandations) - routes spéciales d'abord
-    Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
+    Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord'])->middleware('permission:view_projects_list');
 
     // Filtres pour les projets
-    Route::get('projets/filtres/entites', [ProjetController::class, 'getEntitesForFilter']); // Permissions: view_all_projects
-    Route::get('projets/filtres/utilisateurs', [ProjetController::class, 'getUsersForFilter']); // Permissions: view_all_projects | view_my_entity_projects
+    Route::get('projets/filtres/entites', [ProjetController::class, 'getEntitesForFilter'])->middleware('permission:view_projects_list');
+    Route::get('projets/filtres/utilisateurs', [ProjetController::class, 'getUsersForFilter'])->middleware('permission:view_projects_list');
 
     // Projets - CRUD
-    Route::get('projets', [ProjetController::class, 'index']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
-    Route::get('projets/{id}', [ProjetController::class, 'show']); // Permissions: view_my_projects | view_my_entity_projects | view_all_projects
-    Route::post('projets', [ProjetController::class, 'store'])->middleware('permission:create_instruction');
-    Route::put('projets/{id}', [ProjetController::class, 'update'])->middleware('permission:edit_instruction');
-    Route::delete('projets/{id}', [ProjetController::class, 'destroy'])->middleware('permission:edit_instruction');
+    Route::get('projets', [ProjetController::class, 'index'])->middleware('permission:view_projects_list');
+    Route::get('projets/{id}', [ProjetController::class, 'show'])->middleware('permission:view_project_details');
+    Route::post('projets', [ProjetController::class, 'store'])->middleware('permission:create_project');
+    Route::put('projets/{id}', [ProjetController::class, 'update'])->middleware('permission:edit_project');
+    Route::delete('projets/{id}', [ProjetController::class, 'destroy'])->middleware('permission:delete_project');
 
     // Gestion des statuts de projets
-    Route::post('projets/{id}/changer-statut', [ProjetController::class, 'changerStatut'])->middleware('permission:edit_instruction');
+    Route::post('projets/{id}/changer-statut', [ProjetController::class, 'changerStatut'])->middleware('permission:change_project_status');
 
     // Gestion du niveau d'exécution de projets
-    Route::post('projets/{id}/niveau-execution', [ProjetController::class, 'mettreAJourNiveauExecution'])->middleware('permission:edit_instruction');
+    Route::post('projets/{id}/niveau-execution', [ProjetController::class, 'mettreAJourNiveauExecution'])->middleware('permission:update_project_execution_level');
+
+    // Historique des projets
+    Route::get('projets/{id}/historique', [ProjetController::class, 'historique'])->middleware('permission:view_project_history');
 
     // Tâches - routes spéciales d'abord
-    Route::get('taches/mes-taches', [TacheController::class, 'mesTaches']); // Tâches de l'utilisateur connecté
+    Route::get('taches/mes-taches', [TacheController::class, 'mesTaches'])->middleware('permission:view_tasks_list');
 
     // Tâches - CRUD
-    Route::get('taches', [TacheController::class, 'index']); // Lecture selon permissions
-    Route::get('taches/{id}', [TacheController::class, 'show']); // Lecture selon permissions
-    Route::post('taches', [TacheController::class, 'store'])->middleware('permission:edit_instruction');
-    Route::put('taches/{id}', [TacheController::class, 'update'])->middleware('permission:edit_instruction');
-    Route::delete('taches/{id}', [TacheController::class, 'destroy'])->middleware('permission:edit_instruction');
+    Route::get('taches', [TacheController::class, 'index'])->middleware('permission:view_tasks_list');
+    Route::get('taches/{id}', [TacheController::class, 'show'])->middleware('permission:view_task_details');
+    Route::post('taches', [TacheController::class, 'store'])->middleware('permission:create_task');
+    Route::put('taches/{id}', [TacheController::class, 'update'])->middleware('permission:edit_task');
+    Route::delete('taches/{id}', [TacheController::class, 'destroy'])->middleware('permission:delete_task');
 
     // Gestion des statuts de tâches
-    Route::post('taches/{id}/changer-statut', [TacheController::class, 'changerStatut'])->middleware('permission:edit_instruction');
-    Route::get('taches/{id}/historique-statuts', [TacheController::class, 'historiqueStatuts']); // Lecture libre
+    Route::post('taches/{id}/changer-statut', [TacheController::class, 'changerStatut'])->middleware('permission:change_task_status');
+    Route::get('taches/{id}/historique-statuts', [TacheController::class, 'historiqueStatuts'])->middleware('permission:view_task_history');
 
     // =================================================================
     // DISCUSSIONS - COLLABORATION SUR PROJETS ET TÂCHES
@@ -174,22 +177,22 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Discussions des projets
     Route::prefix('projets/{projetId}/discussions')->group(function () {
-        Route::get('/', [DiscussionProjetController::class, 'index']); // Lecture libre
-        Route::post('/', [DiscussionProjetController::class, 'store']); // Poster un message
-        Route::get('statistiques', [DiscussionProjetController::class, 'statistiques']); // Statistiques
-        Route::get('{id}', [DiscussionProjetController::class, 'show']); // Voir un message
-        Route::put('{id}', [DiscussionProjetController::class, 'update']); // Modifier (auteur seulement)
-        Route::delete('{id}', [DiscussionProjetController::class, 'destroy']); // Supprimer (auteur seulement)
+        Route::get('/', [DiscussionProjetController::class, 'index'])->middleware('permission:view_project_comments');
+        Route::post('/', [DiscussionProjetController::class, 'store'])->middleware('permission:add_project_comment');
+        Route::get('statistiques', [DiscussionProjetController::class, 'statistiques'])->middleware('permission:view_project_comment_stats');
+        Route::get('{id}', [DiscussionProjetController::class, 'show'])->middleware('permission:view_project_comments');
+        Route::put('{id}', [DiscussionProjetController::class, 'update'])->middleware('permission:edit_project_comment');
+        Route::delete('{id}', [DiscussionProjetController::class, 'destroy'])->middleware('permission:delete_project_comment');
     });
 
     // Discussions des tâches
     Route::prefix('taches/{tacheId}/discussions')->group(function () {
-        Route::get('/', [DiscussionTacheController::class, 'index']); // Lecture libre
-        Route::post('/', [DiscussionTacheController::class, 'store']); // Poster un message
-        Route::get('statistiques', [DiscussionTacheController::class, 'statistiques']); // Statistiques
-        Route::get('{id}', [DiscussionTacheController::class, 'show']); // Voir un message
-        Route::put('{id}', [DiscussionTacheController::class, 'update']); // Modifier (auteur seulement)
-        Route::delete('{id}', [DiscussionTacheController::class, 'destroy']); // Supprimer (auteur seulement)
+        Route::get('/', [DiscussionTacheController::class, 'index'])->middleware('permission:view_task_comments');
+        Route::post('/', [DiscussionTacheController::class, 'store'])->middleware('permission:add_task_comment');
+        Route::get('statistiques', [DiscussionTacheController::class, 'statistiques'])->middleware('permission:view_task_comment_stats');
+        Route::get('{id}', [DiscussionTacheController::class, 'show'])->middleware('permission:view_task_comments');
+        Route::put('{id}', [DiscussionTacheController::class, 'update'])->middleware('permission:edit_task_comment');
+        Route::delete('{id}', [DiscussionTacheController::class, 'destroy'])->middleware('permission:delete_task_comment');
     });
 
     // =================================================================
@@ -198,24 +201,24 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Pièces jointes des projets
     Route::prefix('projets/{projetId}/pieces-jointes')->group(function () {
-        Route::get('/', [PieceJointeProjetController::class, 'index']); // Lister les fichiers
-        Route::post('/', [PieceJointeProjetController::class, 'store']); // Upload fichier
-        Route::get('statistiques', [PieceJointeProjetController::class, 'statistiques']); // Statistiques
-        Route::get('{id}', [PieceJointeProjetController::class, 'show']); // Détails fichier
-        Route::get('{id}/download', [PieceJointeProjetController::class, 'download']); // Télécharger
-        Route::put('{id}', [PieceJointeProjetController::class, 'update']); // Modifier (auteur seulement)
-        Route::delete('{id}', [PieceJointeProjetController::class, 'destroy']); // Supprimer (auteur seulement)
+        Route::get('/', [PieceJointeProjetController::class, 'index'])->middleware('permission:view_project_attachments');
+        Route::post('/', [PieceJointeProjetController::class, 'store'])->middleware('permission:add_project_attachment');
+        Route::get('statistiques', [PieceJointeProjetController::class, 'statistiques'])->middleware('permission:view_project_attachments');
+        Route::get('{id}', [PieceJointeProjetController::class, 'show'])->middleware('permission:view_project_attachments');
+        Route::get('{id}/download', [PieceJointeProjetController::class, 'download'])->middleware('permission:download_project_attachment');
+        Route::put('{id}', [PieceJointeProjetController::class, 'update'])->middleware('permission:edit_project_attachment');
+        Route::delete('{id}', [PieceJointeProjetController::class, 'destroy'])->middleware('permission:delete_project_attachment');
     });
 
     // Pièces jointes des tâches
     Route::prefix('taches/{tacheId}/pieces-jointes')->group(function () {
-        Route::get('/', [PieceJointeTacheController::class, 'index']); // Lister les fichiers
-        Route::post('/', [PieceJointeTacheController::class, 'store']); // Upload fichier
-        Route::get('statistiques', [PieceJointeTacheController::class, 'statistiques']); // Statistiques
-        Route::get('{id}', [PieceJointeTacheController::class, 'show']); // Détails fichier
-        Route::get('{id}/download', [PieceJointeTacheController::class, 'download']); // Télécharger
-        Route::put('{id}', [PieceJointeTacheController::class, 'update']); // Modifier (auteur seulement)
-        Route::delete('{id}', [PieceJointeTacheController::class, 'destroy']); // Supprimer (auteur seulement)
+        Route::get('/', [PieceJointeTacheController::class, 'index'])->middleware('permission:view_task_attachments');
+        Route::post('/', [PieceJointeTacheController::class, 'store'])->middleware('permission:add_task_attachment');
+        Route::get('statistiques', [PieceJointeTacheController::class, 'statistiques'])->middleware('permission:view_task_attachments');
+        Route::get('{id}', [PieceJointeTacheController::class, 'show'])->middleware('permission:view_task_attachments');
+        Route::get('{id}/download', [PieceJointeTacheController::class, 'download'])->middleware('permission:download_task_attachment');
+        Route::put('{id}', [PieceJointeTacheController::class, 'update'])->middleware('permission:view_task_attachments');
+        Route::delete('{id}', [PieceJointeTacheController::class, 'destroy'])->middleware('permission:delete_task_attachment');
     });
 
 });

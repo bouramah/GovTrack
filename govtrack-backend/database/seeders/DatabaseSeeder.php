@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
             UserManagementSeeder::class,
             TerminateProjectPermissionSeeder::class,
             EntityTypePermissionsSeeder::class,
+            TypeProjetPermissionsSeeder::class,
+            ProjectPermissionsSeeder::class,
+            ProjetPermissionsSeeder::class,
+            TachePermissionsSeeder::class,
         ]);
     }
 }

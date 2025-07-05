@@ -72,6 +72,8 @@ import {
 import { ConditionalSeparator } from "@/components/Shared/ConditionalSeparator";
 import { formatBackendErrors } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import PermissionManager from '@/components/Shared/PermissionManager';
+import RoleManager from '@/components/Shared/RoleManager';
 
 interface RoleWithDetails extends Role {
   permissions_count?: number;
@@ -371,10 +373,19 @@ export default function RolesPermissionsPage() {
     
     try {
       await apiClient.assignPermissionToRole(selectedRole.id, { permission_id: permissionId });
+      
+      // Mettre à jour le rôle sélectionné
       const updatedRole = await apiClient.getRole(selectedRole.id);
       setSelectedRole(updatedRole);
       setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      
+      // Mettre à jour les permissions disponibles
+      const availablePermsResponse = await apiClient.getAvailablePermissionsForRole(selectedRole.id);
+      setAvailablePermissions(availablePermsResponse.permissions_disponibles || []);
+      
+      // Recharger les données générales
       await loadData();
+      
       toast({
         title: "✅ Succès",
         description: "Permission assignée au rôle"
@@ -394,10 +405,19 @@ export default function RolesPermissionsPage() {
     
     try {
       await apiClient.removePermissionFromRole(selectedRole.id, permissionId);
+      
+      // Mettre à jour le rôle sélectionné
       const updatedRole = await apiClient.getRole(selectedRole.id);
       setSelectedRole(updatedRole);
       setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      
+      // Mettre à jour les permissions disponibles
+      const availablePermsResponse = await apiClient.getAvailablePermissionsForRole(selectedRole.id);
+      setAvailablePermissions(availablePermsResponse.permissions_disponibles || []);
+      
+      // Recharger les données générales
       await loadData();
+      
       toast({
         title: "✅ Succès",
         description: "Permission retirée du rôle"
@@ -1377,72 +1397,26 @@ export default function RolesPermissionsPage() {
 
             {/* Modal Gestion Permissions pour Rôle */}
             <Dialog open={showManagePermissionsModal} onOpenChange={setShowManagePermissionsModal}>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
                     Gérer les permissions : {selectedRole?.nom}
                   </DialogTitle>
                   <DialogDescription>
-                    Assignez ou retirez des permissions pour ce rôle.
+                    Assignez ou retirez des permissions pour ce rôle en utilisant les selects searchable ci-dessous.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Permissions assignées */}
-                    <div>
-                      <h4 className="font-medium mb-3 text-green-700">
-                        Permissions assignées ({selectedRole?.permissions?.length || 0})
-                      </h4>
-                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
-                        {selectedRole?.permissions?.map((permission) => (
-                          <div key={permission.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              <span className="text-sm font-medium">{permission.nom}</span>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRemovePermissionFromRole(permission.id)}
-                            >
-                              <UserMinus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )) || <p className="text-sm text-muted-foreground">Aucune permission assignée</p>}
-                      </div>
-                    </div>
-
-                    {/* Permissions disponibles */}
-                    <div>
-                      <h4 className="font-medium mb-3 text-blue-700">
-                        Permissions disponibles ({availablePermissions.filter(p => !selectedPermissionsForRole.includes(p.id)).length})
-                      </h4>
-                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
-                        {availablePermissions
-                          .filter(permission => !selectedPermissionsForRole.includes(permission.id))
-                          .map((permission) => (
-                            <div key={permission.id} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                              <div className="flex items-center gap-2">
-                                <XCircle className="h-4 w-4 text-blue-600" />
-                                <span className="text-sm font-medium">{permission.nom}</span>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleAssignPermissionToRole(permission.id)}
-                              >
-                                <UserPlus className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        {availablePermissions.filter(p => !selectedPermissionsForRole.includes(p.id)).length === 0 && (
-                          <p className="text-sm text-muted-foreground">Toutes les permissions sont assignées</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
+                <PermissionManager
+                  role={selectedRole}
+                  availablePermissions={availablePermissions}
+                  assignedPermissions={selectedRole?.permissions || []}
+                  onAssignPermission={handleAssignPermissionToRole}
+                  onRemovePermission={handleRemovePermissionFromRole}
+                  loading={loading}
+                />
+                
                 <DialogFooter>
                   <Button onClick={() => setShowManagePermissionsModal(false)}>Fermer</Button>
                 </DialogFooter>
@@ -1619,57 +1593,38 @@ export default function RolesPermissionsPage() {
 
             {/* Modal Gestion Rôles pour Permission */}
             <Dialog open={showManageRolesModal} onOpenChange={setShowManageRolesModal}>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
                     Gérer les rôles : {selectedPermission?.nom}
                   </DialogTitle>
                   <DialogDescription>
-                    Voyez quels rôles ont cette permission.
+                    Voyez quels rôles ont cette permission et gérez les assignations.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Rôles avec cette permission */}
-                    <div>
-                      <h4 className="font-medium mb-3 text-green-700">
-                        Rôles avec cette permission ({selectedPermission?.roles?.length || 0})
-                      </h4>
-                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
-                        {selectedPermission?.roles?.map((role) => (
-                          <div key={role.id} className="flex items-center gap-2 p-2 bg-green-50 rounded">
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                            <span className="text-sm font-medium">{role.nom}</span>
-                          </div>
-                        )) || <p className="text-sm text-muted-foreground">Aucun rôle n'a cette permission</p>}
-                      </div>
-                    </div>
-
-                    {/* Rôles sans cette permission */}
-                    <div>
-                      <h4 className="font-medium mb-3 text-blue-700">
-                        Rôles sans cette permission ({availableRoles.filter(r => !selectedRolesForPermission.includes(r.id)).length})
-                      </h4>
-                      <div className="space-y-2 max-h-60 overflow-y-auto border rounded p-3">
-                        {availableRoles
-                          .filter(role => !selectedRolesForPermission.includes(role.id))
-                          .map((role) => (
-                            <div key={role.id} className="flex items-center gap-2 p-2 bg-blue-50 rounded">
-                              <XCircle className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium">{role.nom}</span>
-                            </div>
-                          ))}
-                        {availableRoles.filter(r => !selectedRolesForPermission.includes(r.id)).length === 0 && (
-                          <p className="text-sm text-muted-foreground">Tous les rôles ont cette permission</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    💡 Pour assigner cette permission à un rôle, utilisez la gestion des permissions depuis l'onglet Rôles.
-                  </div>
-                </div>
+                
+                <RoleManager
+                  permission={selectedPermission}
+                  availableRoles={availableRoles}
+                  assignedRoles={selectedPermission?.roles || []}
+                  onAssignRole={async (roleId: number) => {
+                    // Cette fonction n'est pas implémentée car l'assignation se fait depuis l'onglet Rôles
+                    toast({
+                      title: "ℹ️ Information",
+                      description: "Pour assigner cette permission à un rôle, utilisez la gestion des permissions depuis l'onglet Rôles.",
+                    });
+                  }}
+                  onRemoveRole={async (roleId: number) => {
+                    // Cette fonction n'est pas implémentée car la suppression se fait depuis l'onglet Rôles
+                    toast({
+                      title: "ℹ️ Information",
+                      description: "Pour retirer cette permission d'un rôle, utilisez la gestion des permissions depuis l'onglet Rôles.",
+                    });
+                  }}
+                  loading={loading}
+                />
+                
                 <DialogFooter>
                   <Button onClick={() => setShowManageRolesModal(false)}>Fermer</Button>
                 </DialogFooter>
