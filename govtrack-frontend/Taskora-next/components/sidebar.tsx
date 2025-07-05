@@ -28,6 +28,7 @@ import {
   Shield,
   FolderOpen,
   FolderKanban,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { SearchModal } from "./search-modal";
@@ -219,6 +220,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 {permissions.canViewTypeProjetsList() && (
                   <NavItem href="/type-projets" icon={FolderOpen}>
                     Types de Projets
+                  </NavItem>
+                )}
+                {permissions.canViewAuditLogs() && (
+                  <NavItem href="/audit" icon={Activity}>
+                    Audit & Traçabilité
                   </NavItem>
                 )}
               </div>

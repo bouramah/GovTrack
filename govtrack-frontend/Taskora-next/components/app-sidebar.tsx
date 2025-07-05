@@ -28,6 +28,7 @@ import {
   UserCog,
   Building,
   Shield,
+  Activity,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -63,6 +64,7 @@ export function AppSidebar() {
     ...(hasPermission('view_users_list') ? [{ href: "/users", label: "Gestion Utilisateurs", icon: UserCog }] : []),
     ...(hasPermission('view_entities_list') ? [{ href: "/entities", label: "Entités", icon: Building }] : []),
     ...((rolePermissions.canViewList || permissionPermissions.canViewList) ? [{ href: "/roles", label: "Rôles & Permissions", icon: Shield }] : []),
+    ...(hasPermission('view_audit_logs') ? [{ href: "/audit", label: "Audit & Traçabilité", icon: Activity }] : []),
     { href: "/settings", label: "Paramètres", icon: Settings },
   ]
 

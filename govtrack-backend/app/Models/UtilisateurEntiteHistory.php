@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\Auditable;
 
 class UtilisateurEntiteHistory extends Model
 {
+    use HasFactory, Auditable;
+
     protected $table = 'utilisateur_entite_histories';
 
     public $timestamps = false;

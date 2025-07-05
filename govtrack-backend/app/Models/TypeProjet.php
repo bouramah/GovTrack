@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 class TypeProjet extends Model
 {
+    use HasFactory, Auditable;
+
     // Désactiver les timestamps automatiques car on utilise date_creation/date_modification
     public $timestamps = false;
 

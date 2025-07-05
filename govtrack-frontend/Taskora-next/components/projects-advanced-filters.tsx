@@ -51,24 +51,35 @@ export default function ProjectsAdvancedFilters({
   const loadFilterData = async () => {
     setLoading(true);
     try {
+      console.log('🔍 [ProjectsAdvancedFilters] Chargement des données de filtres...');
+      console.log('📋 [ProjectsAdvancedFilters] Permissions reçues:', permissions);
+      
       // Charger les types de projets (toujours disponible)
       const typesResponse = await apiClient.getTypeProjets({ per_page: 100 });
       setTypeProjets(typesResponse.data || []);
 
       // Charger les entités si l'utilisateur a les permissions
       if (permissions?.can_filter_by_entity) {
+        console.log('🏢 [ProjectsAdvancedFilters] Chargement des entités pour filtres...');
         const entitiesResponse = await apiClient.getProjectFilterEntities();
+        console.log('🏢 [ProjectsAdvancedFilters] Entités chargées:', entitiesResponse);
         setEntities(entitiesResponse);
+      } else {
+        console.log('❌ [ProjectsAdvancedFilters] Pas de permission pour filtrer par entité');
       }
 
       // Charger les utilisateurs si l'utilisateur a les permissions
       if (permissions?.can_filter_by_user) {
+        console.log('👥 [ProjectsAdvancedFilters] Chargement des utilisateurs pour filtres...');
         const usersResponse = await apiClient.getProjectFilterUsers();
+        console.log('👥 [ProjectsAdvancedFilters] Utilisateurs chargés:', usersResponse);
         setUsers(usersResponse);
+      } else {
+        console.log('❌ [ProjectsAdvancedFilters] Pas de permission pour filtrer par utilisateur');
       }
     } catch (error: any) {
+      console.error('❌ [ProjectsAdvancedFilters] Erreur lors du chargement des données de filtres:', error);
       toast.error("Erreur lors du chargement des données de filtres");
-      console.error("Erreur chargement filtres:", error);
     } finally {
       setLoading(false);
     }

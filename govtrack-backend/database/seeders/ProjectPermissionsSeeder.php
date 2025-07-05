@@ -29,7 +29,7 @@ class ProjectPermissionsSeeder extends Seeder
         // Ajouter les permissions si elles n'existent pas
         foreach ($permissionsToAdd as $nom => $description) {
             $permission = Permission::where('nom', $nom)->first();
-            
+
             if (!$permission) {
                 Permission::create([
                     'nom' => $nom,
@@ -81,6 +81,23 @@ class ProjectPermissionsSeeder extends Seeder
                 $roleEmployee->permissions()->attach($permission->id, ['date_creation' => $now]);
                 $this->command->info("✅ Permission 'view_my_projects' attribuée au rôle Employé");
             }
+        }
+
+        // Permissions d'audit
+        $auditPermissions = [
+            'view_audit_logs' => 'Consulter les logs d\'audit',
+            'export_audit_logs' => 'Exporter les logs d\'audit',
+        ];
+
+        foreach ($auditPermissions as $nom => $description) {
+            Permission::firstOrCreate([
+                'nom' => $nom,
+                'description' => $description,
+                'date_creation' => now(),
+                'date_modification' => now(),
+                'creer_par' => 'System',
+                'modifier_par' => 'System'
+            ]);
         }
 
         $this->command->info('🎉 Toutes les permissions ont été ajoutées avec succès !');

@@ -43,9 +43,16 @@ export function SearchableSelect({
 
   const selectedOption = options.find(option => option.value === value);
 
+  // Filtrer les options invalides et s'assurer que toutes les propriétés nécessaires existent
+  const validOptions = options.filter(option => 
+    option && 
+    typeof option.value === 'string' && 
+    typeof option.label === 'string'
+  );
+
   // Filtrer les options basé sur la recherche
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(searchValue.toLowerCase()) ||
+  const filteredOptions = validOptions.filter(option =>
+    (option.label || "").toLowerCase().includes(searchValue.toLowerCase()) ||
     (option.description || "").toLowerCase().includes(searchValue.toLowerCase()) ||
     (option.badge || "").toLowerCase().includes(searchValue.toLowerCase())
   );

@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from "next/link";
 import DashboardFilters from './DashboardFilters';
+import { AuditStatsCard } from './AuditStatsCard';
 
 interface ProjectDashboardProps {
   className?: string;
@@ -59,7 +60,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
       
       // Récupérer les permissions depuis la réponse des projets
       if (data.permissions_info) {
-        setPermissions({
+        const permissionsData = {
           level: data.permissions_info.level,
           can_filter_by_user: data.permissions_info.level === 'all_projects' || data.permissions_info.level === 'entity_projects',
           can_filter_by_entity: data.permissions_info.level === 'all_projects',
@@ -71,7 +72,13 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
             entity: data.permissions_info.level === 'all_projects' ? ['entite_id'] : []
           },
           description: data.permissions_info.description
-        });
+        };
+        
+        console.log('🔍 [ProjectDashboard] Permissions définies:', permissionsData);
+        console.log('🔍 [ProjectDashboard] Niveau:', data.permissions_info.level);
+        console.log('🔍 [ProjectDashboard] can_filter_by_user:', permissionsData.can_filter_by_user);
+        
+        setPermissions(permissionsData);
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement du tableau de bord');
@@ -238,6 +245,11 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
             <p className="text-xs text-muted-foreground">Projets actifs</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Statistiques d'audit */}
+      <div className="mb-10">
+        <AuditStatsCard />
       </div>
 
       {/* Section Projets récents */}

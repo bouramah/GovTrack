@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\Auditable;
 
 class TypeEntite extends Model
 {
+    use HasFactory, Auditable;
+
     protected $table = 'type_entites';
 
     public $timestamps = false;

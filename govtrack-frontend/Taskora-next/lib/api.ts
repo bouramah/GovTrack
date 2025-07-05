@@ -4,6 +4,78 @@ import { ProjectDiscussion, TaskDiscussion, DiscussionCreateRequest, DiscussionU
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+export interface AuditLog {
+  id: number;
+  action: string;
+  table_name: string;
+  record_id: number;
+  record_type: string;
+  deleted_data: any;
+  deleted_data_summary: string;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+  ip_address: string;
+  user_agent: string;
+  request_url: string;
+  request_method: string;
+  reason: string;
+  metadata: any;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+  };
+}
+
+export interface AuditStats {
+  total_logs: number;
+  deletions: number;
+  force_deletions: number;
+  restorations: number;
+  today_logs: number;
+  this_week_logs: number;
+  this_month_logs: number;
+}
+
+export interface TopTable {
+  table_name: string;
+  count: number;
+}
+
+export interface TopUser {
+  user_id: number;
+  user_name: string;
+  count: number;
+}
+
+export interface AuditResponse {
+  data: AuditLog[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  statistiques: AuditStats;
+  top_tables: TopTable[];
+  top_users: TopUser[];
+}
+
+export interface AuditFilters {
+  action?: string;
+  table_name?: string;
+  user_id?: string;
+  search?: string;
+  date_debut?: string;
+  date_fin?: string;
+  page?: number;
+  per_page?: number;
+}
+
 export interface User {
   id: number;
   matricule: string;
@@ -2040,6 +2112,53 @@ class ApiClient {
     const response = await this.client.get(`/v1/taches/${taskId}/discussions/statistiques`);
     return response.data;
   }
+
+  // =================================================================
+  // AUDIT - TRACABILITÉ DES ACTIONS
+  // =================================================================
+
+  // Méthodes d'API pour l'audit
+  async getAuditLogs(filters: AuditFilters = {}): Promise<AuditResponse> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+    
+    const response = await this.client.get('/v1/audit/logs', { params });
+    return response.data;
+  }
+
+  async getAuditLog(id: number): Promise<{ data: AuditLog }> {
+    const response = await this.client.get(`/v1/audit/logs/${id}`);
+    return response.data;
+  }
+
+  async getAuditStats(): Promise<{ data: AuditStats }> {
+    const response = await this.client.get('/v1/audit/stats');
+    return response.data;
+  }
+
+  async exportAuditLogs(filters: AuditFilters = {}): Promise<{ data: any[] }> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+    
+    const response = await this.client.get('/v1/audit/export', { params });
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();
+
+// Export spécifique pour l'audit
+export const auditApi = {
+  getAuditLogs: (filters: AuditFilters = {}) => apiClient.getAuditLogs(filters),
+  getAuditLog: (id: number) => apiClient.getAuditLog(id),
+  getAuditStats: () => apiClient.getAuditStats(),
+  exportAuditLogs: (filters: AuditFilters = {}) => apiClient.exportAuditLogs(filters),
+};

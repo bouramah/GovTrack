@@ -64,6 +64,10 @@ export const usePermissions = () => {
   // Permission pour les types de projets
   const canViewTypeProjetsList = (): boolean => hasPermission('view_type_projets_list');
 
+  // Permissions pour l'audit
+  const canViewAuditLogs = (): boolean => hasPermission('view_audit_logs');
+  const canExportAuditLogs = (): boolean => hasPermission('export_audit_logs');
+
   return {
     // Méthodes générales
     hasPermission,
@@ -98,5 +102,9 @@ export const usePermissions = () => {
     // Permissions entités
     canManageEntities,
     canViewTypeProjetsList,
+    
+    // Permissions audit
+    canViewAuditLogs,
+    canExportAuditLogs,
   };
 }; 

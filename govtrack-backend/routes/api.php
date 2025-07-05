@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\DiscussionProjetController;
 use App\Http\Controllers\Api\DiscussionTacheController;
 use App\Http\Controllers\Api\PieceJointeProjetController;
 use App\Http\Controllers\Api\PieceJointeTacheController;
+use App\Http\Controllers\Api\AuditController;
 
 /*
 |--------------------------------------------------------------------------
@@ -220,5 +221,15 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::put('{id}', [PieceJointeTacheController::class, 'update'])->middleware('permission:view_task_attachments');
         Route::delete('{id}', [PieceJointeTacheController::class, 'destroy'])->middleware('permission:delete_task_attachment');
     });
+
+    // =================================================================
+    // AUDIT - TRACABILITÉ DES ACTIONS
+    // =================================================================
+
+    // Logs d'audit
+    Route::get('audit/logs', [AuditController::class, 'index'])->middleware('permission:view_audit_logs');
+    Route::get('audit/logs/{id}', [AuditController::class, 'show'])->middleware('permission:view_audit_logs');
+    Route::get('audit/stats', [AuditController::class, 'stats'])->middleware('permission:view_audit_logs');
+    Route::get('audit/export', [AuditController::class, 'export'])->middleware('permission:export_audit_logs');
 
 });

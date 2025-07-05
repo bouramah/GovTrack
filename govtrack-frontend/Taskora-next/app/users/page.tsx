@@ -92,6 +92,7 @@ import {
   Minus
 } from 'lucide-react';
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { apiClient, User, UserDetailed, Role, Entite, Poste } from '@/lib/api';
 import {
   Pagination,
@@ -1756,12 +1757,12 @@ export default function UsersPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="affectation-entite">Entité *</Label>
-                  <Combobox
+                  <SearchableSelect
                     options={entites.map((entite) => ({
                       value: entite.id.toString(),
                       label: entite.nom,
                       description: `Type: ${entite.type_entite.nom}`,
-                      searchTerms: `${entite.nom} ${entite.type_entite.nom}`
+                      badge: entite.type_entite.nom
                     }))}
                     value={affectationFormData.entite_id}
                     onValueChange={(value) => setAffectationFormData({...affectationFormData, entite_id: value})}
@@ -1773,12 +1774,11 @@ export default function UsersPage() {
 
                 <div>
                   <Label htmlFor="affectation-poste">Poste *</Label>
-                  <Combobox
+                  <SearchableSelect
                     options={postes.map((poste) => ({
                       value: poste.id.toString(),
                       label: poste.nom,
-                      description: poste.description || "Aucune description",
-                      searchTerms: `${poste.nom} ${poste.description || ''}`
+                      description: poste.description || "Aucune description"
                     }))}
                     value={affectationFormData.poste_id}
                     onValueChange={(value) => setAffectationFormData({...affectationFormData, poste_id: value})}
@@ -2016,31 +2016,21 @@ export default function UsersPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="role-select">Rôle *</Label>
-                  <Select 
-                    value={roleFormData.role_id} 
+                  <SearchableSelect
+                    options={availableRoles
+                      .filter(role => !userRoles.some(userRole => userRole.id === role.id))
+                      .map((role) => ({
+                        value: role.id.toString(),
+                        label: role.nom,
+                        description: role.description || "Aucune description",
+                        badge: "Rôle"
+                      }))}
+                    value={roleFormData.role_id}
                     onValueChange={(value) => setRoleFormData({...roleFormData, role_id: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un rôle" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableRoles
-                        .filter(role => !userRoles.some(userRole => userRole.id === role.id))
-                        .map((role) => (
-                          <SelectItem key={role.id} value={role.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <Crown className="h-4 w-4" />
-                              <div>
-                                <div className="font-medium">{role.nom}</div>
-                                {role.description && (
-                                  <div className="text-sm text-gray-500">{role.description}</div>
-                                )}
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Sélectionner un rôle"
+                    searchPlaceholder="Rechercher un rôle..."
+                    emptyMessage="Aucun rôle disponible"
+                  />
                   {availableRoles.filter(role => !userRoles.some(userRole => userRole.id === role.id)).length === 0 && (
                     <p className="text-sm text-gray-500 mt-2">
                       Tous les rôles disponibles sont déjà assignés à cet utilisateur.

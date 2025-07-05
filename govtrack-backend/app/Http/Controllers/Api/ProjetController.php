@@ -994,7 +994,7 @@ class ProjetController extends Controller
     {
         try {
             $user = $request->user();
-            $query = User::select('id', 'nom', 'prenom', 'email')
+            $query = User::select('id', 'nom', 'prenom', 'email', 'matricule')
                         ->orderBy('nom')
                         ->orderBy('prenom');
 
@@ -1016,7 +1016,16 @@ class ProjetController extends Controller
                 $query->where('id', $user->id);
             }
 
-            $users = $query->get();
+            $users = $query->get()->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'nom' => $user->nom,
+                    'prenom' => $user->prenom,
+                    'email' => $user->email,
+                    'matricule' => $user->matricule,
+                    'display_name' => $user->prenom . ' ' . $user->nom
+                ];
+            });
 
             return response()->json([
                 'success' => true,

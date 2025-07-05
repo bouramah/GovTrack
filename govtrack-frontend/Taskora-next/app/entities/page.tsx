@@ -68,6 +68,7 @@ import {
   Printer
 } from "lucide-react";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { apiClient, TypeEntite, Entite, User, Poste } from "@/lib/api";
 import {
   ViewPostsListGuard,
@@ -2125,12 +2126,12 @@ export default function EntitiesPage() {
           <form onSubmit={handleAffecterChef} className="space-y-4">
             <div>
               <Label htmlFor="user_id">Utilisateur *</Label>
-              <Combobox
+              <SearchableSelect
                 options={users.map(user => ({
                   value: user.id.toString(),
                   label: `${user.prenom} ${user.nom}`,
-                  description: `Matricule: ${user.matricule} - Email: ${user.email}`,
-                  searchTerms: `${user.prenom} ${user.nom} ${user.matricule} ${user.email}`
+                  description: `Email: ${user.email}`,
+                  badge: user.matricule
                 }))}
                 value={chefFormData.user_id}
                 onValueChange={(value) => setChefFormData({...chefFormData, user_id: value})}
@@ -2185,14 +2186,14 @@ export default function EntitiesPage() {
             <DialogTitle>Terminer le mandat de chef</DialogTitle>
             <DialogDescription>
               Entité: {selectedEntiteForAction?.nom}
-              {selectedEntiteForAction?.chef_actuel && (
-                <div className="mt-2 p-3 bg-amber-50 rounded border">
-                  <p className="text-sm">
-                    <strong>Chef actuel:</strong> {selectedEntiteForAction.chef_actuel?.user?.prenom || selectedEntiteForAction.chef_actuel?.prenom} {selectedEntiteForAction.chef_actuel?.user?.nom || selectedEntiteForAction.chef_actuel?.nom}
-                  </p>
-                </div>
-              )}
             </DialogDescription>
+            {selectedEntiteForAction?.chef_actuel && (
+              <div className="mt-2 p-3 bg-amber-50 rounded border">
+                <p className="text-sm">
+                  <strong>Chef actuel:</strong> {selectedEntiteForAction.chef_actuel?.user?.prenom || selectedEntiteForAction.chef_actuel?.prenom} {selectedEntiteForAction.chef_actuel?.user?.nom || selectedEntiteForAction.chef_actuel?.nom}
+                </p>
+              </div>
+            )}
           </DialogHeader>
           <form onSubmit={handleTerminerMandat} className="space-y-4">
             <div>
