@@ -7,23 +7,51 @@ export function cn(...inputs: ClassValue[]) {
 
 // Fonction pour formater les erreurs du backend
 export function formatBackendErrors(error: any): string {
-  if (error?.response?.data?.message) {
-    return error.response.data.message;
+  // 1️⃣ Erreurs personnalisées émises par apiClient
+  if (error?.name === 'ValidationError') {
+    if (error.errors && typeof error.errors === 'object') {
+      const messages = Object.values(error.errors).flat();
+      if (messages.length) {
+        return messages.join(', ');
+      }
+    }
+    return error.message || 'Erreur de validation';
   }
-  
-  if (error?.response?.data?.error) {
-    return error.response.data.error;
+
+  if (error?.name === 'PermissionError') {
+    return error.message || 'Accès refusé';
   }
-  
+
+  // 2️⃣ Analyse de la réponse HTTP
+  const responseData = error?.response?.data;
+  if (responseData) {
+    // Tableau d'erreurs Laravel
+    if (responseData.errors && typeof responseData.errors === 'object') {
+      const messages = Object.values(responseData.errors).flat();
+      if (messages.length) {
+        return messages.join(', ');
+      }
+    }
+
+    if (responseData.message) {
+      return responseData.message;
+    }
+
+    if (responseData.error) {
+      return responseData.error;
+    }
+  }
+
+  // 3️⃣ Fallbacks génériques
   if (error?.message) {
     return error.message;
   }
-  
+
   if (typeof error === 'string') {
     return error;
   }
-  
-  return 'Une erreur inattendue s\'est produite';
+
+  return "Une erreur inattendue s'est produite";
 }
 
 // Fonction pour formater la taille des fichiers

@@ -581,31 +581,31 @@ export default function UsersPage() {
     if (error.response?.status === 422) {
       const errorData = error.response.data;
       
-      if (errorData.message) {
-        return errorData.message;
-      }
-      
-      if (errorData.error) {
-        return errorData.error;
-      }
-      
+      // 1️⃣ Priorité aux messages détaillés de validation
       if (errorData.errors) {
-        // Erreurs de validation Laravel
         const backendErrors = errorData.errors;
         const errorMessages: string[] = [];
-        
         Object.keys(backendErrors).forEach(field => {
           const fieldErrors = backendErrors[field];
           if (Array.isArray(fieldErrors)) {
             errorMessages.push(...fieldErrors);
-          } else {
+          } else if (typeof fieldErrors === 'string') {
             errorMessages.push(fieldErrors);
           }
         });
-        
-        return errorMessages.join(", ");
+        if (errorMessages.length) {
+          return errorMessages.join(', ');
+        }
       }
-      
+
+      // 2️⃣ Ensuite, le message ou l'erreur générique renvoyés par le backend
+      if (errorData.message) {
+        return errorData.message;
+      }
+      if (errorData.error) {
+        return errorData.error;
+      }
+
       return "Accès refusé - Permissions insuffisantes";
     }
     

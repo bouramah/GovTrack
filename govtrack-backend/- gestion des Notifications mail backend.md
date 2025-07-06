@@ -1,4 +1,3 @@
 - gestion des Notifications mail backend 
 - Gestion Notifications frontend
-- Réinitialisation mot de passe 
-- gestion des erreurs
+- Réinitialisation mot de passe par soi et par admin à 0000

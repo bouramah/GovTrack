@@ -606,24 +606,31 @@ class ApiClient {
         // Gestion des erreurs 422 (permissions insuffisantes)
         if (error.response?.status === 422) {
           const errorData = error.response.data;
-          let errorMessage = 'Accès refusé';
-          
-          if (errorData.message) {
+          let errorMessage = 'Erreur de validation';
+
+          // Si le backend fournit un tableau d'erreurs Laravel, on les concatène
+          if (errorData?.errors) {
+            errorMessage = Object.values(errorData.errors).flat().join(', ');
+          } else if (errorData?.message) {
             errorMessage = errorData.message;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.errors) {
-            // Erreurs de validation Laravel
-            const errorMessages = Object.values(errorData.errors)
-              .flat()
-              .join(', ');
-            errorMessage = errorMessages;
           }
-          
-          // Créer une erreur personnalisée avec le message approprié
-          const customError = new Error(errorMessage);
-          customError.name = 'PermissionError';
-          return Promise.reject(customError);
+
+          // Créer une erreur personnalisée contenant les détails de validation
+          const validationError: any = new Error(errorMessage);
+          validationError.name = 'ValidationError';
+          validationError.errors = errorData?.errors || {};
+          validationError.response = error.response;
+          return Promise.reject(validationError);
+        }
+
+        // Gestion des permissions insuffisantes (403)
+        if (error.response?.status === 403) {
+          const errorData = error.response.data || {};
+          const errorMessage = errorData.message || errorData.error || 'Accès refusé';
+          const permissionError: any = new Error(errorMessage);
+          permissionError.name = 'PermissionError';
+          permissionError.response = error.response;
+          return Promise.reject(permissionError);
         }
         
         return Promise.reject(error);
