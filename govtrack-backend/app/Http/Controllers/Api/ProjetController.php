@@ -7,6 +7,7 @@ use App\Models\Projet;
 use App\Models\TypeProjet;
 use App\Models\User;
 use App\Models\PieceJointeProjet;
+use App\Models\Entite;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +15,37 @@ use Carbon\Carbon;
 
 class ProjetController extends Controller
 {
+    /**
+     * Récupérer récursivement toutes les entités enfants d'une entité donnée
+     */
+    private function getEntitesEnfantsRecursives(int $entiteId): array
+    {
+        $entitesIds = [$entiteId];
+
+        $entite = Entite::find($entiteId);
+        if (!$entite) {
+            return $entitesIds;
+        }
+
+        // Récupérer récursivement tous les enfants
+        $this->getEnfantsRecursifs($entite, $entitesIds);
+
+        return array_unique($entitesIds);
+    }
+
+    /**
+     * Méthode récursive pour récupérer tous les enfants d'une entité
+     */
+    private function getEnfantsRecursifs(Entite $entite, array &$entitesIds): void
+    {
+        $enfants = $entite->enfants;
+
+        foreach ($enfants as $enfant) {
+            $entitesIds[] = $enfant->id;
+            $this->getEnfantsRecursifs($enfant, $entitesIds);
+        }
+    }
+
     /**
      * Afficher la liste des projets
      */
@@ -33,20 +65,22 @@ class ProjetController extends Controller
                 // Aucune restriction sur la requête
 
             } elseif ($user->hasPermission('view_my_entity_projects')) {
-                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité
-                // Récupérer l'entité actuelle de l'utilisateur
+                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité ET entités enfants
                 $affectationActuelle = $user->affectations()->where('statut', true)->first();
 
                 if ($affectationActuelle) {
                     $entiteId = $affectationActuelle->service_id;
 
-                    // Récupérer tous les utilisateurs de cette entité (actuels et passés)
-                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                    // Récupérer récursivement toutes les entités (actuelle + enfants)
+                    $entitesIds = $this->getEntitesEnfantsRecursives($entiteId);
+
+                    // Récupérer tous les utilisateurs de ces entités (actuels et passés)
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::whereIn('service_id', $entitesIds)
                         ->distinct()
                         ->pluck('user_id');
 
-                    // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
-                    // OU projets ayant des tâches assignées à des membres de l'entité
+                    // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité ou ses enfants
+                    // OU projets ayant des tâches assignées à des membres de l'entité ou ses enfants
                     $query->where(function ($q) use ($utilisateursEntite) {
                         $q->whereIn('porteur_id', $utilisateursEntite)
                           ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
@@ -226,7 +260,7 @@ class ProjetController extends Controller
                     'entity' => $user->hasPermission('view_all_projects') ? ['entite_id'] : []
                 ],
                 'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à tous les projets' :
-                               ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité' : 'Vos projets personnels')
+                               ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité et entités enfants' : 'Vos projets personnels')
             ];
 
             return response()->json([
@@ -633,14 +667,17 @@ class ProjetController extends Controller
                 // Aucune restriction sur la requête
 
             } elseif ($user->hasPermission('view_my_entity_projects')) {
-                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité
+                // 🏢 NIVEAU 2 : VIEW MY ENTITY PROJECTS - Projets de son entité ET entités enfants
                 $affectationActuelle = $user->affectations()->where('statut', true)->first();
 
                 if ($affectationActuelle) {
                     $entiteId = $affectationActuelle->service_id;
 
-                    // Récupérer tous les utilisateurs de cette entité
-                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+                    // Récupérer récursivement toutes les entités (actuelle + enfants)
+                    $entitesIds = $this->getEntitesEnfantsRecursives($entiteId);
+
+                    // Récupérer tous les utilisateurs de ces entités (actuels et passés)
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::whereIn('service_id', $entitesIds)
                         ->distinct()
                         ->pluck('user_id');
 
@@ -802,9 +839,9 @@ class ProjetController extends Controller
                     'level' => $user->hasPermission('view_all_projects') ? 'all_projects' :
                               ($user->hasPermission('view_my_entity_projects') ? 'entity_projects' : 'my_projects'),
                     'description' => $user->hasPermission('view_all_projects') ? 'Tableau de bord global' :
-                                   ($user->hasPermission('view_my_entity_projects') ? 'Tableau de bord de votre entité' : 'Votre tableau de bord personnel'),
+                                   ($user->hasPermission('view_my_entity_projects') ? 'Tableau de bord de votre entité et entités enfants' : 'Votre tableau de bord personnel'),
                     'scope' => $user->hasPermission('view_all_projects') ? 'Tous les projets' :
-                              ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité' : 'Vos projets')
+                              ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité et entités enfants' : 'Vos projets')
                 ]
             ];
 
@@ -1002,11 +1039,16 @@ class ProjetController extends Controller
             if ($user->hasPermission('view_all_projects')) {
                 // Tous les utilisateurs
             } elseif ($user->hasPermission('view_my_entity_projects')) {
-                // Utilisateurs de son entité
+                // Utilisateurs de son entité ET entités enfants
                 $affectationActuelle = $user->affectations()->where('statut', true)->first();
                 if ($affectationActuelle) {
                     $entiteId = $affectationActuelle->service_id;
-                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::where('service_id', $entiteId)
+
+                    // Récupérer récursivement toutes les entités (actuelle + enfants)
+                    $entitesIds = $this->getEntitesEnfantsRecursives($entiteId);
+
+                    // Récupérer tous les utilisateurs de ces entités
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::whereIn('service_id', $entitesIds)
                         ->distinct()
                         ->pluck('user_id');
                     $query->whereIn('id', $utilisateursEntite);
