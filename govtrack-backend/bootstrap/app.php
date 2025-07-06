@@ -18,18 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // ✅ Le middleware CORS est ajouté en premier
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+
+        $middleware->prepend(\App\Http\Middleware\StripGovtrackPrefix::class);
+
+
+        // Alias et autres middlewares personnalisés
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
 
-        // Configuration pour éviter la redirection vers 'login' pour les requêtes API
+        // Pour éviter la redirection automatique vers login sur API
         $middleware->redirectGuestsTo(function (Request $request) {
-            // Pour une API pure, on ne redirige jamais - AuthenticationException sera lancée
             return null;
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Gestion des erreurs d'authentification
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -40,7 +45,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Gestion des erreurs d'autorisation (permissions)
         $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -51,7 +55,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Gestion des erreurs 404 (ressource non trouvée)
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -62,7 +65,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Gestion des erreurs de méthode non autorisée
         $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -73,7 +75,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Gestion des erreurs de validation
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
@@ -85,10 +86,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Gestion des erreurs 500 (erreurs serveur)
-        $exceptions->render(function (Throwable $e, Request $request) {
+        $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                // Ne pas exposer les détails de l'erreur en production
                 if (app()->environment('production')) {
                     return response()->json([
                         'success' => false,
@@ -96,7 +95,6 @@ return Application::configure(basePath: dirname(__DIR__))
                         'error' => 'Internal Server Error'
                     ], 500);
                 } else {
-                    // En développement, on peut montrer plus de détails
                     return response()->json([
                         'success' => false,
                         'message' => 'Erreur interne du serveur : ' . $e->getMessage(),
@@ -110,4 +108,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
             }
         });
-    })->create();
+    })
+    ->create();
