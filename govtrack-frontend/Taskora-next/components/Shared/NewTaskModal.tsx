@@ -239,7 +239,9 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
   const projectOptions: SearchableSelectOption[] = [
     ...projects.map(project => ({
       value: project.id.toString(),
-      label: project.titre
+      label: project.titre,
+      description: project.type_projet?.nom || 'Type non défini',
+      badge: project.porteur ? `${project.porteur.prenom} ${project.porteur.nom}` : 'Porteur non défini'
     }))
   ];
 

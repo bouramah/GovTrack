@@ -17,6 +17,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { apiClient, Project, ProjectCreateRequest, ProjectUpdateRequest, TypeProjet, User } from '@/lib/api';
 import { toast } from 'sonner';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -29,9 +30,6 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
   const [loading, setLoading] = useState(false);
   const [typeProjets, setTypeProjets] = useState<TypeProjet[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [typeProjetOpen, setTypeProjetOpen] = useState(false);
-  const [porteurOpen, setPorteurOpen] = useState(false);
-  const [donneurOrdreOpen, setDonneurOrdreOpen] = useState(false);
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState<ProjectCreateRequest>({
     titre: '',
@@ -194,6 +192,21 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
     }
   };
 
+  // Préparer les options pour les selects
+  const typeProjetOptions: SearchableSelectOption[] = typeProjets.map((type) => ({
+    value: type.id.toString(),
+    label: type.nom,
+    description: type.description,
+    badge: `${type.duree_previsionnelle_jours} jours`
+  }));
+
+  const userOptions: SearchableSelectOption[] = users.map((user) => ({
+    value: user.id.toString(),
+    label: `${user.prenom} ${user.nom}`,
+    description: user.email,
+    badge: user.matricule
+  }));
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -263,60 +276,15 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           {/* Type de projet */}
           <div className="space-y-2">
             <Label htmlFor="type_projet">Type de projet *</Label>
-            <Popover open={typeProjetOpen} onOpenChange={setTypeProjetOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={typeProjetOpen}
-                  className={`w-full justify-between ${serverErrors.type_projet_id ? "border-red-500 focus:border-red-500" : ""}`}
-                >
-                  {formData.type_projet_id
-                    ? typeProjets.find((type) => type.id === formData.type_projet_id)?.nom
-                    : "Sélectionner un type de projet..."}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Rechercher un type de projet..." />
-                  <CommandList>
-                    <CommandEmpty>Aucun type de projet trouvé.</CommandEmpty>
-                    <CommandGroup>
-                      {typeProjets.map((type) => (
-                        <CommandItem
-                          key={type.id}
-                          value={`${type.nom} ${type.description || ''}`}
-                          onSelect={() => {
-                            handleInputChange('type_projet_id', type.id);
-                            setTypeProjetOpen(false);
-                          }}
-                        >
-                          <div className="flex flex-col w-full">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">{type.nom}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {type.duree_previsionnelle_jours} jours
-                              </Badge>
-                            </div>
-                            {type.description && (
-                              <span className="text-sm text-gray-500 mt-1">
-                                {type.description}
-                              </span>
-                            )}
-                            {type.description_sla && (
-                              <span className="text-xs text-blue-600 mt-1">
-                                SLA: {type.description_sla}
-                              </span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <SearchableSelect
+              options={typeProjetOptions}
+              value={formData.type_projet_id ? formData.type_projet_id.toString() : undefined}
+              onValueChange={(value) => handleInputChange('type_projet_id', parseInt(value))}
+              placeholder="Sélectionner un type de projet..."
+              searchPlaceholder="Rechercher un type de projet..."
+              emptyMessage="Aucun type de projet trouvé."
+              className={serverErrors.type_projet_id ? "border-red-500 focus:border-red-500" : ""}
+            />
             {serverErrors.type_projet_id && (
               <p className="text-sm text-red-600">{serverErrors.type_projet_id[0]}</p>
             )}
@@ -325,56 +293,15 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           {/* Porteur */}
           <div className="space-y-2">
             <Label htmlFor="porteur">Porteur *</Label>
-            <Popover open={porteurOpen} onOpenChange={setPorteurOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={porteurOpen}
-                  className={`w-full justify-between ${serverErrors.porteur_id ? "border-red-500 focus:border-red-500" : ""}`}
-                >
-                  {formData.porteur_id
-                    ? (() => {
-                        const user = users.find((u) => u.id === formData.porteur_id);
-                        return user ? `${user.prenom} ${user.nom} (${user.matricule})` : "Sélectionner le porteur...";
-                      })()
-                    : "Sélectionner le porteur..."}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Rechercher un utilisateur..." />
-                  <CommandList>
-                    <CommandEmpty>Aucun utilisateur trouvé.</CommandEmpty>
-                    <CommandGroup>
-                      {users.map((user) => (
-                        <CommandItem
-                          key={user.id}
-                          value={`${user.prenom} ${user.nom} ${user.matricule} ${user.email}`}
-                          onSelect={() => {
-                            handleInputChange('porteur_id', user.id);
-                            setPorteurOpen(false);
-                          }}
-                        >
-                          <div className="flex flex-col w-full">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">{user.prenom} {user.nom}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {user.matricule}
-                              </Badge>
-                            </div>
-                            <span className="text-sm text-gray-500 mt-1">
-                              {user.email}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <SearchableSelect
+              options={userOptions}
+              value={formData.porteur_id ? formData.porteur_id.toString() : undefined}
+              onValueChange={(value) => handleInputChange('porteur_id', parseInt(value))}
+              placeholder="Sélectionner le porteur..."
+              searchPlaceholder="Rechercher un utilisateur..."
+              emptyMessage="Aucun utilisateur trouvé."
+              className={serverErrors.porteur_id ? "border-red-500 focus:border-red-500" : ""}
+            />
             {serverErrors.porteur_id && (
               <p className="text-sm text-red-600">{serverErrors.porteur_id[0]}</p>
             )}
@@ -383,56 +310,15 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           {/* Donneur d'ordre */}
           <div className="space-y-2">
             <Label htmlFor="donneur_ordre">Donneur d'ordre *</Label>
-            <Popover open={donneurOrdreOpen} onOpenChange={setDonneurOrdreOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={donneurOrdreOpen}
-                  className={`w-full justify-between ${serverErrors.donneur_ordre_id ? "border-red-500 focus:border-red-500" : ""}`}
-                >
-                  {formData.donneur_ordre_id
-                    ? (() => {
-                        const user = users.find((u) => u.id === formData.donneur_ordre_id);
-                        return user ? `${user.prenom} ${user.nom} (${user.matricule})` : "Sélectionner le donneur d'ordre...";
-                      })()
-                    : "Sélectionner le donneur d'ordre..."}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Rechercher un utilisateur..." />
-                  <CommandList>
-                    <CommandEmpty>Aucun utilisateur trouvé.</CommandEmpty>
-                    <CommandGroup>
-                      {users.map((user) => (
-                        <CommandItem
-                          key={user.id}
-                          value={`${user.prenom} ${user.nom} ${user.matricule} ${user.email}`}
-                          onSelect={() => {
-                            handleInputChange('donneur_ordre_id', user.id);
-                            setDonneurOrdreOpen(false);
-                          }}
-                        >
-                          <div className="flex flex-col w-full">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">{user.prenom} {user.nom}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {user.matricule}
-                              </Badge>
-                            </div>
-                            <span className="text-sm text-gray-500 mt-1">
-                              {user.email}
-                            </span>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <SearchableSelect
+              options={userOptions}
+              value={formData.donneur_ordre_id ? formData.donneur_ordre_id.toString() : undefined}
+              onValueChange={(value) => handleInputChange('donneur_ordre_id', parseInt(value))}
+              placeholder="Sélectionner le donneur d'ordre..."
+              searchPlaceholder="Rechercher un utilisateur..."
+              emptyMessage="Aucun utilisateur trouvé."
+              className={serverErrors.donneur_ordre_id ? "border-red-500 focus:border-red-500" : ""}
+            />
             {serverErrors.donneur_ordre_id && (
               <p className="text-sm text-red-600">{serverErrors.donneur_ordre_id[0]}</p>
             )}
@@ -448,7 +334,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
                   className={cn(
                     "w-full justify-start text-left font-normal",
                     !formData.date_debut_previsionnelle && "text-muted-foreground",
-                    serverErrors.date_debut_previsionnelle && "border-red-500 focus:border-red-500"
+                    serverErrors.date_debut_previsionnelle ? "border-red-500 focus:border-red-500" : ""
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -459,7 +345,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.date_debut_previsionnelle ? new Date(formData.date_debut_previsionnelle) : undefined}
@@ -484,60 +370,53 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
                   className={cn(
                     "w-full justify-start text-left font-normal",
                     !formData.date_fin_previsionnelle && "text-muted-foreground",
-                    serverErrors.date_fin_previsionnelle && "border-red-500 focus:border-red-500"
+                    serverErrors.date_fin_previsionnelle ? "border-red-500 focus:border-red-500" : ""
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.date_fin_previsionnelle ? (
                     format(new Date(formData.date_fin_previsionnelle), 'PPP', { locale: fr })
                   ) : (
-                    <span>Sélectionner une date (optionnel)</span>
+                    <span>Sélectionner une date</span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={formData.date_fin_previsionnelle ? new Date(formData.date_fin_previsionnelle) : undefined}
                   onSelect={(date) => handleDateChange('date_fin_previsionnelle', date)}
                   initialFocus
                   locale={fr}
-                  disabled={(date) => 
-                    formData.date_debut_previsionnelle 
-                      ? date <= new Date(formData.date_debut_previsionnelle)
-                      : false
-                  }
+                  disabled={(date) => {
+                    if (!formData.date_debut_previsionnelle) return false;
+                    return date < new Date(formData.date_debut_previsionnelle);
+                  }}
                 />
               </PopoverContent>
             </Popover>
             {serverErrors.date_fin_previsionnelle && (
               <p className="text-sm text-red-600">{serverErrors.date_fin_previsionnelle[0]}</p>
             )}
-            <p className="text-sm text-gray-500">
-              Si non spécifiée, la date sera calculée automatiquement selon le SLA du type de projet
-            </p>
           </div>
 
-          {/* Justification modification dates */}
+          {/* Justification des modifications */}
           <div className="space-y-2">
-            <Label htmlFor="justification">Justification modification dates</Label>
+            <Label htmlFor="justification_modification_dates">Justification des modifications de dates</Label>
             <Textarea
-              id="justification"
+              id="justification_modification_dates"
               value={formData.justification_modification_dates}
               onChange={(e) => handleInputChange('justification_modification_dates', e.target.value)}
-              placeholder="Justification si les dates diffèrent du SLA standard"
-              rows={2}
+              placeholder="Justification des modifications de dates par rapport au SLA..."
+              rows={3}
               className={serverErrors.justification_modification_dates ? "border-red-500 focus:border-red-500" : ""}
             />
             {serverErrors.justification_modification_dates && (
               <p className="text-sm text-red-600">{serverErrors.justification_modification_dates[0]}</p>
             )}
-            <p className="text-sm text-gray-500">
-              Obligatoire si les dates diffèrent du SLA du type de projet
-            </p>
           </div>
 
-          {/* Actions */}
+          {/* Boutons d'action */}
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuler

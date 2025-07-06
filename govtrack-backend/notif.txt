@@ -1,0 +1,86 @@
+📧 Notifications par Email Identifiées
+�� 1. NOTIFICATIONS DE PROJETS
+Création et Modification
+Nouveau projet créé → Notifier le porteur et le donneur d'ordre
+Projet modifié → Notifier le porteur et le donneur d'ordre
+Projet supprimé → Notifier le porteur et le donneur d'ordre
+Changements de Statut
+Projet démarré (statut → "en_cours") → Notifier le porteur, donneur d'ordre et équipe
+Projet bloqué (statut → "bloqué") → Notifier le porteur, donneur d'ordre et équipe
+Demande de clôture (statut → "demande_de_cloture") → Notifier le porteur et donneur d'ordre
+Projet terminé (statut → "terminé") → Notifier le porteur, donneur d'ordre et équipe
+Niveau d'Exécution
+Niveau d'exécution mis à jour → Notifier le porteur et donneur d'ordre
+Projet en retard (alerte automatique) → Notifier le porteur et donneur d'ordre
+�� 2. NOTIFICATIONS DE TÂCHES
+Assignation et Création
+Nouvelle tâche assignée → Notifier le responsable de la tâche
+Tâche créée → Notifier le porteur du projet et le responsable de la tâche
+Tâche modifiée → Notifier le responsable de la tâche et le porteur du projet
+Tâche supprimée → Notifier le responsable de la tâche et le porteur du projet
+Changements de Statut
+Tâche démarrée (statut → "en_cours") → Notifier le porteur du projet et le responsable
+Tâche bloquée (statut → "bloqué") → Notifier le porteur du projet et le responsable
+Demande de clôture de tâche (statut → "demande_de_cloture") → Notifier le porteur du projet
+Tâche terminée (statut → "terminé") → Notifier le porteur du projet et le responsable
+Niveau d'Exécution
+Niveau d'exécution de tâche mis à jour → Notifier le porteur du projet et le responsable
+Tâche en retard (alerte automatique) → Notifier le responsable et le porteur du projet
+�� 3. NOTIFICATIONS DE DISCUSSIONS
+Commentaires et Mentions
+Nouveau commentaire sur un projet → Notifier le porteur, donneur d'ordre et équipe
+Réponse à un commentaire de projet → Notifier l'auteur du commentaire original
+Nouveau commentaire sur une tâche → Notifier le responsable de la tâche et le porteur du projet
+Réponse à un commentaire de tâche → Notifier l'auteur du commentaire original
+Mention d'utilisateur dans un commentaire (@utilisateur) → Notifier l'utilisateur mentionné
+�� 4. NOTIFICATIONS D'UTILISATEURS
+Affectations
+Nouvelle affectation d'utilisateur → Notifier l'utilisateur affecté
+Fin d'affectation d'utilisateur → Notifier l'utilisateur
+Changement de poste → Notifier l'utilisateur
+Rôles et Permissions
+Nouveau rôle attribué → Notifier l'utilisateur
+Rôle retiré → Notifier l'utilisateur
+Permissions modifiées → Notifier l'utilisateur
+�� 5. NOTIFICATIONS D'ENTITÉS
+Gestion des Chefs
+Nouveau chef d'entité nommé → Notifier le nouveau chef et l'équipe de l'entité
+Fin de mandat de chef d'entité → Notifier l'ancien chef et l'équipe de l'entité
+�� 6. NOTIFICATIONS SYSTÈME
+Sécurité et Maintenance
+Changement de mot de passe → Notifier l'utilisateur
+Connexion depuis un nouvel appareil → Notifier l'utilisateur
+Maintenance planifiée → Notifier tous les utilisateurs
+Mise à jour du système → Notifier les administrateurs
+Alertes Automatiques
+Projets en retard (quotidienne) → Notifier les porteurs et donneurs d'ordre
+Tâches en retard (quotidienne) → Notifier les responsables
+Projets à échéance proche (3 jours avant) → Notifier les porteurs
+Tâches à échéance proche (1 jour avant) → Notifier les responsables
+�� 7. NOTIFICATIONS DE RAPPORTS
+Rapports Périodiques
+Rapport hebdomadaire de projets → Notifier les directeurs et chefs d'entité
+Rapport mensuel de performance → Notifier les administrateurs
+Rapport trimestriel → Notifier les directeurs généraux
+🎛️ Types de Fréquence
+Immédiat : Notifications critiques (changements de statut, nouvelles assignations)
+Quotidien : Résumé des activités et alertes de retard
+Hebdomadaire : Rapports de progression
+Mensuel : Rapports de performance
+🔧 Configuration des Notifications
+Chaque utilisateur pourra configurer :
+Types de notifications à recevoir
+Fréquence (immédiat, quotidien, hebdomadaire)
+Canaux (email, push, in-app)
+Heures de réception (éviter les notifications hors heures de travail)
+
+biwy fegp wxpr popv
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=douty38oulare@gmail.com
+MAIL_PASSWORD=biwyfegpwxprpopv
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=douty38oulare@gmail.com
+MAIL_FROM_NAME="GovTrack"
