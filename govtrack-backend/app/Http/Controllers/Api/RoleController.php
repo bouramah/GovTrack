@@ -356,4 +356,66 @@ class RoleController extends Controller
             'message' => 'Permissions disponibles récupérées avec succès'
         ]);
     }
+
+    /**
+     * Assign multiple permissions to role (bulk)
+     */
+    public function assignPermissionsBulk(Request $request, string $id): JsonResponse
+    {
+        $role = Role::findOrFail($id);
+
+        $validated = $request->validate([
+            'permission_ids'   => 'required|array|min:1',
+            'permission_ids.*' => 'exists:permissions,id',
+        ]);
+
+        $permissionIds = $validated['permission_ids'];
+
+        // Ne garder que celles qui ne sont pas déjà attachées
+        $existing = $role->permissions()->pluck('permissions.id')->toArray();
+        $toAttach = array_diff($permissionIds, $existing);
+
+        if (!empty($toAttach)) {
+            $timestamps = array_fill(0, count($toAttach), ['date_creation' => Carbon::now()]);
+            $syncData  = array_combine($toAttach, $timestamps);
+            $role->permissions()->attach($syncData);
+        }
+
+        $role->load('permissions');
+
+        return response()->json([
+            'success'   => true,
+            'data'      => [
+                'role'        => ['id' => $role->id, 'nom' => $role->nom],
+                'permissions' => $role->permissions->pluck('nom'),
+            ],
+            'message'   => 'Permissions assignées avec succès',
+        ]);
+    }
+
+    /**
+     * Remove multiple permissions from role (bulk)
+     */
+    public function removePermissionsBulk(Request $request, string $id): JsonResponse
+    {
+        $role = Role::findOrFail($id);
+
+        $validated = $request->validate([
+            'permission_ids'   => 'required|array|min:1',
+            'permission_ids.*' => 'exists:permissions,id',
+        ]);
+
+        $role->permissions()->detach($validated['permission_ids']);
+
+        $role->load('permissions');
+
+        return response()->json([
+            'success'   => true,
+            'data'      => [
+                'role'        => ['id' => $role->id, 'nom' => $role->nom],
+                'permissions' => $role->permissions->pluck('nom'),
+            ],
+            'message'   => 'Permissions retirées avec succès',
+        ]);
+    }
 }

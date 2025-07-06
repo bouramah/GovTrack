@@ -432,6 +432,62 @@ export default function RolesPermissionsPage() {
     }
   };
 
+  // Assignation BULK de permissions
+  const handleAssignPermissionsBulkToRole = async (permissionIds: number[]) => {
+    if (!selectedRole || permissionIds.length === 0) return;
+
+    try {
+      await apiClient.assignPermissionsToRoleBulk(selectedRole.id, permissionIds);
+
+      // Rafraîchir les données de rôle et permissions disponibles
+      const [updatedRole, availablePermsResponse] = await Promise.all([
+        apiClient.getRole(selectedRole.id),
+        apiClient.getAvailablePermissionsForRole(selectedRole.id)
+      ]);
+
+      setSelectedRole(updatedRole);
+      setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      setAvailablePermissions(availablePermsResponse.permissions_disponibles || []);
+
+      await loadData();
+    } catch (error: any) {
+      console.error('Erreur assignation bulk permissions:', error);
+      toast({
+        title: '❌ Erreur',
+        description: formatBackendErrors(error),
+        variant: 'destructive'
+      });
+      throw error; // Pour permettre au composant enfant de gérer
+    }
+  };
+
+  const handleRemovePermissionsBulkFromRole = async (permissionIds: number[]) => {
+    if (!selectedRole || permissionIds.length === 0) return;
+
+    try {
+      await apiClient.removePermissionsFromRoleBulk(selectedRole.id, permissionIds);
+
+      const [updatedRole, availablePermsResponse] = await Promise.all([
+        apiClient.getRole(selectedRole.id),
+        apiClient.getAvailablePermissionsForRole(selectedRole.id)
+      ]);
+
+      setSelectedRole(updatedRole);
+      setSelectedPermissionsForRole(updatedRole.permissions?.map((p: Permission) => p.id) || []);
+      setAvailablePermissions(availablePermsResponse.permissions_disponibles || []);
+
+      await loadData();
+    } catch (error: any) {
+      console.error('Erreur retrait bulk permissions:', error);
+      toast({
+        title: '❌ Erreur',
+        description: formatBackendErrors(error),
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   // ============================================
   // FONCTIONS GESTION DES PERMISSIONS
   // ============================================
@@ -1414,6 +1470,8 @@ export default function RolesPermissionsPage() {
                   assignedPermissions={selectedRole?.permissions || []}
                   onAssignPermission={handleAssignPermissionToRole}
                   onRemovePermission={handleRemovePermissionFromRole}
+                  onAssignPermissionsBulk={handleAssignPermissionsBulkToRole}
+                  onRemovePermissionsBulk={handleRemovePermissionsBulkFromRole}
                   loading={loading}
                 />
                 

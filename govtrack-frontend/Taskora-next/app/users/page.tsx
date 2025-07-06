@@ -89,7 +89,8 @@ import {
   X,
   Plus,
   UserCheck,
-  Minus
+  Minus,
+  KeyRound
 } from 'lucide-react';
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -188,6 +189,7 @@ export default function UsersPage() {
   const { toast } = useToast();
   const permissions = usePermissions();
   const { user } = useAuth();
+  const [isResettingPasswordId, setIsResettingPasswordId] = useState<number|null>(null);
 
 
 
@@ -764,6 +766,25 @@ export default function UsersPage() {
   const usersWithRoles = users.filter(user => user.roles && user.roles.length > 0).length;
   const usersWithAffectations = users.filter(user => user.affectation_actuelle).length;
 
+  const handleResetUserPassword = async (userId: number, userName: string) => {
+    try {
+      setIsResettingPasswordId(userId);
+      const response = await apiClient.resetUserPassword(userId);
+      toast({
+        title: '✅ Mot de passe réinitialisé',
+        description: `Le mot de passe de ${userName} a été réinitialisé avec succès.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: '❌ Erreur',
+        description: formatBackendErrors(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResettingPasswordId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-gray-50">
@@ -1205,6 +1226,39 @@ export default function UsersPage() {
                                     Gérer rôles
                                   </DropdownMenuItem>
                                 </UserRolesGuard>
+                                {permissions.hasPermission('reset_user_password') && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        key="resetpwd"
+                                        onSelect={(e) => e.preventDefault()}
+                                      >
+                                        <KeyRound className="mr-2 h-4 w-4" />
+                                        Réinitialiser mot de passe
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Réinitialiser le mot de passe</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Êtes-vous sûr de vouloir réinitialiser le mot de passe de <strong>{user.prenom} {user.nom}</strong> ?
+                                          Un mot de passe par défaut sera défini.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleResetUserPassword(user.id, `${user.prenom} ${user.nom}`)}
+                                        >
+                                          {isResettingPasswordId === user.id ? (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                          ) : null}
+                                          Réinitialiser
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
                                 <DeleteUserGuard>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>

@@ -612,4 +612,47 @@ class UserController extends Controller
             'message' => 'Rôle retiré avec succès'
         ]);
     }
+
+    /**
+     * Réinitialiser le mot de passe d'un utilisateur (admin)
+     */
+    public function resetPassword(Request $request, string $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'password' => 'nullable|string|min:8',
+            ]);
+
+            $defaultPassword = $request->get('password', config('auth.default_admin_reset_password', 'Default@123'));
+
+            $user = User::findOrFail($id);
+            $user->password = Hash::make($defaultPassword);
+            $user->date_modification = Carbon::now();
+            $user->modifier_par = $request->user()->email;
+            $user->save();
+
+            // Optionnel : notifier l'utilisateur de son nouveau mot de passe
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mot de passe réinitialisé avec succès',
+                'data' => [
+                    'default_password' => app()->environment('production') ? null : $defaultPassword
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la réinitialisation du mot de passe',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

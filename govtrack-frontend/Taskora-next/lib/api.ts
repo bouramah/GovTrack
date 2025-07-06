@@ -2145,6 +2145,44 @@ class ApiClient {
     const response = await this.client.get('/v1/audit/export', { params });
     return response.data;
   }
+
+  async assignPermissionsToRoleBulk(roleId: number, permissionIds: number[]): Promise<any> {
+    const response = await this.client.post(`/v1/roles/${roleId}/assign-permissions-bulk`, {
+      permission_ids: permissionIds,
+    });
+    return response.data;
+  }
+
+  async removePermissionsFromRoleBulk(roleId: number, permissionIds: number[]): Promise<any> {
+    const response = await this.client.post(`/v1/roles/${roleId}/remove-permissions-bulk`, {
+      permission_ids: permissionIds,
+    });
+    return response.data;
+  }
+
+  /**
+   * Demande de réinitialisation de mot de passe (self-service)
+   */
+  async forgotPassword(email: string): Promise<any> {
+    const response = await this.client.post('/v1/auth/forgot-password', { email });
+    return response.data;
+  }
+
+  /**
+   * Réinitialiser le mot de passe avec token
+   */
+  async resetPassword(data: { email: string; token: string; password: string; password_confirmation: string; }): Promise<any> {
+    const response = await this.client.post('/v1/auth/reset-password', data);
+    return response.data;
+  }
+
+  /**
+   * Réinitialisation par admin à un mot de passe par défaut
+   */
+  async resetUserPassword(userId: number): Promise<any> {
+    const response = await this.client.post(`/v1/users/${userId}/reset-password`);
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

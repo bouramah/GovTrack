@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\DiscussionTacheController;
 use App\Http\Controllers\Api\PieceJointeProjetController;
 use App\Http\Controllers\Api\PieceJointeTacheController;
 use App\Http\Controllers\Api\AuditController;
+use App\Http\Controllers\Api\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +112,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('roles/{roleId}/permissions/{permissionId}', [RoleController::class, 'removePermission'])->middleware('permission:remove_permissions_from_role');
     Route::post('roles/{id}/assign-to-user', [RoleController::class, 'assignToUser'])->middleware('permission:assign_role_to_user');
     Route::delete('roles/{roleId}/users/{userId}', [RoleController::class, 'removeFromUser'])->middleware('permission:remove_role_from_user');
+    Route::post('roles/{id}/assign-permissions-bulk', [RoleController::class, 'assignPermissionsBulk'])->middleware('permission:assign_permissions_to_role');
+    Route::post('roles/{id}/remove-permissions-bulk', [RoleController::class, 'removePermissionsBulk'])->middleware('permission:remove_permissions_from_role');
 
     // Permissions
     Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:view_permissions_list');
@@ -236,3 +239,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('audit/export', [AuditController::class, 'export'])->middleware('permission:export_audit_logs');
 
 });
+
+// Auth reset password
+Route::post('v1/auth/forgot-password', [PasswordResetController::class, 'forgot']);
+Route::post('v1/auth/reset-password', [PasswordResetController::class, 'reset']);
+
+// Admin reset user password
+Route::post('v1/users/{id}/reset-password', [UserController::class, 'resetPassword'])->middleware(['auth:sanctum','permission:reset_user_password']);
