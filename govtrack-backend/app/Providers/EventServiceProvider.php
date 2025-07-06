@@ -5,9 +5,15 @@ namespace App\Providers;
 use App\Events\ProjetCreated;
 use App\Events\ProjetStatusChanged;
 use App\Events\ProjetExecutionLevelUpdated;
+use App\Events\TacheCreated;
+use App\Events\TacheStatusChanged;
+use App\Events\TacheExecutionLevelUpdated;
 use App\Listeners\SendProjetCreatedNotification;
 use App\Listeners\SendProjetStatusChangedNotification;
 use App\Listeners\SendProjetExecutionLevelUpdatedNotification;
+use App\Listeners\SendTacheCreatedNotification;
+use App\Listeners\SendTacheStatusChangedNotification;
+use App\Listeners\SendTacheExecutionLevelUpdatedNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -36,6 +42,19 @@ class EventServiceProvider extends ServiceProvider
 
         ProjetExecutionLevelUpdated::class => [
             SendProjetExecutionLevelUpdatedNotification::class,
+        ],
+
+        // Événements de tâches
+        TacheCreated::class => [
+            SendTacheCreatedNotification::class,
+        ],
+
+        TacheStatusChanged::class => [
+            SendTacheStatusChangedNotification::class,
+        ],
+
+        TacheExecutionLevelUpdated::class => [
+            SendTacheExecutionLevelUpdatedNotification::class,
         ],
     ];
 

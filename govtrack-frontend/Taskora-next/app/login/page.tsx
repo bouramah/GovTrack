@@ -69,20 +69,20 @@ export default function LoginPage() {
       permissions: "view_all_projects, manage_users, manage_entities"
     },
     {
-      nom: "Amadou Diop",
-      email: "amadou.diop@govtrack.gov", 
+      nom: "Lamarana Diallo",
+      email: "douty43oulare@gmail.com", 
       password: "password",
-      role: "Directeur DSI",
-      description: "Directeur de la Direction des Systèmes d'Information",
+      role: "Directeur DRH",
+      description: "Directeur de la Direction des Ressources Humaines",
       matricule: "DIR001",
       permissions: "view_my_entity_projects, validate_instruction"
     },
     {
-      nom: "Fatou Fall",
-      email: "fatou.fall@govtrack.gov",
+      nom: "Wopa Bah",
+      email: "bah@gmail.com",
       password: "password", 
       role: "Développeur",
-      description: "Développeur au Service Développement",
+      description: "Développeur DDV",
       matricule: "DEV001",
       permissions: "view_my_projects, create_instruction"
     }

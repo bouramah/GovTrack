@@ -172,6 +172,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('taches/{id}/changer-statut', [TacheController::class, 'changerStatut'])->middleware('permission:change_task_status');
     Route::get('taches/{id}/historique-statuts', [TacheController::class, 'historiqueStatuts'])->middleware('permission:view_task_history');
 
+    // Gestion du niveau d'exécution des tâches
+    Route::post('taches/{id}/niveau-execution', [TacheController::class, 'mettreAJourNiveauExecution'])->middleware('permission:edit_task');
+
     // =================================================================
     // DISCUSSIONS - COLLABORATION SUR PROJETS ET TÂCHES
     // =================================================================

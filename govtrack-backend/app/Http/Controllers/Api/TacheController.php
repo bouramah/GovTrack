@@ -8,6 +8,9 @@ use App\Models\TacheHistoriqueStatut;
 use App\Models\Projet;
 use App\Models\User;
 use App\Models\PieceJointeTache;
+use App\Events\TacheCreated;
+use App\Events\TacheStatusChanged;
+use App\Events\TacheExecutionLevelUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -103,6 +106,9 @@ class TacheController extends Controller
             ]);
 
             $tache->load(['projet', 'responsable']);
+
+            // Déclencher l'événement de création de tâche
+            event(new TacheCreated($tache, $request->user()));
 
             return response()->json([
                 'success' => true,
@@ -381,6 +387,17 @@ class TacheController extends Controller
             // Mettre à jour le niveau du projet parent
             $tache->mettreAJourNiveauProjet();
 
+            // Déclencher l'événement de changement de statut (seulement si le statut a vraiment changé)
+            if ($nouveauStatut !== $ancienStatut) {
+                event(new TacheStatusChanged(
+                    $tache->fresh(),
+                    $request->user(),
+                    $ancienStatut,
+                    $nouveauStatut,
+                    $commentaire
+                ));
+            }
+
             // Message adaptatif
             $message = ($nouveauStatut === $ancienStatut && !empty($commentaire))
                 ? 'Commentaire ajouté avec succès pour la tâche'
@@ -476,6 +493,129 @@ class TacheController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération de l\'historique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mettre à jour uniquement le niveau d'exécution d'une tâche
+     */
+    public function mettreAJourNiveauExecution(Request $request, int $id): JsonResponse
+    {
+        try {
+            $tache = Tache::findOrFail($id);
+
+            $validated = $request->validate([
+                'niveau_execution' => 'required|integer|min:0|max:100',
+                'commentaire' => 'nullable|string|max:500',
+            ]);
+
+            // RÈGLES MÉTIER POUR LE NIVEAU D'EXÉCUTION
+
+            // Règle 1 : On ne peut modifier le niveau d'exécution que si le statut est "en_cours"
+            if ($tache->statut !== Tache::STATUT_EN_COURS) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le niveau d\'exécution ne peut être modifié que lorsque la tâche est en cours',
+                    'current_status' => [
+                        'statut' => $tache->statut,
+                        'libelle' => Tache::STATUTS[$tache->statut] ?? $tache->statut,
+                        'niveau_actuel' => $tache->niveau_execution
+                    ]
+                ], 422);
+            }
+
+            // Règle 2 : Impossible de mettre à 100% manuellement
+            if ($validated['niveau_execution'] == 100) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de définir le niveau d\'exécution à 100% manuellement. Le niveau passe automatiquement à 100% quand la tâche est terminée.',
+                    'niveau_actuel' => $tache->niveau_execution,
+                    'niveau_max_autorise' => 99
+                ], 422);
+            }
+
+            // Règle 3 : Permettre la diminution du niveau d'exécution
+            // Note: L'utilisateur peut maintenant diminuer le niveau d'exécution si nécessaire
+
+            // Règle 4 : Empêcher les changements redondants (même niveau sans commentaire)
+            if ($validated['niveau_execution'] == $tache->niveau_execution && empty($validated['commentaire'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La tâche a déjà un niveau d\'exécution de ' . $tache->niveau_execution . '%. Pour confirmer ce niveau, veuillez ajouter un commentaire.',
+                    'niveau_actuel' => $tache->niveau_execution
+                ], 422);
+            }
+
+            // Mettre à jour le niveau d'exécution
+            $ancienNiveau = $tache->niveau_execution;
+            $tache->update([
+                'niveau_execution' => $validated['niveau_execution'],
+                'date_modification' => now(),
+                'modifier_par' => $request->user()->email,
+            ]);
+
+            // Créer une entrée d'historique si le niveau a vraiment changé ou s'il y a un commentaire
+            if ($validated['niveau_execution'] != $ancienNiveau || !empty($validated['commentaire'])) {
+                $commentaireHistorique = $validated['commentaire'] ?? 'Mise à jour du niveau d\'exécution';
+
+                $tache->historiqueStatuts()->create([
+                    'ancien_statut' => $tache->statut,
+                    'nouveau_statut' => $tache->statut,
+                    'user_id' => $request->user()->id,
+                    'commentaire' => "Niveau d'exécution: {$ancienNiveau}% → {$validated['niveau_execution']}%. {$commentaireHistorique}",
+                    'date_changement' => now(),
+                ]);
+            }
+
+            // Mettre à jour le niveau du projet parent
+            $tache->mettreAJourNiveauProjet();
+
+            $tache->load(['projet', 'responsable']);
+
+            // Déclencher l'événement de mise à jour du niveau d'exécution
+            if ($validated['niveau_execution'] != $ancienNiveau) {
+                event(new TacheExecutionLevelUpdated(
+                    $tache,
+                    $request->user(),
+                    $ancienNiveau,
+                    $validated['niveau_execution'],
+                    $validated['commentaire'] ?? null
+                ));
+            }
+
+            // Message adapté selon le type de mise à jour
+            $progression = $validated['niveau_execution'] - $ancienNiveau;
+            if ($validated['niveau_execution'] == $ancienNiveau) {
+                $message = 'Commentaire ajouté avec succès pour le niveau d\'exécution';
+            } elseif ($progression > 0) {
+                $message = 'Niveau d\'exécution augmenté avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+            } else {
+                $message = 'Niveau d\'exécution diminué avec succès (de ' . $ancienNiveau . '% à ' . $validated['niveau_execution'] . '%)';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'tache' => $tache,
+                    'ancien_niveau' => $ancienNiveau,
+                    'nouveau_niveau' => $validated['niveau_execution'],
+                    'progression' => $validated['niveau_execution'] - $ancienNiveau
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du niveau d\'exécution',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -1,2 +1,4 @@
 - gestion des Notifications mail backend 
 - Gestion Notifications frontend
+- Réinitialisation mot de passe 
+- gestion des erreurs
