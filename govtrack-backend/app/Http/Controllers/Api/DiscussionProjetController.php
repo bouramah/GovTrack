@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DiscussionProjet;
 use App\Models\Projet;
+use App\Events\DiscussionProjetCreated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -88,6 +89,10 @@ class DiscussionProjetController extends Controller
             ]);
 
             $discussion->load(['user', 'reponses.user']);
+
+            // Déclencher l'événement de notification
+            $isReply = !empty($validated['parent_id']);
+            event(new DiscussionProjetCreated($discussion, $request->user(), $isReply));
 
             return response()->json([
                 'success' => true,

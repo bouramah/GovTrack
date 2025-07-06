@@ -8,12 +8,16 @@ use App\Events\ProjetExecutionLevelUpdated;
 use App\Events\TacheCreated;
 use App\Events\TacheStatusChanged;
 use App\Events\TacheExecutionLevelUpdated;
+use App\Events\DiscussionProjetCreated;
+use App\Events\DiscussionTacheCreated;
 use App\Listeners\SendProjetCreatedNotification;
 use App\Listeners\SendProjetStatusChangedNotification;
 use App\Listeners\SendProjetExecutionLevelUpdatedNotification;
 use App\Listeners\SendTacheCreatedNotification;
 use App\Listeners\SendTacheStatusChangedNotification;
 use App\Listeners\SendTacheExecutionLevelUpdatedNotification;
+use App\Listeners\SendDiscussionProjetCreatedNotification;
+use App\Listeners\SendDiscussionTacheCreatedNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -55,6 +59,15 @@ class EventServiceProvider extends ServiceProvider
 
         TacheExecutionLevelUpdated::class => [
             SendTacheExecutionLevelUpdatedNotification::class,
+        ],
+
+        // Événements de discussions
+        DiscussionProjetCreated::class => [
+            SendDiscussionProjetCreatedNotification::class,
+        ],
+
+        DiscussionTacheCreated::class => [
+            SendDiscussionTacheCreatedNotification::class,
         ],
     ];
 
