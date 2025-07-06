@@ -8,6 +8,9 @@ use App\Models\TypeProjet;
 use App\Models\User;
 use App\Models\PieceJointeProjet;
 use App\Models\Entite;
+use App\Events\ProjetCreated;
+use App\Events\ProjetStatusChanged;
+use App\Events\ProjetExecutionLevelUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -343,6 +346,9 @@ class ProjetController extends Controller
 
             $projet->load(['typeProjet', 'porteur', 'donneurOrdre']);
 
+            // Déclencher l'événement de création de projet
+            event(new ProjetCreated($projet, $request->user()));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Projet créé avec succès',
@@ -521,6 +527,9 @@ class ProjetController extends Controller
                 'justificatif_path' => 'nullable|string',
             ]);
 
+            // 🔥 CORRECTION BUG 1 : Sauvegarder l'ancien statut AVANT modification
+            $ancienStatut = $projet->statut;
+
             // Vérifier la logique du changement de statut
             $estMiseAJourCommentaire = false;
             if ($validated['nouveau_statut'] === $projet->statut) {
@@ -622,6 +631,17 @@ class ProjetController extends Controller
             }
 
             $projet->load(['historiqueStatuts.user']);
+
+            // 🔥 CORRECTION BUG 1 : Utiliser l'ancien statut sauvegardé
+            if (!$estMiseAJourCommentaire) {
+                event(new ProjetStatusChanged(
+                    $projet,
+                    $request->user(),
+                    $ancienStatut,  // ✅ Utiliser l'ancien statut sauvegardé
+                    $projet->statut,
+                    $commentaire
+                ));
+            }
 
             // Message de succès adapté selon le type d'opération
             $message = $estMiseAJourCommentaire
@@ -945,6 +965,17 @@ class ProjetController extends Controller
             }
 
             $projet->load(['typeProjet', 'porteur', 'donneurOrdre']);
+
+            // Déclencher l'événement de mise à jour du niveau d'exécution
+            if ($validated['niveau_execution'] != $ancienNiveau) {
+                event(new ProjetExecutionLevelUpdated(
+                    $projet,
+                    $request->user(),
+                    $ancienNiveau,
+                    $validated['niveau_execution'],
+                    $validated['commentaire'] ?? null
+                ));
+            }
 
             // Message adapté selon le type de mise à jour
             $progression = $validated['niveau_execution'] - $ancienNiveau;
