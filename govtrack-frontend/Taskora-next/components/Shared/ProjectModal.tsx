@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { apiClient, Project, ProjectCreateRequest, ProjectUpdateRequest, TypeProjet, User } from '@/lib/api';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 
 interface ProjectModalProps {
@@ -27,6 +27,7 @@ interface ProjectModalProps {
 }
 
 export default function ProjectModal({ isOpen, onClose, project, onSuccess }: ProjectModalProps) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [typeProjets, setTypeProjets] = useState<TypeProjet[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -89,7 +90,11 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
         });
       }
     } catch (error: any) {
-      toast.error('Erreur lors du chargement des données');
+      toast({
+        title: "Erreur",
+        description: 'Erreur lors du chargement des données',
+        variant: "destructive",
+      });
       console.error('Erreur loadFormData:', error);
     } finally {
       setLoading(false);
@@ -104,27 +109,51 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
     
     // Validation côté client
     if (!formData.titre.trim()) {
-      toast.error('Le titre est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'Le titre est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
     if (!formData.description.trim()) {
-      toast.error('La description est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'La description est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
     if (!formData.type_projet_id) {
-      toast.error('Le type de projet est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'Le type de projet est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
     if (!formData.porteur_id) {
-      toast.error('Le porteur est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'Le porteur est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
     if (!formData.donneur_ordre_id) {
-      toast.error('Le donneur d\'ordre est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'Le donneur d\'ordre est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
     if (!formData.date_debut_previsionnelle) {
-      toast.error('La date de début est obligatoire');
+      toast({
+        title: "Erreur",
+        description: 'La date de début est obligatoire',
+        variant: "destructive",
+      });
       return;
     }
 
@@ -134,11 +163,17 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
       if (isEditing && project) {
         // Mise à jour
         await apiClient.updateProject(project.id, formData as ProjectUpdateRequest);
-        toast.success('Projet mis à jour avec succès');
+        toast({
+          title: "Succès",
+          description: 'Projet mis à jour avec succès',
+        });
       } else {
         // Création
         await apiClient.createProject(formData);
-        toast.success('Projet créé avec succès');
+        toast({
+          title: "Succès",
+          description: 'Projet créé avec succès',
+        });
       }
 
       onSuccess();
@@ -147,20 +182,37 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
       console.error('Erreur submit:', error);
       
       // Gestion des erreurs de validation du serveur
-      if (error.message === 'Erreur de validation' && error.response?.data?.errors) {
+      if (error.response?.status === 422 && error.response?.data?.errors) {
         setServerErrors(error.response.data.errors);
-        toast.error('Veuillez corriger les erreurs de validation ci-dessous');
-      } else if (error.response?.status === 422 && error.response?.data?.errors) {
-        setServerErrors(error.response.data.errors);
-        toast.error('Veuillez corriger les erreurs de validation ci-dessous');
+        toast({
+          title: "Erreur de validation",
+          description: 'Veuillez corriger les erreurs de validation ci-dessous',
+          variant: "destructive",
+        });
       } else if (error.message.includes('Justification requise')) {
-        toast.error('Justification requise pour modifier les dates par rapport au SLA');
+        toast({
+          title: "Erreur",
+          description: 'Justification requise pour modifier les dates par rapport au SLA',
+          variant: "destructive",
+        });
       } else if (error.message.includes('niveau d\'exécution')) {
-        toast.error(error.message);
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
       } else if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+        toast({
+          title: "Erreur",
+          description: error.response.data.message,
+          variant: "destructive",
+        });
       } else {
-        toast.error(error.message || 'Une erreur est survenue');
+        toast({
+          title: "Erreur",
+          description: error.message || 'Une erreur est survenue',
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
