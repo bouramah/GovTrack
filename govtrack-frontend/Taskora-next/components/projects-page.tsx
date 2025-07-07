@@ -16,11 +16,6 @@ export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  // Vérifier les permissions d'accès
-  if (!user) {
-    redirect('/login');
-  }
-
   if (!permissions.canViewList) {
     return (
       <div className="bg-gray-50 min-h-screen flex items-center justify-center">

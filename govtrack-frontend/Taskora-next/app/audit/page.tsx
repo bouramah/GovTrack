@@ -13,10 +13,6 @@ export default function AuditPage() {
   const permissions = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Vérifier les permissions d'accès
-  if (!user) {
-    redirect('/login');
-  }
 
   if (!permissions.canViewAuditLogs) {
     return (
