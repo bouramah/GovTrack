@@ -21,9 +21,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // ✅ Le middleware CORS est ajouté en premier
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
 
-        $middleware->prepend(\App\Http\Middleware\StripGovtrackPrefix::class);
-
-
         // Alias et autres middlewares personnalisés
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
