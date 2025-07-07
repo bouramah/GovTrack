@@ -592,14 +592,14 @@ class ApiClient {
       async (error) => {
         // Si token expiré, déconnecter directement l'utilisateur
         if (error.response?.status === 401) {
-          // Déconnecter l'utilisateur sans essayer de rafraîchir le token
+          console.error(
+            '401 → déconnexion',
+            error.config?.method?.toUpperCase(),
+            error.config?.url,
+            error.response?.data,
+          );
           this.clearToken();
-          
-          // Rediriger vers la page de connexion
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
-          
+          if (typeof window !== 'undefined') window.location.href = '/login';
           return Promise.reject(error);
         }
         
