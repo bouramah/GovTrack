@@ -2,7 +2,8 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ProjectAttachment, TaskAttachment, AttachmentStats } from '@/types/attachment';
 import { ProjectDiscussion, TaskDiscussion, DiscussionCreateRequest, DiscussionUpdateRequest, DiscussionStats } from '@/types/discussion';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://144.91.93.39/api';
+const DEV__API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://144.91.93.39/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://govtrackbackend.camtechssolutions.com/api';
 
 export interface AuditLog {
   id: number;
