@@ -783,10 +783,6 @@ function ProjectActions({
           <Trash2 className="h-4 w-4 mr-2" />
           Supprimer
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onViewTimeline(project)}>
-          <BarChart2 className="h-4 w-4 mr-2" />
-          Voir timeline
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onStatusChange(project)}> 
           <Settings className="h-4 w-4 mr-2" />

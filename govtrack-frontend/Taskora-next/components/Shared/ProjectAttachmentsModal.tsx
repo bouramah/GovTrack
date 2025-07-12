@@ -43,7 +43,7 @@ export default function ProjectAttachmentsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Pièces jointes - {projectTitle}</span>
@@ -70,15 +70,15 @@ export default function ProjectAttachmentsModal({
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-4 overflow-hidden">
-            <TabsContent value="list" className="h-full overflow-y-auto">
+          <div className="mt-4 flex-1 overflow-hidden flex flex-col" style={{ height: 'calc(90vh - 200px)' }}>
+            <TabsContent value="list" className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
               <ProjectAttachmentsList 
                 projectId={projectId} 
                 onRefresh={onRefresh}
               />
             </TabsContent>
 
-            <TabsContent value="upload" className="h-full overflow-y-auto">
+            <TabsContent value="upload" className="flex-1 overflow-y-auto" style={{ height: '100%' }}>
               <ProjectAttachmentUpload
                 projectId={projectId}
                 onUploadSuccess={handleUploadSuccess}

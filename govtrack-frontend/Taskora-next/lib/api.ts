@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { ProjectAttachment, TaskAttachment, AttachmentStats } from '@/types/attachment';
 import { ProjectDiscussion, TaskDiscussion, DiscussionCreateRequest, DiscussionUpdateRequest, DiscussionStats } from '@/types/discussion';
 
-const DEV__API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://144.91.93.39/api';
+const DEV__API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:8000/api';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://govtrackbackend.camtechssolutions.com/api';
 
 export interface AuditLog {
@@ -572,7 +572,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: DEV__API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

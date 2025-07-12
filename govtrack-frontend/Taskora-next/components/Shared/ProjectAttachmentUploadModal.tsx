@@ -38,7 +38,7 @@ export default function ProjectAttachmentUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Ajouter un fichier - {projectTitle}</span>
@@ -56,7 +56,7 @@ export default function ProjectAttachmentUploadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4">
+        <div className="mt-4 flex-1 overflow-y-auto">
           <ProjectAttachmentUpload
             projectId={projectId}
             onUploadSuccess={handleUploadSuccess}
