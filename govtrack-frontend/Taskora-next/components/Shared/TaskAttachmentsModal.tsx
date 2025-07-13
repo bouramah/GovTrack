@@ -463,6 +463,26 @@ export default function TaskAttachmentsModal({
               </div>
             )}
           </div>
+
+          {/* Bouton fermer */}
+          <div className="flex justify-end pt-6 border-t border-gray-200 mt-6">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Fermer
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Fermer le modal des pièces jointes</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
