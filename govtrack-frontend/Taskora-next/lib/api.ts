@@ -1135,6 +1135,7 @@ class ApiClient {
     telephone?: string;
     adresse?: string;
     statut?: boolean;
+    roles?: number[];
   }): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = 
       await this.client.post('/v1/users', data);
@@ -1225,6 +1226,17 @@ class ApiClient {
     }
     
     throw new Error(response.data.message || 'Erreur d\'assignation du rôle');
+  }
+
+  async assignRolesToUser(userId: number, data: { roles: number[] }): Promise<any> {
+    const response: AxiosResponse<ApiResponse<any>> = 
+      await this.client.post(`/v1/users/${userId}/assign-roles`, data);
+    
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+    
+    throw new Error(response.data.message || 'Erreur d\'assignation des rôles');
   }
 
   async removeRoleFromUser(userId: number, roleId: number): Promise<void> {

@@ -94,6 +94,7 @@ import {
 } from 'lucide-react';
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { SearchableMultiSelect, SearchableMultiSelectOption } from "@/components/ui/searchable-multi-select";
 import { apiClient, User, UserDetailed, Role, Entite, Poste } from '@/lib/api';
 import {
   Pagination,
@@ -168,6 +169,7 @@ export default function UsersPage() {
     telephone: '',
     adresse: '',
     statut: true,
+    roles: [] as number[],
   });
 
   const [affectationFormData, setAffectationFormData] = useState({
@@ -183,7 +185,7 @@ export default function UsersPage() {
   });
 
   const [roleFormData, setRoleFormData] = useState({
-    role_id: '',
+    roles: [] as number[],
   });
 
   const { toast } = useToast();
@@ -415,7 +417,7 @@ export default function UsersPage() {
 
   const resetRoleForm = () => {
     setRoleFormData({
-      role_id: '',
+      roles: [],
     });
   };
 
@@ -450,7 +452,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
 
     const validationErrors: string[] = [];
-    if (!roleFormData.role_id) validationErrors.push("Le rôle est requis");
+    if (roleFormData.roles.length === 0) validationErrors.push("Au moins un rôle est requis");
 
     if (validationErrors.length > 0) {
       toast({
@@ -463,13 +465,13 @@ export default function UsersPage() {
 
     try {
       setIsSubmitting(true);
-      await apiClient.assignRoleToUser(selectedUser.id, {
-        role_id: parseInt(roleFormData.role_id),
+      await apiClient.assignRolesToUser(selectedUser.id, {
+        roles: roleFormData.roles,
       });
 
       toast({
         title: "✅ Succès",
-        description: "Rôle assigné avec succès"
+        description: roleFormData.roles.length > 1 ? "Rôles assignés avec succès" : "Rôle assigné avec succès"
       });
 
       setIsAssignRoleModalOpen(false);
@@ -660,7 +662,7 @@ export default function UsersPage() {
       resetForm();
       toast({
         title: "✅ Succès",
-        description: "Utilisateur créé avec succès"
+        description: `Utilisateur créé avec succès${formData.roles.length > 0 ? ` et ${formData.roles.length} rôle(s) assigné(s)` : ''}`
       });
     } catch (error: any) {
       const errorMessage = formatBackendErrors(error);
@@ -743,6 +745,7 @@ export default function UsersPage() {
       telephone: user.telephone || '',
       adresse: user.adresse || '',
       statut: user.statut,
+      roles: [],
     });
     setIsEditModalOpen(true);
   };
@@ -757,6 +760,7 @@ export default function UsersPage() {
       telephone: '',
       adresse: '',
       statut: true,
+      roles: [],
     });
   };
 
@@ -836,7 +840,7 @@ export default function UsersPage() {
                       Nouvel Utilisateur
                     </Button>
                   </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Créer un Utilisateur</DialogTitle>
                   </DialogHeader>
@@ -929,6 +933,29 @@ export default function UsersPage() {
                         onCheckedChange={(checked) => setFormData({...formData, statut: checked})}
                       />
                       <Label htmlFor="statut">Compte actif</Label>
+                    </div>
+                    
+                    {/* Sélection des rôles */}
+                    <div>
+                      <Label htmlFor="roles">Rôles (optionnel)</Label>
+                      <SearchableMultiSelect
+                        options={roles.map((role) => ({
+                          value: role.id.toString(),
+                          label: role.nom,
+                          description: role.description || "Aucune description",
+                          badge: "Rôle"
+                        }))}
+                        value={formData.roles.map(id => id.toString())}
+                        onValueChange={(values) => setFormData({
+                          ...formData,
+                          roles: values.map(v => parseInt(v))
+                        })}
+                        placeholder="Sélectionner des rôles..."
+                        searchPlaceholder="Rechercher des rôles..."
+                        emptyMessage="Aucun rôle disponible"
+                        maxHeight="200px"
+                        maxSelectedItems={3}
+                      />
                     </div>
                     <div className="flex gap-2 pt-4">
                       <Button 
@@ -1970,7 +1997,7 @@ export default function UsersPage() {
                   <div className="flex gap-3">
                     <Button onClick={() => setIsAssignRoleModalOpen(true)} className="flex-1">
                       <Plus className="h-4 w-4 mr-2" />
-                      Assigner un Rôle
+                      Assigner des Rôles
                     </Button>
                   </div>
 
@@ -2061,16 +2088,16 @@ export default function UsersPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Modal d'assignation de rôle */}
+          {/* Modal d'assignation de rôles */}
           <Dialog open={isAssignRoleModalOpen} onOpenChange={setIsAssignRoleModalOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Assigner un Rôle</DialogTitle>
+                <DialogTitle>Assigner des Rôles</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="role-select">Rôle *</Label>
-                  <SearchableSelect
+                  <Label htmlFor="roles-select">Rôles *</Label>
+                  <SearchableMultiSelect
                     options={availableRoles
                       .filter(role => !userRoles.some(userRole => userRole.id === role.id))
                       .map((role) => ({
@@ -2079,17 +2106,17 @@ export default function UsersPage() {
                         description: role.description || "Aucune description",
                         badge: "Rôle"
                       }))}
-                    value={roleFormData.role_id}
-                    onValueChange={(value) => setRoleFormData({...roleFormData, role_id: value})}
-                    placeholder="Sélectionner un rôle"
-                    searchPlaceholder="Rechercher un rôle..."
-                    emptyMessage="Aucun rôle disponible"
+                    value={roleFormData.roles.map(id => id.toString())}
+                    onValueChange={(values) => setRoleFormData({
+                      ...roleFormData,
+                      roles: values.map(v => parseInt(v))
+                    })}
+                    placeholder="Sélectionner des rôles..."
+                    searchPlaceholder="Rechercher des rôles..."
+                    emptyMessage="Tous les rôles disponibles sont déjà assignés à cet utilisateur."
+                    maxHeight="200px"
+                    maxSelectedItems={3}
                   />
-                  {availableRoles.filter(role => !userRoles.some(userRole => userRole.id === role.id)).length === 0 && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Tous les rôles disponibles sont déjà assignés à cet utilisateur.
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex gap-2 pt-4">
@@ -2105,7 +2132,7 @@ export default function UsersPage() {
                   </Button>
                   <Button 
                     onClick={handleAssignRole}
-                    disabled={isSubmitting || !roleFormData.role_id}
+                    disabled={isSubmitting || roleFormData.roles.length === 0}
                     className="flex-1"
                   >
                     {isSubmitting ? (

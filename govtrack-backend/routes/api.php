@@ -97,6 +97,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('users/{id}/affecter', [UserController::class, 'affecter'])->middleware('permission:manage_user_assignments');
     Route::post('users/{id}/terminer-affectation', [UserController::class, 'terminerAffectation'])->middleware('permission:manage_user_assignments');
     Route::post('users/{id}/assign-role', [UserController::class, 'assignRole'])->middleware('permission:manage_user_roles');
+    Route::post('users/{id}/assign-roles', [UserController::class, 'assignRoles'])->middleware('permission:manage_user_roles');
     Route::delete('users/{userId}/roles/{roleId}', [UserController::class, 'removeRole'])->middleware('permission:manage_user_roles');
 
     // Rôles

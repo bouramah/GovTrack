@@ -118,6 +118,8 @@ class UserController extends Controller
                 'adresse' => 'nullable|string|max:500',
                 'password' => 'required|string|min:8',
                 'statut' => 'boolean',
+                'roles' => 'nullable|array',
+                'roles.*' => 'exists:roles,id',
             ]);
 
             $now = Carbon::now();
@@ -135,6 +137,16 @@ class UserController extends Controller
                 'date_modification' => $now,
                 'creer_par' => $request->user()->email,
             ]);
+
+            // Assigner les rôles si fournis
+            if (!empty($validated['roles'])) {
+                $user->roles()->attach($validated['roles'], [
+                    'date_creation' => $now
+                ]);
+            }
+
+            // Charger les rôles pour la réponse
+            $user->load('roles');
 
             // Ne pas retourner le mot de passe
             $user->makeHidden(['password']);
@@ -530,7 +542,69 @@ class UserController extends Controller
     }
 
     /**
-     * Assign role to user
+     * Assign roles to user
+     */
+    public function assignRoles(Request $request, string $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        $roles = Role::whereIn('id', $validated['roles'])->get();
+        $now = Carbon::now();
+
+        // Filtrer les rôles déjà assignés
+        $rolesDejaAssignes = $user->roles()->whereIn('role_id', $validated['roles'])->pluck('role_id')->toArray();
+        $nouveauxRoles = array_diff($validated['roles'], $rolesDejaAssignes);
+
+        if (empty($nouveauxRoles)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'L\'utilisateur a déjà tous ces rôles'
+            ], 422);
+        }
+
+        // Assigner les nouveaux rôles
+        $user->roles()->attach($nouveauxRoles, [
+            'date_creation' => $now
+        ]);
+
+        // Recharger les rôles
+        $user->load('roles');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'nom' => $user->nom,
+                    'prenom' => $user->prenom,
+                    'matricule' => $user->matricule,
+                ],
+                'roles_assignes' => $roles->whereIn('id', $nouveauxRoles)->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'nom' => $role->nom,
+                        'description' => $role->description,
+                    ];
+                }),
+                'roles_actuels' => $user->roles->map(function ($role) {
+                    return [
+                        'id' => $role->id,
+                        'nom' => $role->nom,
+                        'description' => $role->description,
+                    ];
+                }),
+            ],
+            'message' => count($nouveauxRoles) > 1 ? 'Rôles assignés avec succès' : 'Rôle assigné avec succès'
+        ]);
+    }
+
+    /**
+     * Assign role to user (méthode legacy pour compatibilité)
      */
     public function assignRole(Request $request, string $id): JsonResponse
     {
