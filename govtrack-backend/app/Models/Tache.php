@@ -144,6 +144,17 @@ class Tache extends Model
     }
 
     /**
+     * Scope par entité (via les affectations des utilisateurs)
+     */
+    public function scopeByEntite($query, $entiteId)
+    {
+        return $query->whereHas('responsable.affectations', function ($q) use ($entiteId) {
+            $q->where('service_id', $entiteId)
+              ->where('statut', true);
+        });
+    }
+
+    /**
      * Accesseur pour le libellé du statut
      */
     public function getStatutLibelleAttribute()

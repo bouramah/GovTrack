@@ -1809,6 +1809,9 @@ class ApiClient {
     if (filters?.responsable_id) {
       queryParams.append('responsable_id', filters.responsable_id.toString());
     }
+    if (filters?.entite_id) {
+      queryParams.append('entite_id', filters.entite_id.toString());
+    }
     if (filters?.en_retard !== undefined && filters.en_retard !== null) {
       queryParams.append('en_retard', filters.en_retard.toString());
     }
@@ -1831,7 +1834,7 @@ class ApiClient {
   }
 
   // Récupérer les tâches de l'utilisateur connecté
-  async getMesTaches(filters?: Pick<TacheFilters, 'statut' | 'en_retard' | 'sort_by' | 'sort_order'>): Promise<ApiResponse<Tache[]>> {
+  async getMesTaches(filters?: Pick<TacheFilters, 'statut' | 'en_retard' | 'entite_id' | 'sort_by' | 'sort_order'>): Promise<ApiResponse<Tache[]>> {
     const queryParams = new URLSearchParams();
     
     if (filters?.statut) {
@@ -1839,6 +1842,9 @@ class ApiClient {
     }
     if (filters?.en_retard !== undefined && filters.en_retard !== null) {
       queryParams.append('en_retard', filters.en_retard.toString());
+    }
+    if (filters?.entite_id) {
+      queryParams.append('entite_id', filters.entite_id.toString());
     }
     if (filters?.sort_by) {
       queryParams.append('sort_by', filters.sort_by);

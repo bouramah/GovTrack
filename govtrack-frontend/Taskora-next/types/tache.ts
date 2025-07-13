@@ -135,6 +135,7 @@ export interface TacheFilters {
   projet_id?: number;
   statut?: TacheStatut;
   responsable_id?: number;
+  entite_id?: number;
   en_retard?: boolean;
   search?: string;
   sort_by?: string;

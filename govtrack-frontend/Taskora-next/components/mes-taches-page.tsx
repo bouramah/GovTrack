@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "./sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,47 @@ import Topbar from "./Shared/Topbar";
 import MesTachesKanban from "./mes-taches-kanban";
 import type { TacheStatut } from "@/types/tache";
 import { TACHE_STATUTS_KANBAN } from "@/types/tache";
+import { apiClient } from "@/lib/api";
+import type { Entite } from "@/lib/api";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 
 export default function MesTachesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TacheStatut | "all">("all");
   const [enRetardFilter, setEnRetardFilter] = useState<boolean | null>(null);
+  const [entiteFilter, setEntiteFilter] = useState<string>("all");
+  const [entites, setEntites] = useState<Entite[]>([]);
+  const [loadingEntites, setLoadingEntites] = useState(true);
+
+  // Charger les entités pour le filtre
+  const loadEntites = async () => {
+    try {
+      setLoadingEntites(true);
+      const response = await apiClient.getEntitesDetailed();
+      if (response.success && response.data) {
+        setEntites(response.data);
+      }
+    } catch (error) {
+      console.error('Erreur chargement entités:', error);
+    } finally {
+      setLoadingEntites(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEntites();
+  }, []);
+
+  // Préparer les options pour le SearchableSelect
+  const entiteOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Toutes les entités' },
+    ...entites.map(entite => ({
+      value: entite.id.toString(),
+      label: entite.nom,
+      description: entite.type_entite?.nom
+    }))
+  ];
 
   const handleRefresh = () => {
     // Recharger les données (sera géré par le composant Kanban)
@@ -93,6 +128,17 @@ export default function MesTachesPage() {
                   <SelectItem value="false">À jour</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Filtre par entité */}
+              <SearchableSelect
+                options={entiteOptions}
+                value={entiteFilter}
+                onValueChange={setEntiteFilter}
+                placeholder="Toutes les entités"
+                searchPlaceholder="Rechercher une entité..."
+                disabled={loadingEntites}
+                className="w-full sm:w-48 h-9"
+              />
             </div>
           </div>
         </div>
@@ -102,7 +148,8 @@ export default function MesTachesPage() {
           <MesTachesKanban 
             filters={{
               statut: statusFilter === "all" ? undefined : statusFilter,
-              en_retard: enRetardFilter
+              en_retard: enRetardFilter,
+              entite_id: entiteFilter === "all" ? undefined : parseInt(entiteFilter)
             }}
           />
         </main>

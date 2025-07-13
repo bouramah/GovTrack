@@ -19,6 +19,7 @@ export interface TaskFilters {
   statut?: TacheStatut;
   projet_id?: number;
   responsable_id?: number;
+  entite_id?: number;
   en_retard?: boolean;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
@@ -34,8 +35,10 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [entites, setEntites] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingEntites, setLoadingEntites] = useState(false);
 
   // Charger les projets
   useEffect(() => {
@@ -73,6 +76,25 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
     };
 
     loadUsers();
+  }, []);
+
+  // Charger les entités
+  useEffect(() => {
+    const loadEntites = async () => {
+      try {
+        setLoadingEntites(true);
+        const response = await apiClient.getEntitesDetailed();
+        if (response.success && response.data) {
+          setEntites(response.data);
+        }
+      } catch (error) {
+        console.error('Erreur chargement entités:', error);
+      } finally {
+        setLoadingEntites(false);
+      }
+    };
+
+    loadEntites();
   }, []);
 
   const updateFilter = (key: keyof TaskFilters, value: any) => {
@@ -120,6 +142,15 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
     ...Object.entries(TACHE_STATUTS_KANBAN).map(([key, value]) => ({
       value: key,
       label: value
+    }))
+  ];
+
+  const entiteOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Toutes les entités' },
+    ...entites.map(entite => ({
+      value: entite.id.toString(),
+      label: entite.nom,
+      description: entite.type_entite?.nom
     }))
   ];
 
@@ -212,6 +243,19 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
               disabled={loadingUsers}
             />
           </div>
+
+          {/* Entité */}
+          <div className="space-y-2">
+            <Label htmlFor="entite">Entité</Label>
+            <SearchableSelect
+              options={entiteOptions}
+              value={filters.entite_id?.toString() || 'all'}
+              onValueChange={(value) => updateFilter('entite_id', value === 'all' ? undefined : parseInt(value))}
+              placeholder="Toutes les entités"
+              searchPlaceholder="Rechercher une entité..."
+              disabled={loadingEntites}
+            />
+          </div>
         </div>
 
         {/* Filtres avancés */}
@@ -298,6 +342,11 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
               {filters.responsable_id && (
                 <Badge variant="outline" className="text-xs">
                   Responsable: {users.find(u => u.id === filters.responsable_id)?.prenom + ' ' + users.find(u => u.id === filters.responsable_id)?.nom || 'ID: ' + filters.responsable_id}
+                </Badge>
+              )}
+              {filters.entite_id && (
+                <Badge variant="outline" className="text-xs">
+                  Entité: {entites.find(e => e.id === filters.entite_id)?.nom || 'ID: ' + filters.entite_id}
                 </Badge>
               )}
               {filters.en_retard !== undefined && (

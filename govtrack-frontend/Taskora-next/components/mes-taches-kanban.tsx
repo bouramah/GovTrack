@@ -17,6 +17,7 @@ interface MesTachesKanbanProps {
   filters?: {
     statut?: TacheStatut;
     en_retard?: boolean;
+    entite_id?: number;
   };
 }
 

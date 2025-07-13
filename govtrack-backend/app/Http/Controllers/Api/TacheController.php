@@ -23,7 +23,7 @@ class TacheController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Tache::with(['projet', 'responsable', 'piecesJointes.user']);
+            $query = Tache::with(['projet', 'responsable.affectations.entite', 'piecesJointes.user']);
 
             // Filtres
             if ($request->filled('projet_id')) {
@@ -40,6 +40,10 @@ class TacheController extends Controller
 
             if ($request->filled('en_retard') && $request->boolean('en_retard')) {
                 $query->enRetard();
+            }
+
+            if ($request->filled('entite_id')) {
+                $query->byEntite($request->entite_id);
             }
 
             // Recherche textuelle
@@ -447,7 +451,7 @@ class TacheController extends Controller
         try {
             $user = $request->user();
 
-            $query = Tache::with(['projet.typeProjet', 'responsable', 'piecesJointes.user'])
+            $query = Tache::with(['projet.typeProjet', 'responsable.affectations.entite', 'piecesJointes.user'])
                 ->where('responsable_id', $user->id);
 
             // Filtres
@@ -457,6 +461,10 @@ class TacheController extends Controller
 
             if ($request->filled('en_retard') && $request->boolean('en_retard')) {
                 $query->enRetard();
+            }
+
+            if ($request->filled('entite_id')) {
+                $query->byEntite($request->entite_id);
             }
 
             // Tri
