@@ -16,7 +16,12 @@ import {
   Eye,
   Edit,
   Trash2,
-  Loader2
+  Loader2,
+  MoreHorizontal,
+  History,
+  Paperclip,
+  MessageSquare,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
@@ -25,6 +30,11 @@ import { TACHE_STATUTS_KANBAN, TACHE_STATUT_COLORS } from "@/types/tache";
 import NewTaskModal from "./NewTaskModal";
 import TacheDetailModal from "../tache-detail-modal";
 import DeleteTaskDialog from "./DeleteTaskDialog";
+import TaskHistoryModal from "./TaskHistoryModal";
+import TaskAttachmentsModal from "./TaskAttachmentsModal";
+import TaskDiscussionsModal from "../TaskDiscussionsModal";
+import TaskStatusChangeModal from "./TaskStatusChangeModal";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface ProjectTasksTabProps {
   project: Project;
@@ -39,6 +49,10 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
   const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
   const [deleteTaskDialogOpen, setDeleteTaskDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Tache | null>(null);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+  const [discussionsModalOpen, setDiscussionsModalOpen] = useState(false);
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
 
   // Charger les tâches du projet
   useEffect(() => {
@@ -213,40 +227,67 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                       {task.niveau_execution}%
                     </Badge>
                     
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openTaskDetails(task)}
-                        className="h-8 w-8 p-0"
-                        title="Voir les détails"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
+                    {/* Menu d'actions */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-gray-100"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => openTaskDetails(task)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Voir les détails
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
                           setSelectedTask(task);
                           setNewTaskModalOpen(true);
-                        }}
-                        className="h-8 w-8 p-0"
-                        title="Modifier"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteTask(task)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedTask(task);
+                          setStatusChangeModalOpen(true);
+                        }}>
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Changer le statut
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedTask(task);
+                          setHistoryModalOpen(true);
+                        }}>
+                          <History className="h-4 w-4 mr-2" />
+                          Historique
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedTask(task);
+                          setAttachmentsModalOpen(true);
+                        }}>
+                          <Paperclip className="h-4 w-4 mr-2" />
+                          Pièces jointes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedTask(task);
+                          setDiscussionsModalOpen(true);
+                        }}>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Discussions
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => openDeleteTask(task)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
@@ -299,6 +340,48 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
         task={selectedTask}
         onSuccess={handleTaskDelete}
       />
+
+      {/* Modal d'historique de tâche */}
+      {selectedTask && (
+        <TaskHistoryModal
+          open={historyModalOpen}
+          onOpenChange={setHistoryModalOpen}
+          task={selectedTask}
+        />
+      )}
+
+      {/* Modal de pièces jointes de tâche */}
+      {selectedTask && (
+        <TaskAttachmentsModal
+          open={attachmentsModalOpen}
+          onOpenChange={setAttachmentsModalOpen}
+          task={selectedTask}
+          onSuccess={() => handleTaskUpdate(selectedTask)}
+        />
+      )}
+
+      {/* Modal de discussions de tâche */}
+      {selectedTask && (
+        <TaskDiscussionsModal
+          isOpen={discussionsModalOpen}
+          onClose={() => setDiscussionsModalOpen(false)}
+          tacheId={selectedTask.id}
+          tacheTitre={selectedTask.titre}
+        />
+      )}
+
+      {/* Modal de changement de statut de tâche */}
+      {selectedTask && (
+        <TaskStatusChangeModal
+          isOpen={statusChangeModalOpen}
+          onClose={() => setStatusChangeModalOpen(false)}
+          task={selectedTask}
+          onSuccess={(updatedTask) => {
+            handleTaskUpdate(updatedTask);
+            setStatusChangeModalOpen(false);
+          }}
+        />
+      )}
     </>
   );
 } 
