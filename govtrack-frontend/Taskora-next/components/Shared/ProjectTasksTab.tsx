@@ -36,6 +36,7 @@ import TaskAttachmentsModal from "./TaskAttachmentsModal";
 import TaskDiscussionsModal from "../TaskDiscussionsModal";
 import TaskStatusChangeModal from "./TaskStatusChangeModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProjectTasksTabProps {
   project: Project;
@@ -170,10 +171,19 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                 Gestion des tâches et sous-tâches
               </CardDescription>
             </div>
-            <Button onClick={() => setNewTaskModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle tâche
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={() => setNewTaskModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle tâche
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Créer une nouvelle tâche pour ce projet</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>
@@ -186,12 +196,30 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
               {tasks.map((task) => (
                 <div key={task.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3 flex-1">
-                    <CheckSquare className="h-5 w-5 text-gray-400" />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <CheckSquare className="h-5 w-5 text-gray-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Icône de tâche</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-gray-900 truncate">{task.titre}</h4>
                         {isTaskLate(task) && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <AlertTriangle className="h-4 w-4 text-red-500 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Tâche en retard</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                       
@@ -205,14 +233,32 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                             "flex items-center",
                             isTaskLate(task) ? "text-red-600" : ""
                           )}>
-                            <Calendar className="h-3.5 w-3.5 mr-1" />
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Calendar className="h-3.5 w-3.5 mr-1 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Date d'échéance de la tâche</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <span>Échéance : {new Date(task.date_fin_previsionnelle).toLocaleDateString('fr-FR')}</span>
                           </div>
                         )}
                         
                         {task.responsable && (
                           <div className="flex items-center">
-                            <User className="h-3.5 w-3.5 mr-1" />
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <User className="h-3.5 w-3.5 mr-1 cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Responsable de la tâche</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <span>{task.responsable.prenom} {task.responsable.nom}</span>
                           </div>
                         )}
@@ -229,16 +275,25 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                     </Badge>
                     
                     {/* Menu d'actions */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-gray-100"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                                        <DropdownMenu>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-gray-100"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Menu d'actions pour cette tâche</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => openTaskDetails(task)}>
                           <Eye className="h-4 w-4 mr-2" />
@@ -295,19 +350,37 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
             </div>
           ) : (
             <div className="text-center py-8">
-              <CheckSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <CheckSquare className="h-12 w-12 text-gray-300 mx-auto mb-4 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Aucune tâche disponible</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-gray-500 mb-2">Aucune tâche pour ce projet</p>
               <p className="text-sm text-gray-400">
                 Les tâches apparaîtront ici une fois qu'elles seront créées
               </p>
-              <Button 
-                onClick={() => setNewTaskModalOpen(true)}
-                className="mt-4"
-                variant="outline"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Créer la première tâche
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={() => setNewTaskModalOpen(true)}
+                      className="mt-4"
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Créer la première tâche
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Commencer par créer la première tâche</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </CardContent>

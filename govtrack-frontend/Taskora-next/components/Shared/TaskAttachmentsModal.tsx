@@ -30,6 +30,7 @@ import type { Tache } from "@/types/tache";
 import type { TaskAttachment, AttachmentStats } from "@/types/attachment";
 import { ATTACHMENT_TYPES } from "@/types/attachment";
 import { formatFileSize, getFileIconName } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TaskAttachmentsModalProps {
   open: boolean;
@@ -230,7 +231,16 @@ export default function TaskAttachmentsModal({
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Paperclip className="h-5 w-5" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Paperclip className="h-5 w-5 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Gestion des pièces jointes de la tâche</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             Pièces jointes - {task.titre}
           </DialogTitle>
         </DialogHeader>
@@ -329,18 +339,27 @@ export default function TaskAttachmentsModal({
               </div>
 
               {/* Bouton upload */}
-              <Button
-                onClick={handleUpload}
-                disabled={uploading || uploadForm.files.length === 0}
-                className="w-full"
-              >
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4 mr-2" />
-                )}
-                {uploading ? "Upload en cours..." : `Uploader ${uploadForm.files.length} fichier(s)`}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleUpload}
+                      disabled={uploading || uploadForm.files.length === 0}
+                      className="w-full"
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {uploading ? "Chargement en cours..." : `Charger ${uploadForm.files.length} fichier(s)`}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Uploader les fichiers sélectionnés</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
@@ -356,7 +375,16 @@ export default function TaskAttachmentsModal({
               </div>
             ) : attachments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <Paperclip className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Paperclip className="h-12 w-12 mx-auto mb-2 opacity-50 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Aucune pièce jointe disponible</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p>Aucune pièce jointe</p>
               </div>
             ) : (
@@ -396,21 +424,39 @@ export default function TaskAttachmentsModal({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownload(attachment)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(attachment)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownload(attachment)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Télécharger le fichier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(attachment)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Supprimer le fichier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 ))}

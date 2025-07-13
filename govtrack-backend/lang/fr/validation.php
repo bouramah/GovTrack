@@ -166,7 +166,7 @@ return [
         'time' => 'heure',
         'status' => 'statut',
         'comment' => 'commentaire',
-        
+
         // Attributs spécifiques à GovTrack
         'titre' => 'titre',
         'type_projet_id' => 'type de projet',
@@ -183,8 +183,8 @@ return [
         'projet_id' => 'projet',
         'tache_id' => 'tâche',
         'nom' => 'nom',
-        'duree_previsionnelle_jours' => 'durée prévisionnelle en jours',
-        'description_sla' => 'description SLA',
+        'duree_previsionnelle_jours' => 'délai d\'exécution en jours',
+        'description_sla' => 'description',
         'fichier' => 'fichier',
         'est_justificatif' => 'justificatif',
         'message' => 'message',

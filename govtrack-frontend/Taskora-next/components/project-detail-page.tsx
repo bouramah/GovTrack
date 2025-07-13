@@ -45,6 +45,7 @@ import ProjectAttachmentsList from "@/components/Shared/ProjectAttachmentsList";
 import ProjectAttachmentUploadModal from "@/components/Shared/ProjectAttachmentUploadModal";
 import ProjectDiscussionsList from "@/components/Shared/ProjectDiscussionsList";
 import ProjectTasksTab from "@/components/Shared/ProjectTasksTab";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -206,56 +207,110 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
         <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="mr-4 lg:hidden"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mr-2"
-                onClick={() => router.push("/projects")}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour aux projets
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mr-4 lg:hidden"
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                    >
+                      <Menu className="h-5 w-5" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Ouvrir/Fermer le menu</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mr-2"
+                      onClick={() => router.push("/projects")}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Retour aux projets
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Retourner à la liste des projets</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => setEditModalOpen(true)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier le projet
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setStatusChangeModalOpen(true)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Changer statut
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setAttachmentsModalOpen(true)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Pièces jointes
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={project?.statut === 'en_cours'}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Supprimer
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => setEditModalOpen(true)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier le projet
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Modifier les informations du projet</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setStatusChangeModalOpen(true)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Changer statut
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Modifier le statut du projet</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setAttachmentsModalOpen(true)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Pièces jointes
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Gérer les pièces jointes du projet</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="destructive"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      disabled={project?.statut === 'en_cours'}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Supprimer définitivement le projet</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </header>
@@ -298,7 +353,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
 
             <div className="mt-4 md:mt-0 flex flex-col items-start md:items-end">
               <div className="flex items-center text-gray-500 mb-2">
-                <Calendar className="h-4 w-4 mr-1" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Calendar className="h-4 w-4 mr-1 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Date d'échéance prévisionnelle</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <span>
                   Échéance: {project.date_fin_previsionnelle 
                     ? new Date(project.date_fin_previsionnelle).toLocaleDateString('fr-FR')
@@ -307,7 +371,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 </span>
               </div>
               <div className="flex items-center text-gray-500">
-                <Clock className="h-4 w-4 mr-1" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Clock className="h-4 w-4 mr-1 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Date de début prévisionnelle</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <span>
                   Début: {new Date(project.date_debut_previsionnelle).toLocaleDateString('fr-FR')}
                 </span>
@@ -320,15 +393,24 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               <div className="text-sm text-gray-500 mb-1">Niveau d'exécution</div>
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xl font-bold">{project.niveau_execution}%</div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setExecutionLevelModalOpen(true)}
-                  className="ml-2"
-                  disabled={project.statut !== 'en_cours'}
-                >
-                  Mettre à jour
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setExecutionLevelModalOpen(true)}
+                        className="ml-2"
+                        disabled={project.statut !== 'en_cours'}
+                      >
+                        Mettre à jour
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Modifier le niveau d'exécution du projet</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <div className="text-xs text-gray-500 ml-2">
                   {project.taches_count || 0} tâches
                 </div>
@@ -510,10 +592,19 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                           Fichiers et documents attachés au projet
                       </CardDescription>
                     </div>
-                      <Button onClick={() => setUploadModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                        Ajouter un fichier
-                    </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button onClick={() => setUploadModalOpen(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Ajouter un fichier
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Ajouter une nouvelle pièce jointe</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -617,7 +708,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                     {project.est_en_retard && (
                       <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
                         <div className="flex items-center">
-                          <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <AlertTriangle className="h-5 w-5 text-red-500 mr-2 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Le projet a dépassé sa date d'échéance</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <div>
                             <div className="font-medium text-red-900">Projet en retard</div>
                             <div className="text-sm text-red-700">

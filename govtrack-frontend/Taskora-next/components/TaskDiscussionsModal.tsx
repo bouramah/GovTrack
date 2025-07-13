@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Send, Edit, Trash2, Reply, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -216,38 +217,65 @@ export default function TaskDiscussionsModal({
                 
                 {!isReply && (
                   <div className="flex items-center space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setReplyingTo(message.id)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      <Reply className="h-3 w-3 mr-1" />
-                      Répondre
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setReplyingTo(message.id)}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Reply className="h-3 w-3 mr-1" />
+                            Répondre
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Répondre à ce message</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                                          {message.user?.id === user?.id && (
                       <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingMessage(message.id);
-                            setEditText(message.message);
-                          }}
-                          className="h-6 px-2 text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Modifier
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteMessage(message.id)}
-                          className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Supprimer
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingMessage(message.id);
+                                  setEditText(message.message);
+                                }}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Modifier
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Modifier ce message</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteMessage(message.id)}
+                                className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Supprimer
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Supprimer ce message</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </>
                     )}
                   </div>
@@ -303,7 +331,16 @@ export default function TaskDiscussionsModal({
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <DialogTitle className="flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MessageSquare className="h-5 w-5 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Discussions de la tâche</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <span>Discussions - {tacheTitre}</span>
           </DialogTitle>
         </DialogHeader>
@@ -328,14 +365,23 @@ export default function TaskDiscussionsModal({
                 <span className="text-xs text-gray-500">
                   Appuyez sur Cmd+Entrée pour envoyer
                 </span>
-                <Button 
-                  onClick={postMessage}
-                  disabled={!newMessage.trim() || sending}
-                  className="flex items-center space-x-2"
-                >
-                  <Send className="h-4 w-4" />
-                  <span>{sending ? "Envoi..." : "Envoyer"}</span>
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={postMessage}
+                        disabled={!newMessage.trim() || sending}
+                        className="flex items-center space-x-2"
+                      >
+                        <Send className="h-4 w-4" />
+                        <span>{sending ? "Envoi..." : "Envoyer"}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Envoyer le message</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>
@@ -344,7 +390,16 @@ export default function TaskDiscussionsModal({
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {loading ? (
               <div className="text-center py-8 text-gray-500">
-                <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Chargement des discussions en cours</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p>Chargement des discussions...</p>
               </div>
             ) : discussions.length > 0 ? (
@@ -353,7 +408,16 @@ export default function TaskDiscussionsModal({
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Aucune discussion disponible</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p>Aucune discussion</p>
                 <p className="text-xs text-gray-400 mt-1">Soyez le premier à poster un message</p>
               </div>

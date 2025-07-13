@@ -30,6 +30,7 @@ import TaskExecutionLevelModal from "./Shared/TaskExecutionLevelModal";
 import TaskAttachmentsModal from "./Shared/TaskAttachmentsModal";
 import TaskDiscussionsModal from "./TaskDiscussionsModal";
 import TaskStatusChangeModal from "./Shared/TaskStatusChangeModal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TacheKanbanCardProps {
   tache: Tache;
@@ -129,16 +130,25 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
               
               {/* Menu d'actions */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 hover:bg-gray-100"
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  >
-                    <MoreHorizontal className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-gray-100"
+                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Menu d'actions pour cette tâche</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
@@ -210,18 +220,47 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
                   "flex items-center",
                   isEnRetard ? "text-red-600" : ""
                 )}>
-                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Calendar className="h-3.5 w-3.5 mr-1 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Date d'échéance de la tâche</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span>
                     {format(new Date(tache.date_fin_previsionnelle), "dd MMM", { locale: fr })}
                   </span>
-                  {isEnRetard && <AlertTriangle className="h-3.5 w-3.5 ml-1" />}
+                  {isEnRetard && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="h-3.5 w-3.5 ml-1 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Tâche en retard</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </div>
               )}
 
               {/* Pièces jointes */}
               {tache.pieces_jointes && tache.pieces_jointes.length > 0 && (
                 <div className="flex items-center">
-                  <Paperclip className="h-3.5 w-3.5" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Paperclip className="h-3.5 w-3.5 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Nombre de pièces jointes</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span>{tache.pieces_jointes.length}</span>
                 </div>
               )}
@@ -229,7 +268,16 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
               {/* Discussions */}
               {tache.discussions && tache.discussions.length > 0 && (
                 <div className="flex items-center">
-                  <MessageSquare className="h-3.5 w-3.5" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <MessageSquare className="h-3.5 w-3.5 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Nombre de discussions</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span>{tache.discussions.length}</span>
                 </div>
               )}
@@ -250,7 +298,16 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
                 </div>
               ) : (
                 <div className="flex items-center text-xs text-gray-500">
-                  <User className="h-3.5 w-3.5 mr-1" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <User className="h-3.5 w-3.5 mr-1 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Aucun responsable assigné</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span>Non assignée</span>
                 </div>
               )}

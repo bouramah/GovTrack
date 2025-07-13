@@ -605,7 +605,7 @@ export default function TypeProjetsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="duree_previsionnelle_jours">Durée prévisionnelle (jours) *</Label>
+                      <Label htmlFor="duree_previsionnelle_jours">Délai d'exécution (jours) *</Label>
                       <Input
                         id="duree_previsionnelle_jours"
                         name="duree_previsionnelle_jours"
@@ -633,13 +633,13 @@ export default function TypeProjetsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description_sla">Description SLA</Label>
+                    <Label htmlFor="description_sla">Description</Label>
                     <Textarea
                       id="description_sla"
                       name="description_sla"
                       value={formData.description_sla}
                       onChange={handleInputChange}
-                      placeholder="Description des niveaux de service (SLA)..."
+                      placeholder="Description des niveaux de service..."
                       rows={3}
                     />
                   </div>
@@ -693,7 +693,7 @@ export default function TypeProjetsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-duree_previsionnelle_jours">Durée prévisionnelle (jours) *</Label>
+                      <Label htmlFor="edit-duree_previsionnelle_jours">Délai d'exécution (jours) *</Label>
                       <Input
                         id="edit-duree_previsionnelle_jours"
                         name="duree_previsionnelle_jours"
@@ -721,13 +721,13 @@ export default function TypeProjetsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="edit-description_sla">Description SLA</Label>
+                    <Label htmlFor="edit-description_sla">Description</Label>
                     <Textarea
                       id="edit-description_sla"
                       name="description_sla"
                       value={formData.description_sla}
                       onChange={handleInputChange}
-                      placeholder="Description des niveaux de service (SLA)..."
+                      placeholder="Description des niveaux de service..."
                       rows={3}
                     />
                   </div>
@@ -787,7 +787,7 @@ export default function TypeProjetsPage() {
 
                   {selectedTypeProjet.description_sla && (
                     <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Description SLA</Label>
+                      <Label className="text-sm font-medium text-muted-foreground">Description</Label>
                       <p className="mt-1">{selectedTypeProjet.description_sla}</p>
                     </div>
                   )}

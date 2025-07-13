@@ -257,7 +257,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de l\'upload de la photo',
+                'message' => 'Erreur lors du chargement de la photo',
                 'error' => $e->getMessage()
             ], 500);
         }

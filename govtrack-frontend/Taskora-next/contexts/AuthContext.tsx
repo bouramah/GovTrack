@@ -198,7 +198,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Rafraîchir les données utilisateur pour obtenir la nouvelle URL de photo
       await refreshUser();
     } catch (error) {
-      console.error('Erreur lors de l\'upload de la photo:', error);
+      console.error('Erreur lors du chargement de la photo:', error);
       throw error;
     }
   };

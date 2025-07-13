@@ -43,6 +43,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProjectDiscussionsListProps {
   projectId: number;
@@ -346,7 +347,16 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MessageSquare className="h-5 w-5 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Créer un nouveau message de discussion</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             Nouveau message
           </CardTitle>
         </CardHeader>
@@ -363,10 +373,19 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
               />
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleCreateDiscussion} disabled={!newMessage.trim()}>
-                <Send className="h-4 w-4 mr-2" />
-                Publier
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={handleCreateDiscussion} disabled={!newMessage.trim()}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Publier
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Publier le message dans la discussion</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardContent>
@@ -411,36 +430,63 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
                             </span>
                             <div className="flex items-center space-x-1">
                               {canEdit(discussion) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(discussion)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEdit(discussion)}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Modifier ce message</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
                               {canDelete(discussion) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(discussion)}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDelete(discussion)}
+                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Supprimer ce message</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedDiscussion(discussion);
-                                  setReplyDialogOpen(true);
-                                }}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Reply className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedDiscussion(discussion);
+                                        setReplyDialogOpen(true);
+                                      }}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Reply className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Répondre à ce message</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </div>
@@ -480,24 +526,42 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
                                   </span>
                                   <div className="flex items-center space-x-1">
                                     {canEdit(reply) && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleEdit(reply)}
-                                        className="h-6 w-6 p-0"
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                      </Button>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleEdit(reply)}
+                                              className="h-6 w-6 p-0"
+                                            >
+                                              <Edit className="h-3 w-3" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Modifier cette réponse</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     )}
                                     {canDelete(reply) && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDelete(reply)}
-                                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleDelete(reply)}
+                                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                            >
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Supprimer cette réponse</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     )}
                                   </div>
                                 </div>
@@ -516,7 +580,16 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
             </div>
           ) : (
             <div className="text-center py-8">
-              <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Aucune discussion disponible</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-gray-500 mb-2">Aucune discussion pour ce projet</p>
               <p className="text-sm text-gray-400">
                 Commencez la conversation en publiant le premier message
@@ -550,10 +623,19 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
               <Button variant="outline" onClick={() => setReplyDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleReply} disabled={!replyMessage.trim()}>
-                <Send className="h-4 w-4 mr-2" />
-                Répondre
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={handleReply} disabled={!replyMessage.trim()}>
+                      <Send className="h-4 w-4 mr-2" />
+                      Répondre
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Envoyer la réponse</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </DialogContent>
@@ -583,10 +665,19 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleEditSubmit} disabled={!editMessage.trim()}>
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={handleEditSubmit} disabled={!editMessage.trim()}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Sauvegarder les modifications</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </DialogContent>

@@ -90,7 +90,7 @@ export default function ProjectAttachmentUpload({
     } catch (error: any) {
       console.error('Erreur upload fichier:', error);
       
-      let errorMessage = 'Erreur lors de l\'upload du fichier.';
+      let errorMessage = 'Erreur lors du chargement du fichier.';
       if (error.response?.data?.errors) {
         const errors = error.response.data.errors;
         setErrors(errors);
@@ -263,12 +263,12 @@ export default function ProjectAttachmentUpload({
               {isUploading ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Upload...
+                  Chargement...
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Uploader
+                  Charger
                 </>
               )}
             </Button>

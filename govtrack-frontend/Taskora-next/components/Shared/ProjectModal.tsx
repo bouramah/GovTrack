@@ -454,7 +454,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
 
           {/* Justification des modifications */}
           <div className="space-y-2">
-            <Label htmlFor="justification_modification_dates">Justification des modifications de dates</Label>
+            <Label htmlFor="justification_modification_dates">Justification des modifications de dates (optionnel)</Label>
             <Textarea
               id="justification_modification_dates"
               value={formData.justification_modification_dates}

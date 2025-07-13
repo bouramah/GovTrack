@@ -793,7 +793,7 @@ class ApiClient {
       return response.data.data;
     }
     
-    throw new Error(response.data.message || 'Erreur d\'upload de la photo');
+    throw new Error(response.data.message || 'Erreur de chargement de la photo');
   }
 
   private async getCurrentUserId(): Promise<number> {

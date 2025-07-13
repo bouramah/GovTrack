@@ -158,7 +158,7 @@ export default function ProfilePage() {
       setIsUploadingPhoto(true);
       
       toast({
-        title: '📤 Upload en cours...',
+        title: '📤 Chargement en cours...',
         description: 'Votre photo est en cours de téléchargement.',
         variant: 'default',
       });
@@ -173,7 +173,7 @@ export default function ProfilePage() {
     } catch (error: any) {
       console.error('Erreur upload photo:', error);
       
-      let errorMessage = 'Erreur lors de l\'upload de la photo.';
+      let errorMessage = 'Erreur lors du chargement de la photo.';
       if (error.response?.data?.errors) {
         const errors = Object.values(error.response.data.errors).flat();
         errorMessage = errors.join(', ');

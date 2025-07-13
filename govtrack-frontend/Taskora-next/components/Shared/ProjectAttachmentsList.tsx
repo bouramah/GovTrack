@@ -46,6 +46,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProjectAttachmentsListProps {
   projectId: number;
@@ -63,7 +64,7 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
   const [selectedAttachment, setSelectedAttachment] = useState<ProjectAttachment | null>(null);
   const [editForm, setEditForm] = useState({
     description: '',
-    type_document: 'piece_jointe' as string
+    type_document: 'piece_jointe' as 'rapport' | 'justificatif' | 'piece_jointe' | 'documentation' | 'autre'
   });
   const [downloading, setDownloading] = useState<number | null>(null);
 
@@ -292,7 +293,16 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
         <CardContent>
           {attachments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <File className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <File className="h-12 w-12 mx-auto mb-4 opacity-50 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Aucune pièce jointe disponible</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p>Aucune pièce jointe pour ce projet</p>
             </div>
           ) : (
@@ -307,10 +317,19 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{attachment.nom_original}</p>
                         {attachment.est_justificatif && (
-                          <Badge variant="default" className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Justificatif
-                          </Badge>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="default" className="flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Justificatif
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Ce fichier est marqué comme justificatif</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                         {attachment.type_document && (
                           <Badge variant="outline">
@@ -320,11 +339,29 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                         <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <User className="h-3 w-3 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Utilisateur qui a uploadé le fichier</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           {attachment.user?.prenom} {attachment.user?.nom}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Calendar className="h-3 w-3 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Date d'upload du fichier</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           {formatDate(attachment.date_creation)}
                         </span>
                         <span>{formatFileSize(attachment.taille)}</span>
@@ -337,35 +374,62 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(attachment)}
-                      disabled={downloading === attachment.id}
-                    >
-                      {downloading === attachment.id ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      ) : (
-                        <Download className="h-4 w-4" />
-                      )}
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(attachment)}
+                            disabled={downloading === attachment.id}
+                          >
+                            {downloading === attachment.id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Télécharger le fichier</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     {canEdit(attachment) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(attachment)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(attachment)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Modifier les informations du fichier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {canDelete(attachment) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(attachment)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(attachment)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Supprimer le fichier</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>
@@ -403,7 +467,7 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
                   label: type.label
                 }))}
                 value={editForm.type_document}
-                onValueChange={(value) => setEditForm(prev => ({ ...prev, type_document: value }))}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, type_document: value as 'rapport' | 'justificatif' | 'piece_jointe' | 'documentation' | 'autre' }))}
                 placeholder="Sélectionner un type"
                 searchPlaceholder="Rechercher un type..."
               />
