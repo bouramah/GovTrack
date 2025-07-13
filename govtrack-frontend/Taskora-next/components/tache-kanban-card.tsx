@@ -214,6 +214,26 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
 
             {/* Métadonnées */}
             <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 mb-3">
+              {/* Type de tâche */}
+              {tache.type_tache && (
+                <div className="flex items-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className="w-3 h-3 rounded-full mr-1 cursor-help"
+                          style={{ backgroundColor: tache.type_tache.couleur }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Type de tâche : {tache.type_tache.nom}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className="text-gray-600">{tache.type_tache.nom}</span>
+                </div>
+              )}
+
               {/* Date d'échéance */}
               {tache.date_fin_previsionnelle && (
                 <div className={cn(
@@ -345,7 +365,7 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
       open={editModalOpen}
       onOpenChange={setEditModalOpen}
       task={tache}
-      onSuccess={onTaskUpdate}
+      onSuccess={(task) => onTaskUpdate?.(task)}
       context="kanban"
     />
 

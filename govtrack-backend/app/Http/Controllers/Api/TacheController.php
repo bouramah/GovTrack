@@ -55,7 +55,7 @@ class TacheController extends Controller
     {
         try {
             $user = $request->user();
-            $query = Tache::with(['projet', 'responsable.affectations.entite', 'piecesJointes.user']);
+            $query = Tache::with(['projet', 'typeTache', 'responsable.affectations.entite', 'piecesJointes.user']);
 
             // ========================================
             // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES TÂCHES
@@ -183,6 +183,7 @@ class TacheController extends Controller
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'projet_id' => 'required|exists:projets,id',
+                'type_tache_id' => 'nullable|exists:type_taches,id',
                 'responsable_id' => 'nullable|exists:users,id',
                 'date_debut_previsionnelle' => 'nullable|date',
                 'date_fin_previsionnelle' => 'nullable|date|after_or_equal:date_debut_previsionnelle',
@@ -198,7 +199,7 @@ class TacheController extends Controller
                 'modifier_par' => $request->user()->email,
             ]);
 
-            $tache->load(['projet', 'responsable']);
+            $tache->load(['projet', 'typeTache', 'responsable']);
 
             // Déclencher l'événement de création de tâche
             event(new TacheCreated($tache, $request->user()));
@@ -232,12 +233,12 @@ class TacheController extends Controller
         try {
             $tache = Tache::with([
                 'projet.typeProjet',
+                'typeTache',
                 'responsable',
                 'piecesJointes.user',
                 'discussions.user',
                 'historiqueStatuts.user',
-                'projet.porteur',
-                'responsable'
+                'projet.porteur'
             ])->findOrFail($id);
 
             return response()->json([
@@ -265,6 +266,7 @@ class TacheController extends Controller
             $validated = $request->validate([
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string',
+                'type_tache_id' => 'nullable|exists:type_taches,id',
                 'responsable_id' => 'nullable|exists:users,id',
                 'date_debut_previsionnelle' => 'nullable|date',
                 'date_fin_previsionnelle' => 'nullable|date|after_or_equal:date_debut_previsionnelle',
@@ -514,7 +516,7 @@ class TacheController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'data' => $tache->fresh(['projet.typeProjet', 'responsable', 'piecesJointes.user', 'historiqueStatuts.user'])
+                'data' => $tache->fresh(['projet.typeProjet', 'typeTache', 'responsable', 'piecesJointes.user', 'historiqueStatuts.user'])
             ]);
 
         } catch (ValidationException $e) {
@@ -540,7 +542,7 @@ class TacheController extends Controller
         try {
             $user = $request->user();
 
-            $query = Tache::with(['projet.typeProjet', 'responsable.affectations.entite', 'piecesJointes.user'])
+            $query = Tache::with(['projet.typeProjet', 'typeTache', 'responsable.affectations.entite', 'piecesJointes.user'])
                 ->where('responsable_id', $user->id);
 
             // Filtres

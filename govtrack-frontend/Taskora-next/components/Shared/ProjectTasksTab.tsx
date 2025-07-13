@@ -228,6 +228,16 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                       )}
                       
                       <div className="flex items-center gap-4 text-xs text-gray-500">
+                        {task.type_tache && (
+                          <div className="flex items-center">
+                            <div
+                              className="w-3 h-3 rounded-full mr-1"
+                              style={{ backgroundColor: task.type_tache.couleur }}
+                            />
+                            <span>{task.type_tache.nom}</span>
+                          </div>
+                        )}
+                        
                         {task.date_fin_previsionnelle && (
                           <div className={cn(
                             "flex items-center",

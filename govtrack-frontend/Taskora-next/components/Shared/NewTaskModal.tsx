@@ -28,14 +28,17 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
   const [loading, setLoading] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingTypeTaches, setLoadingTypeTaches] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [typeTaches, setTypeTaches] = useState<any[]>([]);
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
     projet_id: '',
     responsable_id: '',
+    type_tache_id: '',
     date_debut_previsionnelle: '',
     date_fin_previsionnelle: '',
     statut: 'a_faire' as TacheStatut,
@@ -89,6 +92,25 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     }
   }, [open, context]);
 
+  // Charger les types de tâches actifs
+  useEffect(() => {
+    const loadTypeTaches = async () => {
+      try {
+        setLoadingTypeTaches(true);
+        const response = await apiClient.getTypeTachesActifs();
+        setTypeTaches(response);
+      } catch (error) {
+        console.error('Erreur chargement types de tâches:', error);
+      } finally {
+        setLoadingTypeTaches(false);
+      }
+    };
+
+    if (open) {
+      loadTypeTaches();
+    }
+  }, [open]);
+
   // Initialiser le formulaire avec les données de la tâche existante
   useEffect(() => {
     if (task) {
@@ -97,6 +119,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         description: task.description || '',
         projet_id: task.projet_id?.toString() || '',
         responsable_id: task.responsable_id?.toString() || '',
+        type_tache_id: task.type_tache_id?.toString() || '',
         date_debut_previsionnelle: task.date_debut_previsionnelle || '',
         date_fin_previsionnelle: task.date_fin_previsionnelle || '',
         statut: context === 'project-detail' && task ? task.statut : 'a_faire' as TacheStatut,
@@ -108,6 +131,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         description: '',
         projet_id: projet_id?.toString() || '',
         responsable_id: '',
+        type_tache_id: '',
         date_debut_previsionnelle: '',
         date_fin_previsionnelle: '',
         statut: 'a_faire' as TacheStatut,
@@ -181,6 +205,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
           titre: formData.titre.trim(),
           description: formData.description.trim() || undefined,
           responsable_id: formData.responsable_id ? parseInt(formData.responsable_id) : undefined,
+          type_tache_id: formData.type_tache_id ? parseInt(formData.type_tache_id) : undefined,
           date_debut_previsionnelle: formData.date_debut_previsionnelle || undefined,
           date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined
           // Statut et niveau_execution ne sont pas modifiables dans le contexte project-detail
@@ -193,6 +218,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
           description: formData.description.trim() || undefined,
           projet_id: parseInt(formData.projet_id),
           responsable_id: formData.responsable_id ? parseInt(formData.responsable_id) : undefined,
+          type_tache_id: formData.type_tache_id ? parseInt(formData.type_tache_id) : undefined,
           date_debut_previsionnelle: formData.date_debut_previsionnelle || undefined,
           date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined
         };
@@ -324,6 +350,37 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
             />
             {serverErrors.responsable_id && (
               <p className="text-sm text-red-600">{serverErrors.responsable_id[0]}</p>
+            )}
+          </div>
+
+          {/* Type de tâche */}
+          <div className="space-y-2">
+            <Label htmlFor="type_tache">Type de tâche</Label>
+            <Select
+              value={formData.type_tache_id || 'none'}
+              onValueChange={(value) => handleInputChange('type_tache_id', value === 'none' ? '' : value)}
+              disabled={loadingTypeTaches}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un type de tâche" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Aucun type</SelectItem>
+                {typeTaches.map((typeTache) => (
+                  <SelectItem key={typeTache.id} value={typeTache.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: typeTache.couleur }}
+                      />
+                      {typeTache.nom}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {serverErrors.type_tache_id && (
+              <p className="text-sm text-red-600">{serverErrors.type_tache_id[0]}</p>
             )}
           </div>
 

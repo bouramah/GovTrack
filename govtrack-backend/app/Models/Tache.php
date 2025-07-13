@@ -67,6 +67,7 @@ class Tache extends Model
         'titre',
         'description',
         'projet_id',
+        'type_tache_id',
         'responsable_id',
         'statut',
         'niveau_execution',
@@ -99,6 +100,14 @@ class Tache extends Model
     public function projet(): BelongsTo
     {
         return $this->belongsTo(Projet::class, 'projet_id');
+    }
+
+    /**
+     * Relation avec le type de tâche
+     */
+    public function typeTache(): BelongsTo
+    {
+        return $this->belongsTo(TypeTache::class, 'type_tache_id');
     }
 
     /**

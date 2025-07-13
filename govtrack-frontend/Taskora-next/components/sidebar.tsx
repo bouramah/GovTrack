@@ -228,6 +228,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                     Types de Projets
                   </NavItem>
                 )}
+                {permissions.canViewTypeTachesList() && (
+                  <NavItem href="/type-taches" icon={CheckSquare}>
+                    Types de Tâches
+                  </NavItem>
+                )}
                 {permissions.canViewAuditLogs() && (
                   <NavItem href="/audit" icon={Activity}>
                     Audit & Traçabilité

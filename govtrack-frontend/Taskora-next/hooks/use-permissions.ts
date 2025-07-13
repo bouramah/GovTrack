@@ -95,6 +95,12 @@ export const usePermissions = () => {
   const canEditTypeProjet = (): boolean => hasPermission('edit_type_projet');
   const canDeleteTypeProjet = (): boolean => hasPermission('delete_type_projet');
 
+  // Permissions pour les types de tâches
+  const canViewTypeTachesList = (): boolean => hasPermission('view_type_taches_list');
+  const canCreateTypeTache = (): boolean => hasPermission('create_type_tache');
+  const canEditTypeTache = (): boolean => hasPermission('edit_type_tache');
+  const canDeleteTypeTache = (): boolean => hasPermission('delete_type_tache');
+
   // Permissions pour l'audit
   const canViewAuditLogs = (): boolean => hasPermission('view_audit_logs');
   const canExportAuditLogs = (): boolean => hasPermission('export_audit_logs');
@@ -179,6 +185,12 @@ export const usePermissions = () => {
     canCreateTypeProjet,
     canEditTypeProjet,
     canDeleteTypeProjet,
+    
+    // Permissions types de tâches
+    canViewTypeTachesList,
+    canCreateTypeTache,
+    canEditTypeTache,
+    canDeleteTypeTache,
     
     // Permissions audit
     canViewAuditLogs,

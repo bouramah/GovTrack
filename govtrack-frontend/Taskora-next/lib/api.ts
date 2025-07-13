@@ -290,6 +290,12 @@ export interface Task {
   date_fin_reelle?: string;
   projet_id: number;
   responsable_id: number;
+  type_tache_id?: number;
+  type_tache?: {
+    id: number;
+    nom: string;
+    couleur: string;
+  };
   responsable?: {
     id: number;
     nom: string;
@@ -476,6 +482,46 @@ export interface TypeProjet {
   date_modification?: string;
   creer_par: string;
   modifier_par?: string;
+}
+
+export interface TypeTache {
+  id: number;
+  nom: string;
+  description?: string;
+  couleur: string;
+  actif: boolean;
+  ordre: number;
+  taches_count?: number;
+  statistiques?: TypeTacheStatistiques;
+  date_creation: string;
+  date_modification?: string;
+  creer_par: string;
+  modifier_par?: string;
+}
+
+export interface TypeTacheStatistiques {
+  total_taches: number;
+  taches_par_statut: {
+    [key: string]: number;
+  };
+  niveau_execution_moyen: number;
+  taches_en_retard: number;
+}
+
+export interface TypeTacheCreateRequest {
+  nom: string;
+  description?: string;
+  couleur?: string;
+  actif?: boolean;
+  ordre?: number;
+}
+
+export interface TypeTacheUpdateRequest {
+  nom?: string;
+  description?: string;
+  couleur?: string;
+  actif?: boolean;
+  ordre?: number;
 }
 
 export interface TypeProjetStatistiques {
@@ -1512,6 +1558,106 @@ class ApiClient {
     
     if (!response.data.success) {
       throw new Error(response.data.message || 'Erreur de suppression du type de projet');
+    }
+  }
+
+  // =================================================================
+  // TYPES DE TÂCHES - GESTION COMPLÈTE
+  // =================================================================
+
+  async getTypeTaches(params?: {
+    nom?: string;
+    actif?: boolean;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+    per_page?: number;
+    page?: number;
+  }): Promise<PaginatedResponse<TypeTache>> {
+    try {
+      const response = await this.client.get('/v1/type-taches', { params });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la récupération des types de tâches');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async getTypeTache(id: number): Promise<TypeTache> {
+    try {
+      const response = await this.client.get(`/v1/type-taches/${id}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la récupération du type de tâche');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async createTypeTache(data: TypeTacheCreateRequest): Promise<TypeTache> {
+    try {
+      const response = await this.client.post('/v1/type-taches', data);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la création du type de tâche');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async updateTypeTache(id: number, data: TypeTacheUpdateRequest): Promise<TypeTache> {
+    try {
+      const response = await this.client.put(`/v1/type-taches/${id}`, data);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la mise à jour du type de tâche');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async deleteTypeTache(id: number): Promise<void> {
+    try {
+      const response = await this.client.delete(`/v1/type-taches/${id}`);
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Erreur lors de la suppression du type de tâche');
+      }
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la suppression du type de tâche');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async getTypeTacheStatistiques(id: number): Promise<{
+    type_tache: TypeTache;
+    statistiques: TypeTacheStatistiques;
+  }> {
+    try {
+      const response = await this.client.get(`/v1/type-taches/${id}/statistiques`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la récupération des statistiques');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
+  async getTypeTachesActifs(): Promise<TypeTache[]> {
+    try {
+      const response = await this.client.get('/v1/type-taches/actifs');
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la récupération des types de tâches actifs');
+      }
+      throw new Error('Erreur de connexion');
     }
   }
 

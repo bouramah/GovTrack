@@ -7,6 +7,7 @@ export interface Tache {
   description: string | null;
   projet_id: number;
   responsable_id: number | null;
+  type_tache_id?: number | null;
   statut: TacheStatut;
   niveau_execution: number;
   date_debut_previsionnelle: string | null;
@@ -39,6 +40,11 @@ export interface Tache {
     prenom: string;
     email: string;
     matricule: string;
+  };
+  type_tache?: {
+    id: number;
+    nom: string;
+    couleur: string;
   };
   pieces_jointes?: TachePieceJointe[];
   discussions?: TacheDiscussion[];
@@ -110,6 +116,7 @@ export interface CreateTacheRequest {
   description?: string;
   projet_id: number;
   responsable_id?: number;
+  type_tache_id?: number;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
 }
@@ -118,6 +125,7 @@ export interface UpdateTacheRequest {
   titre?: string;
   description?: string;
   responsable_id?: number;
+  type_tache_id?: number;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
   niveau_execution?: number;

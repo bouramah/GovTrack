@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TypeProjetController;
+use App\Http\Controllers\Api\TypeTacheController;
 use App\Http\Controllers\Api\ProjetController;
 use App\Http\Controllers\Api\TacheController;
 use App\Http\Controllers\Api\DiscussionProjetController;
@@ -138,6 +139,15 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('type-projets', [TypeProjetController::class, 'store'])->middleware('permission:create_type_projet');
     Route::put('type-projets/{id}', [TypeProjetController::class, 'update'])->middleware('permission:edit_type_projet');
     Route::delete('type-projets/{id}', [TypeProjetController::class, 'destroy'])->middleware('permission:delete_type_projet');
+
+    // Types de tâches
+    Route::get('type-taches', [TypeTacheController::class, 'index'])->middleware('permission:view_type_taches_list');
+    Route::get('type-taches/actifs', [TypeTacheController::class, 'actifs'])->middleware('permission:view_type_taches_list');
+    Route::get('type-taches/{id}', [TypeTacheController::class, 'show'])->middleware('permission:view_type_tache_details');
+    Route::get('type-taches/{id}/statistiques', [TypeTacheController::class, 'statistiques'])->middleware('permission:view_type_tache_stats');
+    Route::post('type-taches', [TypeTacheController::class, 'store'])->middleware('permission:create_type_tache');
+    Route::put('type-taches/{id}', [TypeTacheController::class, 'update'])->middleware('permission:edit_type_tache');
+    Route::delete('type-taches/{id}', [TypeTacheController::class, 'destroy'])->middleware('permission:delete_type_tache');
 
     // Projets (Instructions/Recommandations) - routes spéciales d'abord
     Route::get('projets/tableau-bord', [ProjetController::class, 'tableauBord'])->middleware('permission:view_projects_list');
