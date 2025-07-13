@@ -938,7 +938,18 @@ class ProjetController extends Controller
                 ], 422);
             }
 
-            // Règle 2 : Impossible de mettre à 100% manuellement
+            // Règle 2 : Vérifier si le projet a des tâches (mode automatique)
+            if ($projet->aDesTaches()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le niveau d\'exécution est calculé automatiquement basé sur les tâches du projet. Impossible de le modifier manuellement.',
+                    'niveau_actuel' => $projet->niveau_execution,
+                    'mode' => 'automatique',
+                    'nombre_taches' => $projet->taches()->count()
+                ], 422);
+            }
+
+            // Règle 3 : Impossible de mettre à 100% manuellement
             if ($validated['niveau_execution'] == 100) {
                 return response()->json([
                     'success' => false,
@@ -947,9 +958,6 @@ class ProjetController extends Controller
                     'niveau_max_autorise' => 99
                 ], 422);
             }
-
-            // Règle 3 : Permettre la diminution du niveau d'exécution (suppression de la restriction)
-            // Note: L'utilisateur peut maintenant diminuer le niveau d'exécution si nécessaire
 
             // Règle 4 : Empêcher les changements redondants (même niveau sans commentaire)
             if ($validated['niveau_execution'] == $projet->niveau_execution && empty($validated['commentaire'])) {
@@ -1067,6 +1075,38 @@ class ProjetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération des entités',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer les informations sur le niveau d'exécution d'un projet
+     */
+    public function getNiveauExecutionInfo(int $id): JsonResponse
+    {
+        try {
+            $projet = Projet::with(['taches:id,projet_id,niveau_execution'])->findOrFail($id);
+
+            $aDesTaches = $projet->aDesTaches();
+            $niveauMoyen = $aDesTaches ? $projet->taches->avg('niveau_execution') : null;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'projet_id' => $projet->id,
+                    'niveau_actuel' => $projet->niveau_execution,
+                    'mode' => $aDesTaches ? 'automatique' : 'manuel',
+                    'nombre_taches' => $projet->taches->count(),
+                    'niveau_moyen_taches' => $aDesTaches ? round($niveauMoyen) : null,
+                    'peut_modifier' => !$aDesTaches && $projet->statut === Projet::STATUT_EN_COURS
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des informations du niveau d\'exécution',
                 'error' => $e->getMessage()
             ], 500);
         }

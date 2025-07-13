@@ -204,4 +204,43 @@ class Projet extends Model
 
         return $this;
     }
+
+    /**
+     * Calculer et mettre à jour le niveau d'exécution basé sur les tâches
+     */
+    public function calculerNiveauExecution()
+    {
+        $taches = $this->taches;
+
+        if ($taches->count() > 0) {
+            // Projet avec tâches : calculer la moyenne
+            $niveauMoyen = $taches->avg('niveau_execution') ?? 0;
+            $this->update([
+                'niveau_execution' => round($niveauMoyen),
+                'date_modification' => now(),
+            ]);
+        } else {
+            // Projet sans tâches : réinitialiser à 0
+            $this->update([
+                'niveau_execution' => 0,
+                'date_modification' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Vérifier si le projet a des tâches
+     */
+    public function aDesTaches(): bool
+    {
+        return $this->taches()->count() > 0;
+    }
+
+    /**
+     * Accesseur pour savoir si le niveau d'exécution est automatique
+     */
+    public function getNiveauExecutionAutomatiqueAttribute(): bool
+    {
+        return $this->aDesTaches();
+    }
 }

@@ -158,6 +158,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Gestion du niveau d'exécution de projets
     Route::post('projets/{id}/niveau-execution', [ProjetController::class, 'mettreAJourNiveauExecution'])->middleware('permission:update_project_execution_level');
+    Route::get('projets/{id}/niveau-execution-info', [ProjetController::class, 'getNiveauExecutionInfo'])->middleware('permission:view_project_details');
 
     // Historique des projets
     Route::get('projets/{id}/historique', [ProjetController::class, 'historique'])->middleware('permission:view_project_history');

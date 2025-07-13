@@ -16,6 +16,29 @@ class Tache extends Model
     public $timestamps = false;
 
     /**
+     * Événements du modèle
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Après création d'une tâche
+        static::created(function ($tache) {
+            $tache->mettreAJourNiveauProjet();
+        });
+
+        // Après mise à jour d'une tâche
+        static::updated(function ($tache) {
+            $tache->mettreAJourNiveauProjet();
+        });
+
+        // Après suppression d'une tâche
+        static::deleted(function ($tache) {
+            $tache->mettreAJourNiveauProjet();
+        });
+    }
+
+    /**
      * Table associée au modèle
      */
     protected $table = 'taches';
@@ -179,13 +202,7 @@ class Tache extends Model
     {
         $projet = $this->projet;
         if ($projet) {
-            $taches = $projet->taches;
-            $niveauMoyen = $taches->avg('niveau_execution') ?? 0;
-
-            $projet->update([
-                'niveau_execution' => round($niveauMoyen),
-                'date_modification' => now(),
-            ]);
+            $projet->calculerNiveauExecution();
         }
     }
 }

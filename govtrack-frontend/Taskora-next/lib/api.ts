@@ -1657,6 +1657,37 @@ class ApiClient {
     }
   }
 
+  async getProjectExecutionLevelInfo(id: number): Promise<{
+    projet_id: number;
+    niveau_actuel: number;
+    mode: 'automatique' | 'manuel';
+    nombre_taches: number;
+    niveau_moyen_taches: number | null;
+    peut_modifier: boolean;
+  }> {
+    try {
+      const response: AxiosResponse<ApiResponse<{
+        projet_id: number;
+        niveau_actuel: number;
+        mode: 'automatique' | 'manuel';
+        nombre_taches: number;
+        niveau_moyen_taches: number | null;
+        peut_modifier: boolean;
+      }>> = await this.client.get(`/v1/projets/${id}/niveau-execution-info`);
+      
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      
+      throw new Error(response.data.message || 'Erreur de récupération des informations du niveau d\'exécution');
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Erreur lors de la récupération des informations du niveau d\'exécution');
+      }
+      throw new Error('Erreur de connexion');
+    }
+  }
+
   async getProjectDashboard(params?: ProjectFilters): Promise<ProjectDashboard> {
     try {
       const response: AxiosResponse<ApiResponse<ProjectDashboard>> = 
