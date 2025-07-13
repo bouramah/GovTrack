@@ -29,7 +29,7 @@ export default function MesTachesPage() {
   const loadEntites = async () => {
     try {
       setLoadingEntites(true);
-      const response = await apiClient.getEntitesDetailed();
+      const response = await apiClient.getEntitesDetailed({ per_page: 1000 });
       if (response.success && response.data) {
         setEntites(response.data);
       }

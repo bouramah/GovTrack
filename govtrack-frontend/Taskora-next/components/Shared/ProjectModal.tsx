@@ -61,7 +61,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
       setTypeProjets(typeProjetsResponse.data || []);
 
       // Charger les utilisateurs
-      const usersResponse = await apiClient.getUsersDetailed({ per_page: 100 });
+      const usersResponse = await apiClient.getUsersDetailed({ per_page: 1000 });
       setUsers(usersResponse.data || []);
 
       // Si on édite, pré-remplir le formulaire

@@ -21,6 +21,11 @@ class TachePermissionsSeeder extends Seeder
 
         // Permissions principales pour les tâches
         $tachePermissions = [
+            // Permissions de scope pour l'affichage des tâches
+            'view_all_tasks' => 'Voir toutes les tâches (administrateur)',
+            'view_my_entity_tasks' => 'Voir les tâches de mon entité et entités enfants',
+            'view_my_tasks' => 'Voir mes tâches personnelles',
+
             // Permissions de base pour les tâches
             'view_tasks_list' => 'Voir la liste des tâches',
             'create_task' => 'Créer une tâche',
@@ -81,9 +86,9 @@ class TachePermissionsSeeder extends Seeder
         }
 
         if ($roleDirecteur) {
-            // Directeur : toutes les permissions sauf suppression
+            // Directeur : toutes les permissions sauf suppression + permissions de scope
             $directeurPermissions = [
-                'view_tasks_list', 'create_task', 'edit_task', 'view_task_details',
+                'view_my_entity_tasks', 'view_my_tasks', 'view_tasks_list', 'create_task', 'edit_task', 'view_task_details',
                 'change_task_status', 'view_task_history',
                 'add_task_attachment', 'view_task_attachments', 'download_task_attachment',
                 'add_task_comment', 'view_task_comments', 'edit_task_comment', 'view_task_comment_stats'
@@ -99,9 +104,9 @@ class TachePermissionsSeeder extends Seeder
         }
 
         if ($roleEmployee) {
-            // Employé : permissions limitées
+            // Employé : permissions limitées + permissions de scope
             $employeePermissions = [
-                'view_tasks_list', 'view_task_details', 'view_task_history',
+                'view_my_tasks', 'view_tasks_list', 'view_task_details', 'view_task_history',
                 'view_task_attachments', 'download_task_attachment',
                 'view_task_comments', 'view_task_comment_stats'
             ];

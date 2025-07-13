@@ -47,7 +47,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     const loadUsers = async () => {
       try {
         setLoadingUsers(true);
-        const response = await apiClient.getUsersDetailed();
+        const response = await apiClient.getUsersDetailed({ per_page: 1000 });
         if (response.success && response.data) {
           setUsers(response.data);
         }

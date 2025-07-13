@@ -18,14 +18,98 @@ use Illuminate\Validation\ValidationException;
 class TacheController extends Controller
 {
     /**
+     * Récupérer récursivement toutes les entités enfants d'une entité donnée
+     */
+    private function getEntitesEnfantsRecursives(int $entiteId): array
+    {
+        $entitesIds = [$entiteId];
+
+        $entite = \App\Models\Entite::find($entiteId);
+        if (!$entite) {
+            return $entitesIds;
+        }
+
+        // Récupérer récursivement tous les enfants
+        $this->getEnfantsRecursifs($entite, $entitesIds);
+
+        return array_unique($entitesIds);
+    }
+
+    /**
+     * Méthode récursive pour récupérer tous les enfants d'une entité
+     */
+    private function getEnfantsRecursifs(\App\Models\Entite $entite, array &$entitesIds): void
+    {
+        $enfants = $entite->enfants;
+
+        foreach ($enfants as $enfant) {
+            $entitesIds[] = $enfant->id;
+            $this->getEnfantsRecursifs($enfant, $entitesIds);
+        }
+    }
+
+    /**
      * Afficher la liste des tâches
      */
     public function index(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
             $query = Tache::with(['projet', 'responsable.affectations.entite', 'piecesJointes.user']);
 
-            // Filtres
+            // ========================================
+            // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES TÂCHES
+            // ========================================
+
+            if ($user->hasPermission('view_all_tasks')) {
+                // 🔓 NIVEAU 1 : VIEW ALL TASKS - Accès complet à toutes les tâches
+                // L'utilisateur peut voir toutes les tâches et utiliser tous les filtres
+                // Aucune restriction sur la requête
+
+            } elseif ($user->hasPermission('view_my_entity_tasks')) {
+                // 🏢 NIVEAU 2 : VIEW MY ENTITY TASKS - Tâches de son entité ET entités enfants
+                $affectationActuelle = $user->affectations()->where('statut', true)->first();
+
+                if ($affectationActuelle) {
+                    $entiteId = $affectationActuelle->service_id;
+
+                    // Récupérer récursivement toutes les entités (actuelle + enfants)
+                    $entitesIds = $this->getEntitesEnfantsRecursives($entiteId);
+
+                    // Récupérer tous les utilisateurs de ces entités (actuels et passés)
+                    $utilisateursEntite = \App\Models\UtilisateurEntiteHistory::whereIn('service_id', $entitesIds)
+                        ->distinct()
+                        ->pluck('user_id');
+
+                    // Filtrer les tâches assignées à des membres de l'entité ou ses enfants
+                    $query->whereIn('responsable_id', $utilisateursEntite);
+                } else {
+                    // Si pas d'affectation d'entité, fallback vers ses tâches personnelles
+                    $query->where('responsable_id', $user->id);
+                }
+
+            } elseif ($user->hasPermission('view_my_tasks')) {
+                // 👤 NIVEAU 3 : VIEW MY TASKS - Seulement ses tâches
+                $query->where('responsable_id', $user->id);
+
+            } else {
+                // ❌ AUCUNE PERMISSION - Accès refusé
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions nécessaires pour consulter les tâches',
+                    'permissions_required' => [
+                        'view_my_tasks' => 'Voir mes tâches personnelles',
+                        'view_my_entity_tasks' => 'Voir les tâches de mon entité',
+                        'view_all_tasks' => 'Voir toutes les tâches (administrateur)'
+                    ]
+                ], 403);
+            }
+
+            // ========================================
+            // FILTRES AVANCÉS SELON LES PERMISSIONS
+            // ========================================
+
+            // Filtres de base (disponibles pour tous)
             if ($request->filled('projet_id')) {
                 $query->byProjet($request->projet_id);
             }
@@ -34,16 +118,8 @@ class TacheController extends Controller
                 $query->byStatut($request->statut);
             }
 
-            if ($request->filled('responsable_id')) {
-                $query->byResponsable($request->responsable_id);
-            }
-
             if ($request->filled('en_retard') && $request->boolean('en_retard')) {
                 $query->enRetard();
-            }
-
-            if ($request->filled('entite_id')) {
-                $query->byEntite($request->entite_id);
             }
 
             // Recherche textuelle
@@ -53,6 +129,19 @@ class TacheController extends Controller
                     $q->where('titre', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%");
                 });
+            }
+
+            // Filtres par utilisateur (selon les permissions)
+            if ($request->filled('responsable_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_tasks ou view_my_entity_tasks
+                if ($user->hasPermission('view_all_tasks') || $user->hasPermission('view_my_entity_tasks')) {
+                    $query->byResponsable($request->responsable_id);
+                }
+            }
+
+            // Filtre par entité (seulement pour view_all_tasks)
+            if ($request->filled('entite_id') && $user->hasPermission('view_all_tasks')) {
+                $query->byEntite($request->entite_id);
             }
 
             // Tri
