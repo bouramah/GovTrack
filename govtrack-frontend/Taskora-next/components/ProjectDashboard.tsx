@@ -17,7 +17,8 @@ import {
   Calendar,
   Loader2,
   RefreshCw,
-  Plus
+  Plus,
+  List
 } from 'lucide-react';
 import { apiClient, ProjectDashboard as DashboardData, Project, ProjectFilters, ProjectPermissions } from '@/lib/api';
 import { toast } from 'sonner';
@@ -185,8 +186,8 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
         <div className="flex justify-center md:justify-end">
           <Link href="/projects">
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Créer un projet
+              <List className="h-5 w-5 mr-2" />
+              Voir tous les projets 
             </Button>
           </Link>
         </div>

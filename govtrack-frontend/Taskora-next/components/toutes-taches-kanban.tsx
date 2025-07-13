@@ -31,7 +31,11 @@ export default function ToutesTachesKanban({ filters, userRole = 'user' }: Toute
       setLoading(true);
       setError(null);
       
-      const response = await apiClient.getTaches(filters);
+      const response = await apiClient.getTaches({
+        ...filters,
+        sort_by: 'date_creation',
+        sort_order: 'desc'
+      });
       if (response.success && response.data) {
         setTaches(response.data);
       } else {

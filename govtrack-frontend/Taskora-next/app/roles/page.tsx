@@ -204,8 +204,8 @@ export default function RolesPermissionsPage() {
         nom: debouncedSearchTerm || undefined,
         page: currentPage,
         per_page: itemsPerPage,
-        sort_by: 'nom',
-        sort_order: 'asc' as const
+        sort_by: 'date_creation',
+        sort_order: 'desc' as const
       };
 
       // Paramètres pour l'API permissions
@@ -213,8 +213,8 @@ export default function RolesPermissionsPage() {
         nom: debouncedSearchTermPermissions || undefined,
         page: currentPagePermissions,
         per_page: itemsPerPagePermissions,
-        sort_by: 'nom',
-        sort_order: 'asc' as const
+        sort_by: 'date_creation',
+        sort_order: 'desc' as const
       };
 
       const [rolesResponse, permissionsResponse, usersData] = await Promise.all([

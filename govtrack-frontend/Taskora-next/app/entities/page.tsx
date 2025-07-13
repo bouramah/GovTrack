@@ -339,8 +339,8 @@ export default function EntitiesPage() {
         type_entite_id: selectedTypeFilter !== "tous" ? parseInt(selectedTypeFilter) : undefined,
         page: currentPage,
         per_page: itemsPerPage,
-        sort_by: 'nom',
-        sort_order: 'asc' as const
+        sort_by: 'date_creation',
+        sort_order: 'desc' as const
       };
 
       // Paramètres pour l'API postes
@@ -348,8 +348,8 @@ export default function EntitiesPage() {
         nom: debouncedSearchTermPostes || undefined,
         page: currentPagePostes,
         per_page: itemsPerPagePostes,
-        sort_by: 'nom',
-        sort_order: 'asc' as const
+        sort_by: 'date_creation',
+        sort_order: 'desc' as const
       };
 
       const [typeEntitesData, entitesResponse, usersData, postesResponse] = await Promise.all([

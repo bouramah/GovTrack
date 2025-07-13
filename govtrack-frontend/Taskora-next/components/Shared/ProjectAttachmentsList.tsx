@@ -76,7 +76,10 @@ export default function ProjectAttachmentsList({ projectId, onRefresh }: Project
   const loadAttachments = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getProjectAttachments(projectId);
+      const response = await apiClient.getProjectAttachments(projectId, {
+        sort_by: 'date_creation',
+        sort_order: 'desc'
+      });
       if (response.success && response.data) {
         setAttachments(response.data);
       }

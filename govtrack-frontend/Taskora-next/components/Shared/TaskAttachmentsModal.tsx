@@ -64,7 +64,10 @@ export default function TaskAttachmentsModal({
     try {
       setLoading(true);
       const [attachmentsResponse, statsResponse] = await Promise.all([
-        apiClient.getTaskAttachments(task.id),
+        apiClient.getTaskAttachments(task.id, {
+          sort_by: 'date_creation',
+          sort_order: 'desc'
+        }),
         apiClient.getTaskAttachmentsStats(task.id)
       ]);
 

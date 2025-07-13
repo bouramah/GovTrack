@@ -1703,6 +1703,8 @@ class ApiClient {
       est_justificatif?: boolean;
       type_document?: string;
       per_page?: number;
+      sort_by?: string;
+      sort_order?: 'asc' | 'desc';
     }
   ): Promise<ApiResponse<ProjectAttachment[]>> {
     const queryParams = new URLSearchParams();
@@ -1714,6 +1716,12 @@ class ApiClient {
     }
     if (params?.per_page) {
       queryParams.append('per_page', params.per_page.toString());
+    }
+    if (params?.sort_by) {
+      queryParams.append('sort_by', params.sort_by);
+    }
+    if (params?.sort_order) {
+      queryParams.append('sort_order', params.sort_order);
     }
 
     const url = `/v1/projets/${projectId}/pieces-jointes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
@@ -1927,6 +1935,8 @@ class ApiClient {
       est_justificatif?: boolean;
       type_document?: string;
       per_page?: number;
+      sort_by?: string;
+      sort_order?: 'asc' | 'desc';
     }
   ): Promise<ApiResponse<TachePieceJointe[]>> {
     const queryParams = new URLSearchParams();
@@ -1938,6 +1948,12 @@ class ApiClient {
     }
     if (params?.per_page) {
       queryParams.append('per_page', params.per_page.toString());
+    }
+    if (params?.sort_by) {
+      queryParams.append('sort_by', params.sort_by);
+    }
+    if (params?.sort_order) {
+      queryParams.append('sort_order', params.sort_order);
     }
 
     const url = `/v1/taches/${taskId}/pieces-jointes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;

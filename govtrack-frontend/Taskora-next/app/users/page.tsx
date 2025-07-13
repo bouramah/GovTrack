@@ -222,8 +222,8 @@ export default function UsersPage() {
         per_page: itemsPerPage,
         search: debouncedSearchTerm || undefined,
         statut: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        sort_by: 'nom',
-        sort_order: 'asc' as const
+        sort_by: 'date_creation',
+        sort_order: 'desc' as const
       };
 
       const [usersResponse, rolesData, entitesData, postesData] = await Promise.all([

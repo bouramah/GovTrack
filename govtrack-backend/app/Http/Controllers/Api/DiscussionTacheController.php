@@ -26,7 +26,7 @@ class DiscussionTacheController extends Controller
                 ->messagesRacine(); // Seulement les messages principaux (pas les réponses)
 
             // Tri par date
-            $sortOrder = $request->get('sort_order', 'asc');
+            $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy('date_creation', $sortOrder);
 
             // Pagination

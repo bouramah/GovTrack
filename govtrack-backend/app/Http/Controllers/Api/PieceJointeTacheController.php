@@ -33,8 +33,10 @@ class PieceJointeTacheController extends Controller
                 $query->where('type_document', $request->get('type_document'));
             }
 
-            // Tri par date de création (plus récent en premier)
-            $query->orderBy('date_creation', 'desc');
+            // Tri
+            $sortBy = $request->get('sort_by', 'date_creation');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
 
             $piecesJointes = $query->paginate($request->get('per_page', 20));
 

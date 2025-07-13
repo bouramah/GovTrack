@@ -24,8 +24,8 @@ class TypeProjetController extends Controller
             }
 
             // Tri
-            $sortBy = $request->get('sort_by', 'nom');
-            $sortOrder = $request->get('sort_order', 'asc');
+            $sortBy = $request->get('sort_by', 'date_creation');
+            $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination

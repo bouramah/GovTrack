@@ -23,8 +23,7 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = User::with(['roles', 'affectations.poste', 'affectations.entite'])
-                ->orderBy('nom');
+            $query = User::with(['roles', 'affectations.poste', 'affectations.entite']);
 
             // Filtres optionnels
             if ($request->filled('search')) {
@@ -48,9 +47,15 @@ class UserController extends Controller
             }
 
             // Tri
-            $sortBy = $request->get('sort_by', 'nom');
-            $sortOrder = $request->get('sort_order', 'asc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sortBy = $request->get('sort_by', 'date_creation');
+            $sortOrder = $request->get('sort_order', 'desc');
+
+            // Fallback: si date_creation est null, utiliser created_at
+            if ($sortBy === 'date_creation') {
+                $query->orderByRaw('COALESCE(date_creation, created_at) ' . $sortOrder);
+            } else {
+                $query->orderBy($sortBy, $sortOrder);
+            }
 
             // Pagination
             $perPage = $request->get('per_page', 15);

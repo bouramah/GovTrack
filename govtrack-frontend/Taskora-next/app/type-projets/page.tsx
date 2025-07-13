@@ -116,7 +116,9 @@ export default function TypeProjetsPage() {
       const response = await apiClient.getTypeProjets({
         nom: debouncedSearchTerm || undefined,
         page: currentPage,
-        per_page: 15
+        per_page: 15,
+        sort_by: 'date_creation',
+        sort_order: 'desc'
       });
       
       setTypeProjets(response.data || []);
