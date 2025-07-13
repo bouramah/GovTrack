@@ -627,12 +627,13 @@ export default function RolesPermissionsPage() {
     }
   };
 
-  const filteredRoles = roles.filter(role =>
+  // Filtrage côté frontend seulement si pas de recherche côté backend
+  const filteredRoles = debouncedSearchTerm ? roles : roles.filter(role =>
     role.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (role.description || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredPermissions = permissions.filter(permission =>
+  const filteredPermissions = debouncedSearchTermPermissions ? permissions : permissions.filter(permission =>
     permission.nom.toLowerCase().includes(searchTermPermissions.toLowerCase()) ||
     (permission.description || "").toLowerCase().includes(searchTermPermissions.toLowerCase())
   );

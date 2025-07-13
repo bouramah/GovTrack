@@ -916,7 +916,8 @@ export default function EntitiesPage() {
     (poste.description || "").toLowerCase().includes(searchTermPostes.toLowerCase())
   );
 
-  const filteredEntites = entites.filter(entite => {
+  // Filtrage côté frontend seulement si pas de recherche côté backend
+  const filteredEntites = debouncedSearchTerm ? entites : entites.filter(entite => {
     const matchesSearch = entite.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entite.type_entite.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entite.description?.toLowerCase().includes(searchTerm.toLowerCase());
