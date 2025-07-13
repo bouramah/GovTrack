@@ -137,7 +137,8 @@ export default function ProjectStatusChangeModal({
   const currentStatus = PROJECT_STATUSES.find(s => s.value === project.statut);
   const selectedStatus = PROJECT_STATUSES.find(s => s.value === nouveauStatut);
   const isSameStatus = nouveauStatut === project.statut;
-  const requiresJustificatif = nouveauStatut === 'demande_de_cloture';
+  const requiresJustificatif = nouveauStatut === 'demande_de_cloture' || nouveauStatut === 'termine';
+  const hasJustificatifs = project.pieces_jointes?.some(piece => piece.est_justificatif) || false;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -232,8 +233,13 @@ export default function ProjectStatusChangeModal({
                 <FileText className="h-4 w-4 text-orange-400 mt-0.5" />
                 <div className="ml-2">
                   <p className="text-sm text-orange-800">
-                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture.
+                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour {nouveauStatut === 'demande_de_cloture' ? 'demander la clôture' : 'terminer le projet'}.
                   </p>
+                  {!hasJustificatifs && (
+                    <p className="text-sm text-red-600 mt-1">
+                      ⚠️ Aucun justificatif trouvé. Veuillez d'abord ajouter une pièce jointe marquée comme justificatif.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -273,7 +279,7 @@ export default function ProjectStatusChangeModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={loading || !nouveauStatut || (isSameStatus && !commentaire.trim())}
+              disabled={loading || !nouveauStatut || (isSameStatus && !commentaire.trim()) || (requiresJustificatif && !hasJustificatifs)}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSameStatus ? 'Mettre à jour' : 'Changer le statut'}

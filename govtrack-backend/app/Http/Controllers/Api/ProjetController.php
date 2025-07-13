@@ -527,7 +527,6 @@ class ProjetController extends Controller
                 'justificatif_path' => 'nullable|string',
             ]);
 
-            // 🔥 CORRECTION BUG 1 : Sauvegarder l'ancien statut AVANT modification
             $ancienStatut = $projet->statut;
 
             // Vérifier la logique du changement de statut
@@ -587,6 +586,24 @@ class ProjetController extends Controller
                         'message' => 'Erreur de validation',
                         'errors' => [
                             'nouveau_statut' => ['Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture']
+                        ]
+                    ], 422);
+                }
+            }
+
+            // Validation spécifique pour le statut "termine"
+            if ($validated['nouveau_statut'] === Projet::STATUT_TERMINE) {
+                // Vérifier qu'il y a au moins un justificatif (pièce jointe marquée comme justificatif)
+                $aUnJustificatif = PieceJointeProjet::where('projet_id', $id)
+                    ->where('est_justificatif', true)
+                    ->exists();
+
+                if (!$aUnJustificatif) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erreur de validation',
+                        'errors' => [
+                            'nouveau_statut' => ['Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour terminer le projet']
                         ]
                     ], 422);
                 }

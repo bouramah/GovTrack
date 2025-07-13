@@ -289,6 +289,7 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
       onOpenChange={setEditModalOpen}
       task={tache}
       onSuccess={onTaskUpdate}
+      context="kanban"
     />
 
     <DeleteTaskDialog

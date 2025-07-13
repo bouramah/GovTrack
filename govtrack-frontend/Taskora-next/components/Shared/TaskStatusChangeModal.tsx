@@ -181,7 +181,7 @@ export default function TaskStatusChangeModal({
   const currentStatus = TACHE_STATUSES.find(s => s.value === task.statut);
   const selectedStatus = TACHE_STATUSES.find(s => s.value === nouveauStatut);
   const isSameStatus = nouveauStatut === task.statut;
-  const requiresJustificatif = nouveauStatut === 'demande_de_cloture';
+  const requiresJustificatif = nouveauStatut === 'demande_de_cloture' || nouveauStatut === 'termine';
   const hasJustificatifs = task.pieces_jointes?.some(piece => piece.est_justificatif) || false;
 
   return (
@@ -278,7 +278,7 @@ export default function TaskStatusChangeModal({
                 <FileText className="h-4 w-4 text-orange-400 mt-0.5" />
                 <div className="ml-2">
                   <p className="text-sm text-orange-800">
-                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour demander la clôture.
+                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour {nouveauStatut === 'demande_de_cloture' ? 'demander la clôture' : 'terminer la tâche'}.
                   </p>
                   {!hasJustificatifs && (
                     <p className="text-sm text-red-600 mt-1">

@@ -315,6 +315,7 @@ export default function MesTachesKanban({ filters }: MesTachesKanbanProps) {
             description: "Tâche créée avec succès",
           });
         }}
+        context="kanban"
       />
     </DndProvider>
   );

@@ -25,7 +25,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
-import type { Tache, Project } from "@/lib/api";
+import type { Tache } from "@/types/tache";
+import type { Project } from "@/lib/api";
 import { TACHE_STATUTS_KANBAN, TACHE_STATUT_COLORS } from "@/types/tache";
 import NewTaskModal from "./NewTaskModal";
 import TacheDetailModal from "../tache-detail-modal";
@@ -319,6 +320,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
         task={selectedTask}
         projet_id={project.id}
         onSuccess={selectedTask ? handleTaskUpdate : handleTaskCreate}
+        context="project-detail"
       />
 
       {/* Modal de détails de tâche */}

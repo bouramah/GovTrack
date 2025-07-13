@@ -335,6 +335,21 @@ class TacheController extends Controller
                 }
             }
 
+            // Validation spécifique pour le statut "termine"
+            if ($nouveauStatut === Tache::STATUT_TERMINE) {
+                // Vérifier qu'il y a au moins un justificatif (pièce jointe marquée comme justificatif)
+                $aUnJustificatif = \App\Models\PieceJointeTache::where('tache_id', $id)
+                    ->where('est_justificatif', true)
+                    ->exists();
+
+                if (!$aUnJustificatif) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour terminer la tâche'
+                    ], 422);
+                }
+            }
+
             // Validation pour le passage au statut "terminé"
             if ($nouveauStatut === Tache::STATUT_TERMINE) {
                 $projet = $tache->projet;

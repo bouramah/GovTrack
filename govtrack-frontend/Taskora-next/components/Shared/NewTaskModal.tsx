@@ -20,9 +20,10 @@ interface NewTaskModalProps {
   task?: Tache | null;
   projet_id?: number;
   onSuccess: (task: Tache) => void;
+  context?: 'project-detail' | 'kanban'; // Contexte d'utilisation
 }
 
-export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSuccess }: NewTaskModalProps) {
+export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSuccess, context = 'kanban' }: NewTaskModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -62,8 +63,13 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     }
   }, [open]);
 
-  // Charger les projets
+  // Charger les projets - seulement si pas en mode project-detail
   useEffect(() => {
+    if (context === 'project-detail') {
+      // Pas besoin de charger les projets en mode project-detail
+      return;
+    }
+
     const loadProjects = async () => {
       try {
         setLoadingProjects(true);
@@ -81,7 +87,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     if (open) {
       loadProjects();
     }
-  }, [open]);
+  }, [open, context]);
 
   // Initialiser le formulaire avec les données de la tâche existante
   useEffect(() => {
@@ -93,8 +99,8 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         responsable_id: task.responsable_id?.toString() || '',
         date_debut_previsionnelle: task.date_debut_previsionnelle || '',
         date_fin_previsionnelle: task.date_fin_previsionnelle || '',
-        statut: task.statut,
-        niveau_execution: task.niveau_execution
+        statut: context === 'project-detail' && task ? task.statut : 'a_faire' as TacheStatut,
+        niveau_execution: context === 'project-detail' && task ? task.niveau_execution : 0
       });
     } else {
       setFormData({
@@ -110,7 +116,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     }
     // Réinitialiser les erreurs
     setServerErrors({});
-  }, [task, open, projet_id]);
+  }, [task, open, projet_id, context]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -176,8 +182,8 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
           description: formData.description.trim() || undefined,
           responsable_id: formData.responsable_id ? parseInt(formData.responsable_id) : undefined,
           date_debut_previsionnelle: formData.date_debut_previsionnelle || undefined,
-          date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined,
-          niveau_execution: parseInt(formData.niveau_execution.toString())
+          date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined
+          // Statut et niveau_execution ne sont pas modifiables dans le contexte project-detail
         };
         response = await apiClient.updateTache(task.id, updateData);
       } else {
@@ -287,21 +293,23 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
             )}
           </div>
 
-          {/* Projet */}
-          <div className="space-y-2">
-            <Label htmlFor="projet">Projet *</Label>
-            <SearchableSelect
-              options={projectOptions}
-              value={formData.projet_id}
-              onValueChange={(value) => handleInputChange('projet_id', value)}
-              placeholder="Sélectionner un projet"
-              searchPlaceholder="Rechercher un projet..."
-              disabled={loadingProjects}
-            />
-            {serverErrors.projet_id && (
-              <p className="text-sm text-red-600">{serverErrors.projet_id[0]}</p>
-            )}
-          </div>
+          {/* Projet - caché en mode project-detail */}
+          {context !== 'project-detail' && (
+            <div className="space-y-2">
+              <Label htmlFor="projet">Projet *</Label>
+              <SearchableSelect
+                options={projectOptions}
+                value={formData.projet_id}
+                onValueChange={(value) => handleInputChange('projet_id', value)}
+                placeholder="Sélectionner un projet"
+                searchPlaceholder="Rechercher un projet..."
+                disabled={loadingProjects}
+              />
+              {serverErrors.projet_id && (
+                <p className="text-sm text-red-600">{serverErrors.projet_id[0]}</p>
+              )}
+            </div>
+          )}
 
           {/* Responsable */}
           <div className="space-y-2">
@@ -349,45 +357,8 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
             </div>
           </div>
 
-          {/* Statut et progression */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="statut">Statut</Label>
-              <Select
-                value={formData.statut}
-                onValueChange={(value) => handleInputChange('statut', value)}
-              >
-                <SelectTrigger id="statut" className={serverErrors.statut ? "border-red-500" : ""}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TACHE_STATUTS_KANBAN).map(([key, value]) => (
-                    <SelectItem key={key} value={key}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {serverErrors.statut && (
-                <p className="text-sm text-red-600">{serverErrors.statut[0]}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="niveau_execution">Niveau d'exécution (%)</Label>
-              <Input
-                id="niveau_execution"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.niveau_execution}
-                onChange={(e) => handleInputChange('niveau_execution', parseInt(e.target.value) || 0)}
-                className={serverErrors.niveau_execution ? "border-red-500" : ""}
-              />
-              {serverErrors.niveau_execution && (
-                <p className="text-sm text-red-600">{serverErrors.niveau_execution[0]}</p>
-              )}
-            </div>
-          </div>
+          {/* Statut et progression - cachés en mode project-detail */}
+          {/* Ces champs sont gérés automatiquement dans le contexte project-detail */}
 
           {/* Boutons */}
           <div className="flex justify-end gap-3 pt-4">

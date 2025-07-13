@@ -216,6 +216,7 @@ export default function ToutesTachesKanban({ filters, userRole = 'user' }: Toute
             description: "Tâche créée avec succès",
           });
         }}
+        context="kanban"
       />
     </DndProvider>
   );
