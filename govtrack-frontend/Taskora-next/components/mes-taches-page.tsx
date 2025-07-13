@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, RefreshCw } from "lucide-react";
+import { Search, Filter, RefreshCw, LayoutGrid, ListIcon, Kanban } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import Topbar from "./Shared/Topbar";
 import MesTachesKanban from "./mes-taches-kanban";
+import MesTachesGrid from "./mes-taches-grid";
+import MesTachesList from "./mes-taches-list";
 import type { TacheStatut } from "@/types/tache";
 import { TACHE_STATUTS_KANBAN } from "@/types/tache";
 import { apiClient } from "@/lib/api";
 import type { Entite } from "@/lib/api";
 import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
+import { cn } from "@/lib/utils";
+
+type ViewMode = "grid" | "list" | "kanban";
 
 export default function MesTachesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +29,7 @@ export default function MesTachesPage() {
   const [entiteFilter, setEntiteFilter] = useState<string>("all");
   const [entites, setEntites] = useState<Entite[]>([]);
   const [loadingEntites, setLoadingEntites] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // Charger les entités pour le filtre
   const loadEntites = async () => {
@@ -59,6 +65,13 @@ export default function MesTachesPage() {
     window.location.reload();
   };
 
+  const filters = {
+    statut: statusFilter === "all" ? undefined : statusFilter,
+    en_retard: enRetardFilter === null ? undefined : enRetardFilter,
+    entite_id: entiteFilter === "all" ? undefined : parseInt(entiteFilter),
+    search: searchTerm || undefined
+  };
+
   return (
     <div className="bg-gray-50">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -78,12 +91,12 @@ export default function MesTachesPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Mes Tâches</h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  Gérez vos tâches assignées avec le tableau Kanban
+                  Gérez vos tâches assignées avec différents modes d'affichage
                 </p>
               </div>
             </div>
           </div>
-
+          
           {/* Barre de filtres */}
           <div className="px-4 sm:px-6 lg:px-8 py-3 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -141,17 +154,69 @@ export default function MesTachesPage() {
               />
             </div>
           </div>
+
+          {/* Barre de modes d'affichage */}
+          <div className="px-4 sm:px-6 lg:px-8 py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="bg-gray-100 rounded-lg p-1 flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-3 text-sm font-medium",
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                  )}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Grille
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-3 text-sm font-medium",
+                    viewMode === "list"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                  )}
+                  onClick={() => setViewMode("list")}
+                >
+                  <ListIcon className="h-4 w-4 mr-2" />
+                  Liste
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-3 text-sm font-medium",
+                    viewMode === "kanban"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                  )}
+                  onClick={() => setViewMode("kanban")}
+                >
+                  <Kanban className="h-4 w-4 mr-2" />
+                  Kanban
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Contenu principal */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <MesTachesKanban 
-            filters={{
-              statut: statusFilter === "all" ? undefined : statusFilter,
-              en_retard: enRetardFilter,
-              entite_id: entiteFilter === "all" ? undefined : parseInt(entiteFilter)
-            }}
-          />
+          {viewMode === "grid" && (
+            <MesTachesGrid filters={filters} />
+          )}
+          {viewMode === "list" && (
+            <MesTachesList filters={filters} />
+          )}
+          {viewMode === "kanban" && (
+            <MesTachesKanban filters={filters} />
+          )}
         </main>
       </div>
 
