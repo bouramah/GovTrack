@@ -262,8 +262,8 @@ class ProjetController extends Controller
                         ? ['porteur_id', 'donneur_ordre_id'] : [],
                     'entity' => $user->hasPermission('view_all_projects') ? ['entite_id'] : []
                 ],
-                'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à tous les projets' :
-                               ($user->hasPermission('view_my_entity_projects') ? 'Projets de votre entité et entités enfants' : 'Vos projets personnels')
+                'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à toutes les instructions' :
+                               ($user->hasPermission('view_my_entity_projects') ? 'Instructions de votre entité et entités enfants' : 'Vos instructions personnelles')
             ];
 
             return response()->json([

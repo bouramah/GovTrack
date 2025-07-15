@@ -20,7 +20,7 @@ export default function TestFiltersPage() {
       user: ['porteur_id', 'donneur_ordre_id'],
       entity: ['entite_id']
     },
-    description: 'Accès complet à tous les projets'
+    description: 'Accès complet à toutes les instructions'
   });
 
   return (
@@ -104,7 +104,7 @@ export default function TestFiltersPage() {
                       user: ['porteur_id', 'donneur_ordre_id'],
                       entity: ['entite_id']
                     },
-                    description: 'Accès complet à tous les projets'
+                    description: 'Accès complet à toutes les instructions'
                   })}
                   className="w-full text-left p-2 text-sm bg-blue-50 hover:bg-blue-100 rounded"
                 >
