@@ -20,6 +20,7 @@ export interface TaskFilters {
   projet_id?: number;
   responsable_id?: number;
   entite_id?: number;
+  type_tache_id?: number;
   en_retard?: boolean;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
@@ -36,9 +37,11 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [entites, setEntites] = useState<any[]>([]);
+  const [typeTaches, setTypeTaches] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingEntites, setLoadingEntites] = useState(false);
+  const [loadingTypeTaches, setLoadingTypeTaches] = useState(false);
 
   // Charger les projets
   useEffect(() => {
@@ -97,6 +100,23 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
     loadEntites();
   }, []);
 
+  // Charger les types de tâches actifs
+  useEffect(() => {
+    const loadTypeTaches = async () => {
+      try {
+        setLoadingTypeTaches(true);
+        const response = await apiClient.getTypeTachesActifs();
+        setTypeTaches(response);
+      } catch (error) {
+        console.error('Erreur chargement types de tâches:', error);
+      } finally {
+        setLoadingTypeTaches(false);
+      }
+    };
+
+    loadTypeTaches();
+  }, []);
+
   const updateFilter = (key: keyof TaskFilters, value: any) => {
     onFiltersChange({
       ...filters,
@@ -120,7 +140,7 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
 
   // Préparer les options pour les selects searchables
   const projectOptions: SearchableSelectOption[] = [
-    { value: 'all', label: 'Tous les projets' },
+    { value: 'all', label: 'Toutes les instructions' },
     ...projects.map(project => ({
       value: project.id.toString(),
       label: project.titre
@@ -151,6 +171,16 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
       value: entite.id.toString(),
       label: entite.nom,
       description: entite.type_entite?.nom
+    }))
+  ];
+
+  const typeTacheOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'Tous les types de tâches' },
+    ...typeTaches.map(typeTache => ({
+      value: typeTache.id.toString(),
+      label: typeTache.nom,
+      description: typeTache.description,
+      badge: typeTache.couleur
     }))
   ];
 
@@ -188,7 +218,7 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
 
       <CardContent className="space-y-4">
         {/* Filtres de base */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {/* Recherche */}
           <div className="space-y-2">
             <Label htmlFor="search">Recherche</Label>
@@ -225,9 +255,22 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
               options={projectOptions}
               value={filters.projet_id?.toString() || 'all'}
               onValueChange={(value) => updateFilter('projet_id', value === 'all' ? undefined : parseInt(value))}
-              placeholder="Tous les projets"
+              placeholder="Toutes les instructions"
               searchPlaceholder="Rechercher une instruction..."
               disabled={loadingProjects}
+            />
+          </div>
+
+          {/* Type de tâche */}
+          <div className="space-y-2">
+            <Label htmlFor="type_tache">Type de tâche</Label>
+            <SearchableSelect
+              options={typeTacheOptions}
+              value={filters.type_tache_id?.toString() || 'all'}
+              onValueChange={(value) => updateFilter('type_tache_id', value === 'all' ? undefined : parseInt(value))}
+              placeholder="Tous les types"
+              searchPlaceholder="Rechercher un type..."
+              disabled={loadingTypeTaches}
             />
           </div>
 
@@ -337,6 +380,11 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
               {filters.projet_id && (
                 <Badge variant="outline" className="text-xs">
                   Instruction: {projects.find(p => p.id === filters.projet_id)?.titre || 'ID: ' + filters.projet_id}
+                </Badge>
+              )}
+              {filters.type_tache_id && (
+                <Badge variant="outline" className="text-xs">
+                  Type: {typeTaches.find(t => t.id === filters.type_tache_id)?.nom || 'ID: ' + filters.type_tache_id}
                 </Badge>
               )}
               {filters.responsable_id && (

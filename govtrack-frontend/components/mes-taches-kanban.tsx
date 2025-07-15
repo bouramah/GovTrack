@@ -16,6 +16,7 @@ import NewTaskModal from "./Shared/NewTaskModal";
 interface MesTachesKanbanProps {
   filters?: {
     statut?: TacheStatut;
+    type_tache_id?: number;
     en_retard?: boolean;
     entite_id?: number;
   };

@@ -1983,6 +1983,9 @@ class ApiClient {
     if (filters?.statut) {
       queryParams.append('statut', filters.statut);
     }
+    if (filters?.type_tache_id) {
+      queryParams.append('type_tache_id', filters.type_tache_id.toString());
+    }
     if (filters?.responsable_id) {
       queryParams.append('responsable_id', filters.responsable_id.toString());
     }
@@ -2011,11 +2014,14 @@ class ApiClient {
   }
 
   // Récupérer les tâches de l'utilisateur connecté
-  async getMesTaches(filters?: Pick<TacheFilters, 'statut' | 'en_retard' | 'entite_id' | 'sort_by' | 'sort_order'>): Promise<ApiResponse<Tache[]>> {
+  async getMesTaches(filters?: Pick<TacheFilters, 'statut' | 'type_tache_id' | 'en_retard' | 'entite_id' | 'sort_by' | 'sort_order'>): Promise<ApiResponse<Tache[]>> {
     const queryParams = new URLSearchParams();
     
     if (filters?.statut) {
       queryParams.append('statut', filters.statut);
+    }
+    if (filters?.type_tache_id) {
+      queryParams.append('type_tache_id', filters.type_tache_id.toString());
     }
     if (filters?.en_retard !== undefined && filters.en_retard !== null) {
       queryParams.append('en_retard', filters.en_retard.toString());

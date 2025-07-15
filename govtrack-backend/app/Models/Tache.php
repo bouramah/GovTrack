@@ -167,6 +167,14 @@ class Tache extends Model
     }
 
     /**
+     * Scope par type de tâche
+     */
+    public function scopeByTypeTache($query, $typeTacheId)
+    {
+        return $query->where('type_tache_id', $typeTacheId);
+    }
+
+    /**
      * Scope tâches en retard
      */
     public function scopeEnRetard($query)

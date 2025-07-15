@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 interface ToutesTachesListProps {
   filters?: {
     statut?: TacheStatut;
+    type_tache_id?: number;
     en_retard?: boolean;
     entite_id?: number;
     search?: string;

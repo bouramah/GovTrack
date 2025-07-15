@@ -118,6 +118,10 @@ class TacheController extends Controller
                 $query->byStatut($request->statut);
             }
 
+            if ($request->filled('type_tache_id')) {
+                $query->byTypeTache($request->type_tache_id);
+            }
+
             if ($request->filled('en_retard') && $request->boolean('en_retard')) {
                 $query->enRetard();
             }
@@ -548,6 +552,10 @@ class TacheController extends Controller
             // Filtres
             if ($request->filled('statut')) {
                 $query->byStatut($request->statut);
+            }
+
+            if ($request->filled('type_tache_id')) {
+                $query->byTypeTache($request->type_tache_id);
             }
 
             if ($request->filled('en_retard') && $request->boolean('en_retard')) {

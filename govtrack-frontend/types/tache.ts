@@ -144,6 +144,7 @@ export interface TacheFilters {
   statut?: TacheStatut;
   responsable_id?: number;
   entite_id?: number;
+  type_tache_id?: number;
   en_retard?: boolean;
   search?: string;
   sort_by?: string;

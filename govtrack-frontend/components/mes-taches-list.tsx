@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 interface MesTachesListProps {
   filters?: {
     statut?: TacheStatut;
+    type_tache_id?: number;
     en_retard?: boolean;
     entite_id?: number;
     search?: string;
