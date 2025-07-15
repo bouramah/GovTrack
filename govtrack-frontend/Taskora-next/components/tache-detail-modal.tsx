@@ -112,13 +112,13 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {/* Informations du projet */}
+          {/* Informations de l'instruction */}
           <div className="bg-blue-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">Projet</h4>
+            <h4 className="text-sm font-medium text-blue-900 mb-2">Instruction</h4>
             <div className="text-sm text-blue-800">
-              <p className="font-medium">{tache.projet?.titre || 'Projet inconnu'}</p>
+              <p className="font-medium">{tache.projet?.titre || 'Instruction inconnue'}</p>
               {tache.projet?.typeProjet && (
-                <p className="text-xs text-blue-600">{tache.projet.typeProjet.nom}</p>
+                <p className="text-xs text-blue-600">{tache.projet.typeProjet.nom.replace('projet', 'instruction')}</p>
               )}
             </div>
           </div>

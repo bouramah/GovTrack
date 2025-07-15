@@ -180,14 +180,14 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
         <div className="text-center md:text-left flex-1">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">Tableau de bord</h1>
           <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto md:mx-0">
-            Suivi global des projets, progression, retards et accès rapide à vos actions clés.
+            Suivi global des instructions, progression, retards et accès rapide à vos actions clés.
           </p>
         </div>
         <div className="flex justify-center md:justify-end">
           <Link href="/projects">
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
               <List className="h-5 w-5 mr-2" />
-              Voir tous les projets 
+              Voir toutes les instructions 
             </Button>
           </Link>
         </div>
@@ -208,12 +208,12 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <Card className="hover:scale-105 transition-transform shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projets</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Instructions</CardTitle>
             <BarChart3 className="h-6 w-6 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-extrabold text-gray-900">{total_projets}</div>
-            <p className="text-xs text-muted-foreground">Projets au total</p>
+            <p className="text-xs text-muted-foreground">Instructions au total</p>
           </CardContent>
         </Card>
         <Card className="hover:scale-105 transition-transform shadow-md">
@@ -223,7 +223,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-extrabold text-red-600">{projets_en_retard}</div>
-            <p className="text-xs text-muted-foreground">Projets en retard</p>
+            <p className="text-xs text-muted-foreground">Instructions en retard</p>
           </CardContent>
         </Card>
         <Card className="hover:scale-105 transition-transform shadow-md">
@@ -243,7 +243,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-extrabold text-blue-600">{projets_par_statut.en_cours?.count || 0}</div>
-            <p className="text-xs text-muted-foreground">Projets actifs</p>
+            <p className="text-xs text-muted-foreground">Instructions actives</p>
           </CardContent>
         </Card>
       </div>
@@ -253,12 +253,12 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
         <AuditStatsCard />
       </div> */}
 
-      {/* Section Projets récents */}
+      {/* Section Instructions récentes */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Projets récents</h2>
+          <h2 className="text-xl font-bold text-gray-900">Instructions récentes</h2>
           <Link href="/projects">
-            <Button variant="ghost" size="sm" className="text-blue-600">Voir tous</Button>
+            <Button variant="ghost" size="sm" className="text-blue-600">Voir toutes</Button>
           </Link>
         </div>
         <div className="divide-y divide-gray-100">
@@ -286,7 +286,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
               </div>
             ))
           ) : (
-            <div className="text-gray-500 text-center py-8">Aucun projet récent</div>
+            <div className="text-gray-500 text-center py-8">Aucune instruction récente</div>
           )}
         </div>
       </div>

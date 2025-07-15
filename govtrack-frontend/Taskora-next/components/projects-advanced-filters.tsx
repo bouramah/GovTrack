@@ -297,7 +297,7 @@ export default function ProjectsAdvancedFilters({
                     checked={filters.en_retard || false}
                     onCheckedChange={(checked) => updateFilter('en_retard', checked)}
                   />
-                  <Label htmlFor="en_retard" className="text-sm">Projets en retard uniquement</Label>
+                  <Label htmlFor="en_retard" className="text-sm">Instructions en retard uniquement</Label>
                 </div>
               </div>
             </div>

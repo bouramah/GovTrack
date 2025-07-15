@@ -24,7 +24,7 @@ export default function ProjectsPage() {
             Accès refusé
           </h1>
           <p className="text-gray-600 mb-4">
-            Vous n'avez pas les permissions nécessaires pour consulter les projets.
+            Vous n'avez pas les permissions nécessaires pour consulter les instructions.
           </p>
           <p className="text-sm text-gray-500">
             Contactez votre administrateur pour obtenir les permissions appropriées.

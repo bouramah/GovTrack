@@ -55,7 +55,7 @@ export function AppSidebar() {
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/my-tasks", label: "Mes Tâches", icon: CheckSquare },
-    { href: "/projects", label: "Projets", icon: FolderKanban },
+    { href: "/projects", label: "Instructions", icon: FolderKanban },
     { href: "/kanban", label: "Kanban", icon: FolderKanban },
     { href: "/calendar", label: "Calendrier", icon: Calendar },
     { href: "/contacts", label: "Contacts", icon: Users },

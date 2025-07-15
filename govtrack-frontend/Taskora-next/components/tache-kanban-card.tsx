@@ -121,7 +121,7 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
                   variant="outline"
                   className="text-xs font-medium text-gray-700 bg-gray-50"
                 >
-                  {tache.projet?.titre || 'Projet inconnu'}
+                  {tache.projet?.titre || 'Instruction inconnue'}
                 </Badge>
                 <Badge className={cn("text-xs font-medium border", TACHE_STATUT_COLORS[tache.statut])}>
                   {tache.niveau_execution}%

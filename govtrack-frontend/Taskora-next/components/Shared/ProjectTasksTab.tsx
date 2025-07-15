@@ -69,7 +69,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
         console.error('Erreur chargement tâches:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les tâches du projet",
+          description: "Impossible de charger les tâches de l'instruction",
           variant: "destructive",
         });
       } finally {
@@ -147,7 +147,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Tâches du projet</CardTitle>
+          <CardTitle>Tâches de l'instruction</CardTitle>
           <CardDescription>Gestion des tâches et sous-tâches</CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,7 +166,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Tâches du projet</CardTitle>
+              <CardTitle>Tâches de l'instruction</CardTitle>
               <CardDescription>
                 Gestion des tâches et sous-tâches
               </CardDescription>
@@ -180,7 +180,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Créer une nouvelle tâche pour ce projet</p>
+                  <p>Créer une nouvelle tâche pour cette instruction</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -370,7 +370,7 @@ export default function ProjectTasksTab({ project, onProjectUpdate }: ProjectTas
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <p className="text-gray-500 mb-2">Aucune tâche pour ce projet</p>
+              <p className="text-gray-500 mb-2">Aucune tâche pour cette instruction</p>
               <p className="text-sm text-gray-400">
                 Les tâches apparaîtront ici une fois qu'elles seront créées
               </p>

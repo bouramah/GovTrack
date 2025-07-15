@@ -146,7 +146,7 @@ export default function PermissionManager({
     if (permissionName.includes('permission')) return 'Permissions';
     if (permissionName.includes('entity') || permissionName.includes('entite')) return 'Entités';
     if (permissionName.includes('poste')) return 'Postes';
-    if (permissionName.includes('project') || permissionName.includes('projet')) return 'Projets';
+    if (permissionName.includes('project') || permissionName.includes('projet')) return 'Instructions';
     if (permissionName.includes('task') || permissionName.includes('tache')) return 'Tâches';
     if (permissionName.includes('type')) return 'Types';
     return 'Autres';

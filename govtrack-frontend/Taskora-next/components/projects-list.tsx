@@ -127,10 +127,10 @@ export default function ProjectsList({
       setPermissions(response.permissions || null);
       
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement des projets");
+      setError(err.message || "Erreur lors du chargement des instructions");
       toast({
         title: "Erreur",
-        description: err.message || "Impossible de charger les projets",
+        description: err.message || "Impossible de charger les instructions",
         variant: "destructive",
       });
     } finally {
@@ -194,8 +194,8 @@ export default function ProjectsList({
     try {
       // TODO: Implémenter l'archivage
       toast({
-        title: "Projet archivé",
-        description: "Le projet a été archivé avec succès",
+        title: "Instruction archivée",
+        description: "L'instruction a été archivée avec succès",
       });
 
       loadProjects(pagination.current_page);
@@ -203,7 +203,7 @@ export default function ProjectsList({
     } catch (err: any) {
       toast({
         title: "Erreur",
-        description: err.message || "Impossible d'archiver le projet",
+        description: err.message || "Impossible d'archiver l'instruction",
         variant: "destructive",
       });
     }
@@ -216,8 +216,8 @@ export default function ProjectsList({
   const handleProjectCreated = () => {
     loadProjects(1); // Recharger depuis la première page
     toast({
-      title: 'Projet créé',
-      description: 'Le projet a été créé avec succès.',
+      title: 'Instruction créée',
+      description: 'L\'instruction a été créée avec succès.',
       variant: 'success',
     });
   };
@@ -242,8 +242,8 @@ export default function ProjectsList({
     setEditModalOpen(false);
     setSelectedProjectForAction(null);
     toast({
-      title: 'Projet modifié',
-      description: 'Le projet a été modifié avec succès.',
+      title: 'Instruction modifiée',
+      description: 'L\'instruction a été modifiée avec succès.',
       variant: 'success',
     });
   };
@@ -253,8 +253,8 @@ export default function ProjectsList({
     setDeleteDialogOpen(false);
     setSelectedProjectForAction(null);
     toast({
-      title: 'Projet supprimé',
-      description: 'Le projet a été supprimé avec succès.',
+      title: 'Instruction supprimée',
+      description: 'L\'instruction a été supprimée avec succès.',
       variant: 'success',
     });
   };
@@ -334,22 +334,22 @@ export default function ProjectsList({
         className="mb-6"
       />
 
-      {/* Bouton nouveau projet */}
+      {/* Bouton nouvelle instruction */}
       <div className="flex justify-end mb-6">
         <Button
           onClick={() => setCreateModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau projet
+          Nouvelle instruction
         </Button>
       </div>
 
-      {/* Liste des projets */}
+      {/* Liste des instructions */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <span className="ml-2 text-gray-600">Chargement des projets...</span>
+          <span className="ml-2 text-gray-600">Chargement des instructions...</span>
         </div>
       ) : error ? (
         <div className="text-center py-12">
@@ -360,15 +360,15 @@ export default function ProjectsList({
       ) : filteredProjects.length === 0 ? (
         <div className="text-center py-12">
           <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Aucun projet trouvé</h3>
+          <h3 className="text-lg font-semibold mb-2">Aucune instruction trouvée</h3>
           <p className="text-gray-600 mb-4">
             {filters.search || filters.statut
-              ? "Aucun projet ne correspond à vos critères de recherche."
-              : "Aucun projet n'a encore été créé."}
+              ? "Aucune instruction ne correspond à vos critères de recherche."
+              : "Aucune instruction n'a encore été créée."}
           </p>
           <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Créer le premier projet
+            Créer la première instruction
           </Button>
         </div>
       ) : (

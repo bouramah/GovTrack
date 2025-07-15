@@ -168,7 +168,7 @@ export default function TypeProjetsPage() {
       setFormData({ nom: '', description: '', duree_previsionnelle_jours: 30, description_sla: '' });
       toast({
         title: "✅ Succès",
-        description: "Type de projet créé avec succès"
+        description: "Type d'instruction créé avec succès"
       });
     } catch (error: any) {
       console.error('Erreur création type projet:', error);
@@ -195,7 +195,7 @@ export default function TypeProjetsPage() {
       setFormData({ nom: '', description: '', duree_previsionnelle_jours: 30, description_sla: '' });
       toast({
         title: "✅ Succès",
-        description: "Type de projet modifié avec succès"
+        description: "Type d'instruction modifié avec succès"
       });
     } catch (error: any) {
       console.error('Erreur modification type projet:', error);
@@ -219,7 +219,7 @@ export default function TypeProjetsPage() {
       setTypeProjetToDelete(null);
       toast({
         title: "✅ Succès",
-        description: "Type de projet supprimé avec succès"
+        description: "Type d'instruction supprimé avec succès"
       });
     } catch (error: any) {
       console.error('Erreur suppression type projet:', error);
@@ -320,7 +320,7 @@ export default function TypeProjetsPage() {
             <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
             <CardTitle>Accès refusé</CardTitle>
             <CardDescription>
-              Vous n'avez pas la permission de voir les types de projets.
+              Vous n'avez pas la permission de voir les types d'instructions.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -333,12 +333,12 @@ export default function TypeProjetsPage() {
       <div className="bg-gray-50">
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
         <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
-          <Topbar name="Types de Projets" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Topbar name="Types d'Instructions" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           <main className="flex-1 overflow-y-auto p-3 lg:p-6">
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Chargement des types de projets...</p>
+                <p className="mt-4 text-gray-600">Chargement des types d'instructions...</p>
               </div>
             </div>
           </main>
@@ -351,20 +351,20 @@ export default function TypeProjetsPage() {
     <div className="bg-gray-50">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
-        <Topbar name="Types de Projets" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                  <Topbar name="Types d'Instructions" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="flex-1 overflow-y-auto p-3 lg:p-6">
           <div className="max-w-7xl mx-auto">
             {/* En-tête */}
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Types de Projets</h1>
-                <p className="text-gray-600">Gérer les catégories et types de projets du système</p>
+                <h1 className="text-3xl font-bold text-gray-900">Types d'Instructions</h1>
+                <p className="text-gray-600">Gérer les catégories et types d'instructions du système</p>
               </div>
               {permissions.canCreate && (
                 <TypeProjetCreateGuard>
                   <Button onClick={openCreateModal}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Nouveau Type
+                    Nouveau Type d'Instruction
                   </Button>
                 </TypeProjetCreateGuard>
               )}
@@ -391,7 +391,7 @@ export default function TypeProjetsPage() {
                   <div className="text-2xl font-bold">
                     {typeProjets.filter(tp => (tp.projets_count || 0) > 0).length}
                   </div>
-                  <p className="text-xs text-muted-foreground">avec projets</p>
+                  <p className="text-xs text-muted-foreground">avec instructions</p>
                 </CardContent>
               </Card>
               <Card>
@@ -436,7 +436,7 @@ export default function TypeProjetsPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Rechercher un type de projet..."
+                        placeholder="Rechercher un type d'instruction..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-9"
@@ -452,7 +452,7 @@ export default function TypeProjetsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FolderOpen className="h-5 w-5" />
-                  Types de Projets ({totalItems})
+                  Types d'Instructions ({totalItems})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -466,7 +466,7 @@ export default function TypeProjetsPage() {
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold text-lg">{typeProjet.nom}</h3>
                                 <Badge variant={(typeProjet.projets_count || 0) > 0 ? "default" : "secondary"}>
-                                  {typeProjet.projets_count || 0} projets
+                                  {typeProjet.projets_count || 0} instructions
                                 </Badge>
                                 <Badge variant="outline">
                                   {typeProjet.duree_formattee || `${typeProjet.duree_previsionnelle_jours} jours`}
@@ -543,7 +543,7 @@ export default function TypeProjetsPage() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FolderOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                    <p>Aucun type de projet trouvé</p>
+                    <p>Aucun type d'instruction trouvé</p>
                     {searchTerm && (
                       <p className="text-sm">Essayez de modifier vos critères de recherche</p>
                     )}
@@ -586,10 +586,10 @@ export default function TypeProjetsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
-                  Nouveau Type de Projet
+                  Nouveau Type d'Instruction
                 </DialogTitle>
                 <DialogDescription>
-                  Créer un nouveau type de projet avec ses caractéristiques
+                  Créer un nouveau type d'instruction avec ses caractéristiques
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateTypeProjet}>
@@ -629,7 +629,7 @@ export default function TypeProjetsPage() {
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Description détaillée du type de projet..."
+                      placeholder="Description détaillée du type d'instruction..."
                       rows={3}
                     />
                   </div>
@@ -674,10 +674,10 @@ export default function TypeProjetsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Edit className="h-5 w-5" />
-                  Modifier le Type de Projet
+                  Modifier le Type d'Instruction
                 </DialogTitle>
                 <DialogDescription>
-                  Modifier les informations du type de projet
+                  Modifier les informations du type d'instruction
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleUpdateTypeProjet}>
@@ -717,7 +717,7 @@ export default function TypeProjetsPage() {
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      placeholder="Description détaillée du type de projet..."
+                      placeholder="Description détaillée du type d'instruction..."
                       rows={3}
                     />
                   </div>
@@ -762,7 +762,7 @@ export default function TypeProjetsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Eye className="h-5 w-5" />
-                  Détails du Type de Projet : {selectedTypeProjet?.nom}
+                  Détails du Type d'Instruction : {selectedTypeProjet?.nom}
                 </DialogTitle>
               </DialogHeader>
               {selectedTypeProjet && (
@@ -814,10 +814,10 @@ export default function TypeProjetsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Statistiques : {selectedTypeProjetStatistiques?.type_projet?.nom}
+                  Statistiques du Type d'Instruction
                 </DialogTitle>
                 <DialogDescription>
-                  Statistiques détaillées des projets de ce type
+                  Statistiques détaillées des instructions de ce type
                 </DialogDescription>
               </DialogHeader>
               {selectedTypeProjetStatistiques && (
@@ -827,7 +827,7 @@ export default function TypeProjetsPage() {
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold">{selectedTypeProjetStatistiques.statistiques.total_projets}</div>
-                        <p className="text-xs text-muted-foreground">Total projets</p>
+                        <p className="text-xs text-muted-foreground">Total instructions</p>
                       </CardContent>
                     </Card>
                     <Card>
@@ -839,7 +839,7 @@ export default function TypeProjetsPage() {
                     <Card>
                       <CardContent className="pt-4">
                         <div className="text-2xl font-bold text-red-600">{selectedTypeProjetStatistiques.statistiques.projets_en_retard}</div>
-                        <p className="text-xs text-muted-foreground">Projets en retard</p>
+                        <p className="text-xs text-muted-foreground">Instructions en retard</p>
                       </CardContent>
                     </Card>
                     <Card>
@@ -847,7 +847,7 @@ export default function TypeProjetsPage() {
                         <div className="text-2xl font-bold text-green-600">
                           {selectedTypeProjetStatistiques.statistiques.total_projets - selectedTypeProjetStatistiques.statistiques.projets_en_retard}
                         </div>
-                        <p className="text-xs text-muted-foreground">Projets à jour</p>
+                        <p className="text-xs text-muted-foreground">Instructions à jour</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -880,14 +880,14 @@ export default function TypeProjetsPage() {
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer le type de projet</AlertDialogTitle>
+                <AlertDialogTitle>Supprimer le type d'instruction</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Êtes-vous sûr de vouloir supprimer le type de projet "{typeProjetToDelete?.nom}" ?
+                  Êtes-vous sûr de vouloir supprimer le type d'instruction "{typeProjetToDelete?.nom}" ?
                   {typeProjetToDelete?.projets_count && typeProjetToDelete.projets_count > 0 && (
                     <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded">
                       <p className="text-orange-800 text-sm">
-                        ⚠️ Attention : Ce type de projet est associé à {typeProjetToDelete.projets_count} projet(s). 
-                        La suppression n'est possible que s'il n'y a aucun projet associé.
+                        ⚠️ Attention : Ce type d'instruction est associé à {typeProjetToDelete.projets_count} instruction(s). 
+                        La suppression n'est possible que s'il n'y a aucune instruction associée.
                       </p>
                     </div>
                   )}

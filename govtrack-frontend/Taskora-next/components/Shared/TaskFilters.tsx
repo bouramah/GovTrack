@@ -218,15 +218,15 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
             />
           </div>
 
-          {/* Projet */}
+          {/* Instruction */}
           <div className="space-y-2">
-            <Label htmlFor="projet">Projet</Label>
+            <Label htmlFor="projet">Instruction</Label>
             <SearchableSelect
               options={projectOptions}
               value={filters.projet_id?.toString() || 'all'}
               onValueChange={(value) => updateFilter('projet_id', value === 'all' ? undefined : parseInt(value))}
               placeholder="Tous les projets"
-              searchPlaceholder="Rechercher un projet..."
+              searchPlaceholder="Rechercher une instruction..."
               disabled={loadingProjects}
             />
           </div>
@@ -336,7 +336,7 @@ export default function TaskFilters({ filters, onFiltersChange, onReset }: TaskF
               )}
               {filters.projet_id && (
                 <Badge variant="outline" className="text-xs">
-                  Projet: {projects.find(p => p.id === filters.projet_id)?.titre || 'ID: ' + filters.projet_id}
+                  Instruction: {projects.find(p => p.id === filters.projet_id)?.titre || 'ID: ' + filters.projet_id}
                 </Badge>
               )}
               {filters.responsable_id && (

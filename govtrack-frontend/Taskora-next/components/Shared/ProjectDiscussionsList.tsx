@@ -396,7 +396,7 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
         <CardHeader>
           <CardTitle>Discussions ({discussions.length})</CardTitle>
           <CardDescription>
-            Messages et réponses sur ce projet
+            Messages et réponses sur cette instruction
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -590,7 +590,7 @@ export default function ProjectDiscussionsList({ projectId, onRefresh }: Project
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <p className="text-gray-500 mb-2">Aucune discussion pour ce projet</p>
+              <p className="text-gray-500 mb-2">Aucune discussion pour cette instruction</p>
               <p className="text-sm text-gray-400">
                 Commencez la conversation en publiant le premier message
               </p>

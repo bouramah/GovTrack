@@ -136,10 +136,10 @@ export default function ToutesTachesPage() {
               />
             )}
             {viewMode === "kanban" && (
-              <ToutesTachesKanban 
-                filters={filters}
-                userRole="admin"
-              />
+            <ToutesTachesKanban 
+              filters={filters}
+              userRole="admin"
+            />
             )}
           </div>
         </main>

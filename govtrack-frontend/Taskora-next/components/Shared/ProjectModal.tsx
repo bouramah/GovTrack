@@ -127,7 +127,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
     if (!formData.type_projet_id) {
       toast({
         title: "Erreur",
-        description: 'Le type de projet est obligatoire',
+        description: 'Le type d\'instruction est obligatoire',
         variant: "destructive",
       });
       return;
@@ -165,14 +165,14 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
         await apiClient.updateProject(project.id, formData as ProjectUpdateRequest);
         toast({
           title: "Succès",
-          description: 'Projet mis à jour avec succès',
+          description: 'Instruction mise à jour avec succès',
         });
       } else {
         // Création
         await apiClient.createProject(formData);
         toast({
           title: "Succès",
-          description: 'Projet créé avec succès',
+          description: 'Instruction créée avec succès',
         });
       }
 
@@ -264,7 +264,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? 'Modifier le projet' : 'Créer un nouveau projet'}
+            {isEditing ? 'Modifier l\'instruction' : 'Créer une nouvelle instruction'}
           </DialogTitle>
         </DialogHeader>
 
@@ -299,7 +299,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
               id="titre"
               value={formData.titre}
               onChange={(e) => handleInputChange('titre', e.target.value)}
-              placeholder="Titre du projet"
+              placeholder="Titre de l'instruction"
               required
               className={serverErrors.titre ? "border-red-500 focus:border-red-500" : ""}
             />
@@ -315,7 +315,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Description détaillée du projet"
+              placeholder="Description détaillée de l'instruction"
               rows={4}
               required
               className={serverErrors.description ? "border-red-500 focus:border-red-500" : ""}
@@ -327,14 +327,14 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
 
           {/* Type de projet */}
           <div className="space-y-2">
-            <Label htmlFor="type_projet">Type de projet *</Label>
+            <Label htmlFor="type_projet">Type d'instruction *</Label>
             <SearchableSelect
               options={typeProjetOptions}
               value={formData.type_projet_id ? formData.type_projet_id.toString() : undefined}
               onValueChange={(value) => handleInputChange('type_projet_id', parseInt(value))}
-              placeholder="Sélectionner un type de projet..."
-              searchPlaceholder="Rechercher un type de projet..."
-              emptyMessage="Aucun type de projet trouvé."
+              placeholder="Sélectionner un type d'instruction..."
+              searchPlaceholder="Rechercher un type d'instruction..."
+              emptyMessage="Aucun type d'instruction trouvé."
               className={serverErrors.type_projet_id ? "border-red-500 focus:border-red-500" : ""}
             />
             {serverErrors.type_projet_id && (

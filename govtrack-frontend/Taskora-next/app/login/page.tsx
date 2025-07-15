@@ -64,7 +64,7 @@ export default function LoginPage() {
       email: "admin@govtrack.gov",
       password: "password",
       role: "Administrateur",
-      description: "Accès complet à tous les projets et fonctionnalités administratives",
+      description: "Accès complet à toutes les instructions et fonctionnalités administratives",
       matricule: "ADM001",
       permissions: "view_all_projects, manage_users, manage_entities"
     },

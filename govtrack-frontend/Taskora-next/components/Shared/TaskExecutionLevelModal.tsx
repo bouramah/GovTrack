@@ -133,7 +133,7 @@ export default function TaskExecutionLevelModal({
           <div className="bg-gray-50 p-3 rounded-lg">
             <h4 className="font-medium text-gray-900 mb-1">{task.titre}</h4>
             <p className="text-sm text-gray-600">
-              Projet : {task.projet?.titre || 'Projet inconnu'}
+              Instruction : {task.projet?.titre || 'Instruction inconnue'}
             </p>
             <p className="text-sm text-gray-600">
               Niveau actuel : <span className="font-medium">{task.niveau_execution}%</span>

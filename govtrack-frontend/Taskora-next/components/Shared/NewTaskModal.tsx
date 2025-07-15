@@ -173,7 +173,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     if (!formData.projet_id) {
       toast({
         title: "Erreur",
-        description: "Le projet est obligatoire",
+        description: "L'instruction est obligatoire",
         variant: "destructive",
       });
       return;
@@ -322,17 +322,17 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
           {/* Projet - caché en mode project-detail */}
           {context !== 'project-detail' && (
             <div className="space-y-2">
-              <Label htmlFor="projet">Projet *</Label>
+              <Label htmlFor="projet">Instruction *</Label>
               <SearchableSelect
                 options={projectOptions}
                 value={formData.projet_id}
                 onValueChange={(value) => handleInputChange('projet_id', value)}
-                placeholder="Sélectionner un projet"
-                searchPlaceholder="Rechercher un projet..."
+                placeholder="Sélectionner une instruction"
+                searchPlaceholder="Rechercher une instruction..."
                 disabled={loadingProjects}
               />
               {serverErrors.projet_id && (
-                <p className="text-sm text-red-600">{serverErrors.projet_id[0]}</p>
+                <p className="text-sm text-red-600">{serverErrors.projet_id[0].replace('projet', 'instruction')}</p>
               )}
             </div>
           )}

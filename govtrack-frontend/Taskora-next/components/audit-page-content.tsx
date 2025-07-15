@@ -255,14 +255,14 @@ export default function AuditPageContent() {
       roles: "Rôles",
       permissions: "Permissions",
       type_entites: "Types d'entités",
-      type_projets: "Types de projets",
-      projets: "Projets",
+      type_projets: "Types d'instructions",
+      projets: "Instructions",
       taches: "Tâches",
-      discussion_projets: "Discussions projets",
+      discussion_projets: "Discussions instructions",
       discussion_taches: "Discussions tâches",
-      piece_jointe_projets: "Pièces jointes projets",
+      piece_jointe_projets: "Pièces jointes instructions",
       piece_jointe_taches: "Pièces jointes tâches",
-      projet_historique_statuts: "Historique statuts projets",
+      projet_historique_statuts: "Historique statuts instructions",
       tache_historique_statuts: "Historique statuts tâches",
       entite_chef_histories: "Historique chefs entités",
       utilisateur_entite_histories: "Historique affectations",
@@ -346,7 +346,7 @@ export default function AuditPageContent() {
                       <SelectItem value="all">Toutes les tables</SelectItem>
                       <SelectItem value="users">Utilisateurs</SelectItem>
                       <SelectItem value="entites">Entités</SelectItem>
-                      <SelectItem value="projets">Projets</SelectItem>
+                      <SelectItem value="projets">Instructions</SelectItem>
                       <SelectItem value="taches">Tâches</SelectItem>
                       <SelectItem value="roles">Rôles</SelectItem>
                       <SelectItem value="permissions">Permissions</SelectItem>

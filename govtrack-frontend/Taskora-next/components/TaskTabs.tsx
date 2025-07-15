@@ -94,7 +94,7 @@ export default function TaskTabs({ taskId, task }: TaskTabsProps) {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Projet</p>
+                  <p className="text-sm text-gray-500">Instruction</p>
                   <p className="font-medium">{task?.projet?.titre}</p>
                 </div>
                 <div>

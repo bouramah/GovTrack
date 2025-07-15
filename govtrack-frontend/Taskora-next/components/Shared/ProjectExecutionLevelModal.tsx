@@ -183,7 +183,7 @@ export default function ProjectExecutionLevelModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informations du projet */}
+          {/* Informations de l'instruction */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 mb-2">{project.titre}</h3>
             <div className="text-sm text-gray-600 space-y-1">
@@ -210,7 +210,7 @@ export default function ProjectExecutionLevelModal({
                 </h3>
                 {executionInfo.mode === 'automatique' ? (
                   <div className="text-sm text-blue-800">
-                    <p>Le niveau d'exécution est calculé automatiquement basé sur les tâches du projet.</p>
+                    <p>Le niveau d'exécution est calculé automatiquement basé sur les tâches de l'instruction.</p>
                     <p className="mt-1">
                       <span className="font-medium">Nombre de tâches :</span> {executionInfo.nombre_taches}
                       {executionInfo.niveau_moyen_taches !== null && (
@@ -220,14 +220,14 @@ export default function ProjectExecutionLevelModal({
                       )}
                     </p>
                     <p className="text-xs text-blue-700 mt-2">
-                      Pour modifier manuellement le niveau, supprimez toutes les tâches du projet.
+                      Pour modifier manuellement le niveau, supprimez toutes les tâches de l'instruction.
                     </p>
                   </div>
                 ) : (
                   <div className="text-sm text-green-800">
                     <p>Le niveau d'exécution peut être modifié manuellement.</p>
                     <p className="text-xs text-green-700 mt-1">
-                      Aucune tâche associée à ce projet.
+                      Aucune tâche associée à cette instruction.
                     </p>
                   </div>
                 )}
@@ -246,10 +246,10 @@ export default function ProjectExecutionLevelModal({
                   </h3>
                   <div className="text-sm text-red-700 mt-1 space-y-1">
                     {!isProjectEnCours && (
-                      <p>Le niveau d'exécution ne peut être modifié que lorsque le projet est en cours.</p>
+                      <p>Le niveau d'exécution ne peut être modifié que lorsque l'instruction est en cours.</p>
                     )}
                     {!executionInfo.peut_modifier && executionInfo.mode === 'automatique' && (
-                      <p>Le niveau d'exécution est calculé automatiquement basé sur les tâches du projet.</p>
+                      <p>Le niveau d'exécution est calculé automatiquement basé sur les tâches de l'instruction.</p>
                     )}
                   </div>
                 </div>

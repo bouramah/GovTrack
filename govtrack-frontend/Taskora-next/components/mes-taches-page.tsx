@@ -96,7 +96,7 @@ export default function MesTachesPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Barre de filtres */}
           <div className="px-4 sm:px-6 lg:px-8 py-3 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row gap-3">

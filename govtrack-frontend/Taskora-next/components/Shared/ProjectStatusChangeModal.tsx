@@ -18,11 +18,11 @@ interface ProjectStatusChangeModalProps {
 }
 
 const PROJECT_STATUSES = [
-  { value: 'a_faire', label: 'À faire', description: 'Projet en attente de démarrage' },
-  { value: 'en_cours', label: 'En cours', description: 'Projet en cours d\'exécution' },
-  { value: 'bloque', label: 'Bloqué', description: 'Projet temporairement bloqué' },
+  { value: 'a_faire', label: 'À faire', description: 'Instruction en attente de démarrage' },
+  { value: 'en_cours', label: 'En cours', description: 'Instruction en cours d\'exécution' },
+  { value: 'bloque', label: 'Bloqué', description: 'Instruction temporairement bloquée' },
   { value: 'demande_de_cloture', label: 'Demande de clôture', description: 'Demande de clôture en attente de validation' },
-  { value: 'termine', label: 'Terminé', description: 'Projet terminé avec succès' }
+  { value: 'termine', label: 'Terminé', description: 'Instruction terminée avec succès' }
 ];
 
 export default function ProjectStatusChangeModal({ 
@@ -36,7 +36,7 @@ export default function ProjectStatusChangeModal({
   const [commentaire, setCommentaire] = useState('');
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
 
-  // Initialiser le statut quand le projet change
+  // Initialiser le statut quand l'instruction change
   React.useEffect(() => {
     if (project) {
       setNouveauStatut(project.statut);
@@ -77,7 +77,7 @@ export default function ProjectStatusChangeModal({
       const response = await apiClient.changeProjectStatut(project.id, data);
       
       if (response.success) {
-        toast.success(response.message || 'Statut du projet modifié avec succès');
+        toast.success(response.message || 'Statut de l\'instruction modifié avec succès');
         onSuccess();
         onClose();
       } else {
@@ -146,12 +146,12 @@ export default function ProjectStatusChangeModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-blue-500" />
-            Changer le statut du projet
+            Changer le statut de l'instruction
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informations du projet */}
+          {/* Informations de l'instruction */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-semibold text-gray-900 mb-2">{project.titre}</h3>
             <div className="text-sm text-gray-600 space-y-1">
@@ -221,7 +221,7 @@ export default function ProjectStatusChangeModal({
           {isSameStatus && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
-                <span className="font-medium">Note :</span> Le projet a déjà ce statut. Un commentaire est obligatoire pour mettre à jour.
+                <span className="font-medium">Note :</span> L'instruction a déjà ce statut. Un commentaire est obligatoire pour mettre à jour.
               </p>
             </div>
           )}
@@ -233,7 +233,7 @@ export default function ProjectStatusChangeModal({
                 <FileText className="h-4 w-4 text-orange-400 mt-0.5" />
                 <div className="ml-2">
                   <p className="text-sm text-orange-800">
-                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour {nouveauStatut === 'demande_de_cloture' ? 'demander la clôture' : 'terminer le projet'}.
+                    <span className="font-medium">Important :</span> Un justificatif (pièce jointe marquée comme justificatif) est obligatoire pour {nouveauStatut === 'demande_de_cloture' ? 'demander la clôture' : 'terminer l\'instruction'}.
                   </p>
                   {!hasJustificatifs && (
                     <p className="text-sm text-red-600 mt-1">

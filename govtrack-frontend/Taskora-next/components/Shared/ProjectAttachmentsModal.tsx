@@ -57,7 +57,7 @@ export default function ProjectAttachmentsModal({
             </Button>
           </DialogTitle>
           <DialogDescription>
-            Gérez les fichiers attachés à ce projet
+            Gérez les fichiers attachés à cette instruction
           </DialogDescription>
         </DialogHeader>
 

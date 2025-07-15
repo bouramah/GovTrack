@@ -236,7 +236,7 @@ export default function ToutesTachesGrid({ filters }: ToutesTachesGridProps) {
                       {tache.titre}
                     </CardTitle>
                     <CardDescription className="text-xs text-gray-500 mt-1">
-                      {tache.projet?.titre}
+                      {tache.instruction?.titre}
                     </CardDescription>
                   </div>
                   

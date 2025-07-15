@@ -231,7 +231,7 @@ export default function ToutesTachesList({ filters }: ToutesTachesListProps) {
                 <TableHead>Progression</TableHead>
                 <TableHead>Date limite</TableHead>
                 <TableHead>Assigné à</TableHead>
-                <TableHead>Projet</TableHead>
+                <TableHead>Instruction</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>

@@ -74,13 +74,13 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
         const projectData = await apiClient.getProject(parseInt(id));
         setProject(projectData);
       } catch (err: any) {
-        setError(err.message || "Erreur lors du chargement du projet");
+        setError(err.message || "Erreur lors du chargement de l'instruction");
         toast({
           title: "Erreur",
-          description: err.message || "Impossible de charger le projet",
+          description: err.message || "Impossible de charger l'instruction",
           variant: "destructive",
         });
-        // Rediriger vers la liste des projets après un délai
+        // Rediriger vers la liste des instructions après un délai
         setTimeout(() => {
         router.push("/projects");
         }, 3000);
@@ -99,7 +99,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-600" />
-          <p className="mt-4 text-gray-600">Chargement des détails du projet...</p>
+          <p className="mt-4 text-gray-600">Chargement des détails de l'instruction...</p>
         </div>
       </div>
     );
@@ -113,7 +113,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
           <h3 className="text-lg font-semibold mb-2">Erreur de chargement</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <Button onClick={() => router.push("/projects")}>
-            Retour aux projets
+            Retour aux instructions
           </Button>
         </div>
       </div>
@@ -177,7 +177,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
       .toUpperCase();
   };
 
-  // Fonction pour recharger le projet après modification
+  // Fonction pour recharger l'instruction après modification
   const handleProjectUpdate = async () => {
     try {
       const projectData = await apiClient.getProject(parseInt(id));
@@ -185,7 +185,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
     } catch (err: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de recharger le projet",
+        description: "Impossible de recharger l'instruction",
         variant: "destructive",
       });
     }
@@ -235,11 +235,11 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                       onClick={() => router.push("/projects")}
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
-                      Retour aux projets
+                      Retour aux instructions
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Retourner à la liste des projets</p>
+                    <p>Retourner à la liste des instructions</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -254,11 +254,11 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                       onClick={() => setEditModalOpen(true)}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Modifier le projet
+                      Modifier l'instruction
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Modifier les informations du projet</p>
+                    <p>Modifier les informations de l'instruction</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -274,7 +274,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Modifier le statut du projet</p>
+                    <p>Modifier le statut de l'instruction</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -290,7 +290,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Gérer les pièces jointes du projet</p>
+                    <p>Gérer les pièces jointes de l'instruction</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -307,7 +307,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Supprimer définitivement le projet</p>
+                    <p>Supprimer définitivement l'instruction</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -407,7 +407,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Modifier le niveau d'exécution du projet</p>
+                      <p>Modifier le niveau d'exécution de l'instruction</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -482,7 +482,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                   {/* Project Details */}
               <Card>
                 <CardHeader>
-                      <CardTitle>Détails du projet</CardTitle>
+                      <CardTitle>Détails de l'instruction</CardTitle>
                 </CardHeader>
                     <CardContent className="space-y-4">
                     <div>
@@ -520,7 +520,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                   {/* Project Timeline */}
                 <Card>
                   <CardHeader>
-                      <CardTitle>Timeline du projet</CardTitle>
+                      <CardTitle>Timeline de l'instruction</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -587,9 +587,9 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Pièces jointes du projet</CardTitle>
+                        <CardTitle>Pièces jointes de l'instruction</CardTitle>
                       <CardDescription>
-                          Fichiers et documents attachés au projet
+                          Fichiers et documents attachés à l'instruction
                       </CardDescription>
                     </div>
                       <TooltipProvider>
@@ -621,7 +621,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                 <CardHeader>
                     <CardTitle>Historique des statuts</CardTitle>
                       <CardDescription>
-                      Évolution du statut du projet
+                      Évolution du statut de l'instruction
                       </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -682,7 +682,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
             <TabsContent value="analytics">
               <Card>
                 <CardHeader>
-                    <CardTitle>Analyses du projet</CardTitle>
+                    <CardTitle>Analyses de l'instruction</CardTitle>
                   <CardDescription>
                       Métriques de performance et insights
                   </CardDescription>
@@ -714,12 +714,12 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                                 <AlertTriangle className="h-5 w-5 text-red-500 mr-2 cursor-help" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Le projet a dépassé sa date d'échéance</p>
+                                <p>L'instruction a dépassé sa date d'échéance</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                           <div>
-                            <div className="font-medium text-red-900">Projet en retard</div>
+                            <div className="font-medium text-red-900">Instruction en retard</div>
                             <div className="text-sm text-red-700">
                               L'échéance prévisionnelle a été dépassée
                             </div>

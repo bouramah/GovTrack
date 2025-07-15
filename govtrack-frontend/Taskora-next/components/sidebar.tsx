@@ -180,7 +180,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
               </NavItem>
               {permissions.canViewProjectsList() && (
                 <NavItem href="/projects" icon={FolderKanban}>
-                  Projets
+                  Instructions
                 </NavItem>
               )}
               {permissions.canViewMyTasks() && (
@@ -225,7 +225,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 )}
                 {permissions.canViewTypeProjetsList() && (
                   <NavItem href="/type-projets" icon={FolderOpen}>
-                    Types de Projets
+                    Types d'Instructions
                   </NavItem>
                 )}
                 {permissions.canViewTypeTachesList() && (
@@ -256,7 +256,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
             {/* <div className="mb-6">
               <div className="flex items-center justify-between px-3 mb-2">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Projets Récents
+                  Instructions Récentes
                 </h3>
               </div>
               <div

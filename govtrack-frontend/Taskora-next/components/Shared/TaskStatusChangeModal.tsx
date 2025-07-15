@@ -201,7 +201,7 @@ export default function TaskStatusChangeModal({
             <div className="text-sm text-gray-600 space-y-1">
               <p><span className="font-medium">Statut actuel :</span> {task.statut_libelle}</p>
               <p><span className="font-medium">Niveau d'exécution :</span> {task.niveau_execution}%</p>
-              <p><span className="font-medium">Projet :</span> {task.projet?.titre || 'Projet inconnu'}</p>
+              <p><span className="font-medium">Instruction :</span> {task.projet?.titre || 'Instruction inconnue'}</p>
             </div>
           </div>
 

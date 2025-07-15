@@ -374,7 +374,7 @@ export default function DashboardFilters({
                   value={filters.type_projet_id?.toString() || "all"}
                   onValueChange={(value) => updateFilter('type_projet_id', value === "all" ? null : parseInt(value))}
                   placeholder="Tous les types"
-                  searchPlaceholder="Rechercher un type de projet..."
+                  searchPlaceholder="Rechercher un type d'instruction..."
                 />
               </div>
 
@@ -387,7 +387,7 @@ export default function DashboardFilters({
                     checked={filters.en_retard || false}
                     onCheckedChange={(checked) => updateFilter('en_retard', checked)}
                   />
-                  <Label htmlFor="en_retard" className="text-sm">Projets en retard uniquement</Label>
+                  <Label htmlFor="en_retard" className="text-sm">Instructions en retard uniquement</Label>
                 </div>
               </div>
             </div>
