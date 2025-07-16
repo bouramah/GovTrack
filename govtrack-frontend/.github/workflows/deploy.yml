@@ -1,4 +1,4 @@
-name: Déploiement Frontend (Next.js)
+name: Déployer le Frontend sur le VPS
 
 on:
   push:
@@ -7,20 +7,29 @@ on:
 
 jobs:
   deploy:
-    name: Déploiement GovTrack Frontend
+    name: Déploiement du frontend Next.js
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🔑 Ajouter la clé SSH
+      - name: 📥 Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configuration de la connexion SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-      - name: 🚀 Déploiement sur le VPS
+      - name: 🚀 Déploiement via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             echo "📁 Aller dans le dossier frontend..."
             cd /var/www/govtrack-frontend
+
+            echo "🔧 Chargement de NVM et sélection de Node.js 22..."
+            export NVM_DIR="/root/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+            nvm use 22
 
             echo "📥 Récupération des dernières modifications..."
             git pull origin main
