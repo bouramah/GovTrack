@@ -28,3 +28,24 @@ jobs:
             php artisan route:cache
             php artisan view:cache
             sudo systemctl restart laravel-worker
+      - name: 📬 Envoi d'un email après déploiement
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ GovTrack Backend déployé avec succès sur le VPS !"
+          body: |
+            Bonjour Boss,
+
+            Le déploiement de l'application Laravel GovTrack Backend est terminé avec succès !
+
+            🎯 Serveur : ${{ secrets.VPS_HOST }}
+            📁 Dossier : /var/www/html/govtrack-backend
+            📦 Date : ${{ github.event.head_commit.timestamp }}
+
+            Merci et bonne journée !
+          to: ${{ secrets.EMAIL_TO }}
+          from: GovTrack Backend CI/CD <${{ secrets.EMAIL_FROM }}>
+          secure: true
