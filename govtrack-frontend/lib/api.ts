@@ -618,7 +618,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: DEV__API_BASE_URL,
+      baseURL: API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
