@@ -14,6 +14,7 @@ import {
   MessageSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import MinistryLogo from "./Shared/MinistryLogo"
 
 export function MainSidebar() {
   const pathname = usePathname()
@@ -34,7 +35,7 @@ export function MainSidebar() {
     <div className="w-64 border-r bg-background h-screen">
       <div className="h-14 flex items-center px-4 border-b">
         <Link href="/" className="flex items-center gap-2">
-          <Home className="h-6 w-6" />
+          <MinistryLogo size="sm" showText={false} />
           <span className="font-bold text-xl">GovTrack</span>
         </Link>
       </div>

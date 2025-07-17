@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import NewProjectModal from "./NewProjectModal";
+import MinistryLogo from "./MinistryLogo";
 import Link from "next/link";
 
 type topbarPropsT = {
@@ -75,7 +76,7 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm fixed w-full lg:w-[calc(100%-16rem)] top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Left: Menu Button (mobile) and Date/Greeting */}
+        {/* Left: Menu Button (mobile), Logo and Date/Greeting */}
         <div className="flex items-center">
           <Button
             variant="ghost"
@@ -86,6 +87,12 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
             <Menu className="h-10 w-10" />
             <span className="sr-only">Toggle menu</span>
           </Button>
+          
+          {/* Logo du Ministère */}
+          <div className="mr-6">
+            <MinistryLogo size="sm" showText={true} />
+          </div>
+          
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{name}</h2>
             {user && (

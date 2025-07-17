@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import MinistryLogo from '@/components/Shared/MinistryLogo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -94,16 +95,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-7xl grid lg:grid-cols-2 gap-8">
         {/* Formulaire de connexion */}
         <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md shadow-lg border-0">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">GovTrack</CardTitle>
-              <CardDescription className="text-center">
-                Système de Gestion d'Instructions Gouvernementales
-              </CardDescription>
+              <div className="flex justify-center mb-6">
+                <MinistryLogo size="lg" showText={true} />
+              </div>
+              <div className="border-t border-gray-200 pt-6">
+                <CardTitle className="text-2xl font-bold text-center text-gray-900">GovTrack</CardTitle>
+                <CardDescription className="text-center text-gray-600 mt-2">
+                  Système de Gestion d'Instructions Gouvernementales
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">

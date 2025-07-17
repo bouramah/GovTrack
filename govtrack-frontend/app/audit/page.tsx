@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
+import Topbar from "@/components/Shared/Topbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/use-permissions";
 import { redirect } from "next/navigation";
@@ -38,20 +39,15 @@ export default function AuditPage() {
 
       {/* Main Content */}
       <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col pt-16">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 lg:px-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Audit et Traçabilité</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Consultez l'historique complet des actions de suppression dans l'application
-              </p>
-            </div>
-          </div>
-        </header>
+        <Topbar name="Audit et Traçabilité" sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto min-h-0 bg-gray-50">
+        <main className="flex-1 overflow-y-auto min-h-0 bg-gray-50 p-3 lg:p-6">
+          <div className="mb-6">
+            <p className="text-sm text-gray-600">
+              Consultez l'historique complet des actions de suppression dans l'application
+            </p>
+          </div>
           <AuditPageContent />
         </main>
       </div>

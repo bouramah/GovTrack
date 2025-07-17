@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import MinistryLogo from '@/components/Shared/MinistryLogo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -40,10 +41,15 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader>
-          <CardTitle className="text-center text-2xl">Mot de passe oublié</CardTitle>
+          <div className="flex justify-center mb-6">
+            <MinistryLogo size="md" showText={true} />
+          </div>
+          <div className="border-t border-gray-200 pt-6">
+            <CardTitle className="text-center text-2xl text-gray-900">Mot de passe oublié</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

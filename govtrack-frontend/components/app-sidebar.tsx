@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import MinistryLogo from "./Shared/MinistryLogo"
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false)
@@ -81,7 +82,7 @@ export function AppSidebar() {
     >
       <div className="flex h-14 items-center px-4 border-b">
         <Link href="/" className="flex items-center gap-2">
-          <Home className="h-6 w-6" />
+          <MinistryLogo size="sm" showText={false} />
           {!collapsed && <span className="font-bold text-xl">GovTrack</span>}
         </Link>
         <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setCollapsed(!collapsed)}>
