@@ -359,14 +359,14 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
             )}
           </div>
 
-          {/* Donneur d'ordre */}
+          {/* Ordonnateur de l'instruction */}
           <div className="space-y-2">
-            <Label htmlFor="donneur_ordre">Donneur d'ordre *</Label>
+            <Label htmlFor="donneur_ordre">Ordonnateur de l'instruction *</Label>
             <SearchableSelect
               options={userOptions}
               value={formData.donneur_ordre_id ? formData.donneur_ordre_id.toString() : undefined}
               onValueChange={(value) => handleInputChange('donneur_ordre_id', parseInt(value))}
-              placeholder="Sélectionner le donneur d'ordre..."
+              placeholder="Sélectionner le Ordonnateur de l'instruction..."
               searchPlaceholder="Rechercher un utilisateur..."
               emptyMessage="Aucun utilisateur trouvé."
               className={serverErrors.donneur_ordre_id ? "border-red-500 focus:border-red-500" : ""}

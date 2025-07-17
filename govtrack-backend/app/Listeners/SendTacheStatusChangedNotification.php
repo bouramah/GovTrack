@@ -45,7 +45,7 @@ class SendTacheStatusChangedNotification implements ShouldQueue
             $recipients->push($tache->responsable);
         }
 
-        // 3. Donneur d'ordre du projet (si différent de celui qui change)
+        // 3. Ordonnateur de l'instruction du projet (si différent de celui qui change)
         if ($tache->projet->donneurOrdre && $tache->projet->donneurOrdre->id !== $changer->id) {
             $recipients->push($tache->projet->donneurOrdre);
         }

@@ -154,7 +154,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Projets dont l'utilisateur est donneur d'ordre
+     * Projets dont l'utilisateur est Ordonnateur de l'instruction
      */
     public function projetsDonnes(): HasMany
     {
@@ -210,7 +210,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Obtenir tous les projets où l'utilisateur est impliqué (porteur, donneur d'ordre ou tâches)
+     * Obtenir tous les projets où l'utilisateur est impliqué (porteur, Ordonnateur de l'instruction ou tâches)
      */
     public function projetsImpliques()
     {
@@ -245,7 +245,7 @@ class User extends Authenticatable
             $userIds->push($projet->porteur_id);
         }
 
-        // Donneur d'ordre
+        // Ordonnateur de l'instruction
         if ($projet->donneur_ordre_id) {
             $userIds->push($projet->donneur_ordre_id);
         }

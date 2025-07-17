@@ -148,7 +148,7 @@
                 </div>
 
                 <div class="info-row">
-                    <span class="info-label">Donneur d'ordre :</span>
+                    <span class="info-label">Ordonnateur de l'instruction :</span>
                     <span class="info-value">{{ $projet->donneurOrdre->prenom }} {{ $projet->donneurOrdre->nom }}</span>
                 </div>
 
@@ -186,7 +186,7 @@
                 </a>
             </div>
 
-            <p>Vous recevez cette notification car vous êtes impliqué dans ce projet (porteur, donneur d'ordre ou membre de l'équipe).</p>
+            <p>Vous recevez cette notification car vous êtes impliqué dans ce projet (porteur, Ordonnateur de l'instruction ou membre de l'équipe).</p>
         </div>
 
         <div class="footer">

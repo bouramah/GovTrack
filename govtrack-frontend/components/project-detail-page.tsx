@@ -436,7 +436,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-500 mb-1">Donneur d'ordre</div>
+              <div className="text-sm text-gray-500 mb-1">Ordonnateur de l'instruction</div>
               <div className="flex items-center">
                 <Avatar className="h-8 w-8 mr-2">
                   <AvatarFallback className="bg-green-100 text-green-700 text-xs">

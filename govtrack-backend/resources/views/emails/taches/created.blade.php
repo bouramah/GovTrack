@@ -184,7 +184,7 @@
             </div>
             @if($tache->projet->donneurOrdre)
                 <div class="info-row">
-                    <span class="info-label">Donneur d'ordre :</span>
+                    <span class="info-label">Ordonnateur de l'instruction :</span>
                     <span class="info-value">{{ $tache->projet->donneurOrdre->prenom }} {{ $tache->projet->donneurOrdre->nom }}</span>
                 </div>
             @endif

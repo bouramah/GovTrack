@@ -42,7 +42,7 @@ class SendTacheCreatedNotification implements ShouldQueue
             $recipients->push($tache->responsable);
         }
 
-        // 3. Donneur d'ordre du projet (si différent du créateur)
+        // 3. Ordonnateur de l'instruction du projet (si différent du créateur)
         if ($tache->projet->donneurOrdre && $tache->projet->donneurOrdre->id !== $creator->id) {
             $recipients->push($tache->projet->donneurOrdre);
         }

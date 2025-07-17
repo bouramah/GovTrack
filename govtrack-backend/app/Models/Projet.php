@@ -90,7 +90,7 @@ class Projet extends Model
     }
 
     /**
-     * Relation avec le donneur d'ordre
+     * Relation avec le Ordonnateur de l'instruction
      */
     public function donneurOrdre(): BelongsTo
     {
@@ -146,7 +146,7 @@ class Projet extends Model
     }
 
     /**
-     * Scope par donneur d'ordre
+     * Scope par Ordonnateur de l'instruction
      */
     public function scopeByDonneurOrdre($query, $userId)
     {

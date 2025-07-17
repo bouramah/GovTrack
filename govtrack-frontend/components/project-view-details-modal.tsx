@@ -89,14 +89,14 @@ export function ProjectViewDetailsModal({ project, open, onOpenChange }: Project
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-500 mb-1">Donneur d'ordre</div>
+            <div className="text-sm text-gray-500 mb-1">Ordonnateur de l'instruction</div>
             <div className="flex -space-x-2 mb-2">
               <Avatar className="h-8 w-8 border-2 border-white">
                 <AvatarImage src="/placeholder.svg" alt={`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`} />
                 <AvatarFallback>{getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}</AvatarFallback>
                 </Avatar>
             </div>
-            <div className="text-xs text-gray-500">Donneur d'ordre</div>
+            <div className="text-xs text-gray-500">Ordonnateur de l'instruction</div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">

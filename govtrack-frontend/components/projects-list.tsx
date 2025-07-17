@@ -599,7 +599,7 @@ function ProjectCard({
           <span className="font-medium">Type :</span> {project.type_projet.nom}
         </div>
 
-        {/* Porteur et Donneur d'ordre */}
+        {/* Porteur et Ordonnateur de l'instruction */}
         <div className="flex items-center justify-between">
           <div className="flex -space-x-2">
             <Avatar className="h-8 w-8 border-2 border-white">
@@ -614,7 +614,7 @@ function ProjectCard({
             </Avatar>
           </div>
           <span className="text-xs text-gray-500">
-            Porteur & Donneur d'ordre
+            Porteur & Ordonnateur de l'instruction
           </span>
         </div>
 

@@ -332,7 +332,7 @@ export default function ProjectsAdvancedFilters({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="donneur_ordre">Donneur d'ordre</Label>
+                      <Label htmlFor="donneur_ordre">Ordonnateur de l'instruction</Label>
                       <SearchableSelect
                         options={[
                           { value: "all", label: "Tous les donneurs d'ordre" },
@@ -346,7 +346,7 @@ export default function ProjectsAdvancedFilters({
                         value={filters.donneur_ordre_id?.toString() || "all"}
                         onValueChange={(value) => updateFilter('donneur_ordre_id', value === "all" ? null : parseInt(value))}
                         placeholder="Tous les donneurs d'ordre"
-                        searchPlaceholder="Rechercher un donneur d'ordre..."
+                        searchPlaceholder="Rechercher un Ordonnateur de l'instruction..."
                       />
                     </div>
                   </div>

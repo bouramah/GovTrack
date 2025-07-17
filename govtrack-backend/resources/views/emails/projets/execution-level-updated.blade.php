@@ -214,7 +214,7 @@
                     <span class="info-value">{{ $projet->porteur->prenom ?? 'Non défini' }} {{ $projet->porteur->nom ?? '' }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Donneur d'ordre :</span>
+                    <span class="info-label">Ordonnateur de l'instruction :</span>
                     <span class="info-value">{{ $projet->donneurOrdre->prenom ?? 'Non défini' }} {{ $projet->donneurOrdre->nom ?? '' }}</span>
                 </div>
                 <div class="info-row">

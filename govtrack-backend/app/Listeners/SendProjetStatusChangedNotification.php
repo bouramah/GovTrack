@@ -39,7 +39,7 @@ class SendProjetStatusChangedNotification implements ShouldQueue
             $recipients->push($projet->porteur);
         }
 
-        // 2. Donneur d'ordre
+        // 2. Ordonnateur de l'instruction
         if ($projet->donneurOrdre && $projet->donneurOrdre->id !== $changer->id) {
             $recipients->push($projet->donneurOrdre);
         }

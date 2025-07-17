@@ -294,7 +294,7 @@ export default function DashboardFilters({
           )}
           {filters.donneur_ordre_id && (
             <Badge variant="outline" className="flex items-center gap-1">
-              Donneur d'ordre: {users.find(u => u.id === filters.donneur_ordre_id)?.display_name}
+              Ordonnateur de l'instruction: {users.find(u => u.id === filters.donneur_ordre_id)?.display_name}
               <X 
                 className="h-3 w-3 cursor-pointer" 
                 onClick={() => clearFilter('donneur_ordre_id')}
@@ -422,7 +422,7 @@ export default function DashboardFilters({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="donneur_ordre">Donneur d'ordre</Label>
+                      <Label htmlFor="donneur_ordre">Ordonnateur de l'instruction</Label>
                       <SearchableSelect
                         options={[
                           { value: "all", label: "Tous les donneurs d'ordre" },
@@ -436,7 +436,7 @@ export default function DashboardFilters({
                         value={filters.donneur_ordre_id?.toString() || "all"}
                         onValueChange={(value) => updateFilter('donneur_ordre_id', value === "all" ? null : parseInt(value))}
                         placeholder="Tous les donneurs d'ordre"
-                        searchPlaceholder="Rechercher un donneur d'ordre..."
+                        searchPlaceholder="Rechercher un Ordonnateur de l'instruction..."
                       />
                     </div>
                   </div>

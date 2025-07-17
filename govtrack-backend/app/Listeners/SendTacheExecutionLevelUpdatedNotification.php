@@ -45,7 +45,7 @@ class SendTacheExecutionLevelUpdatedNotification implements ShouldQueue
             $recipients->push($tache->responsable);
         }
 
-        // 3. Donneur d'ordre du projet (si différent de celui qui met à jour)
+        // 3. Ordonnateur de l'instruction du projet (si différent de celui qui met à jour)
         if ($tache->projet->donneurOrdre && $tache->projet->donneurOrdre->id !== $updater->id) {
             $recipients->push($tache->projet->donneurOrdre);
         }
