@@ -8,9 +8,9 @@ interface MinistryLogoProps {
 
 export default function MinistryLogo({ size = 'md', showText = true, className = '' }: MinistryLogoProps) {
   const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12'
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-20 h-20'
   };
 
   const textSizeClasses = {
@@ -25,18 +25,18 @@ export default function MinistryLogo({ size = 'md', showText = true, className =
         <Image
           src="/logo.jpg"
           alt="Logo du Ministère de la Sécurité et de la Protection Civile"
-          width={48}
-          height={48}
+          width={100}
+          height={100}
           className="w-full h-full object-contain rounded-full"
           priority
         />
       </div>
       {showText && (
         <div className="flex flex-col">
-          <span className={`font-semibold text-gray-900 ${textSizeClasses[size]}`}>
+          <span className={`font-bold text-gray-900 ${textSizeClasses[size]}`}>
             Ministère de la Sécurité
           </span>
-          <span className={`text-gray-600 ${textSizeClasses[size]}`}>
+          <span className={`font-bold text-gray-900 ${textSizeClasses[size]}`}>
             et de la Protection Civile
           </span>
         </div>
