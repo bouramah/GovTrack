@@ -35,8 +35,8 @@ class ProjetCreated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nouveau projet créé : ' . $this->projet->titre,
-            tags: ['projet', 'creation'],
+            subject: 'Nouvelle instruction créée : ' . $this->projet->titre,
+            tags: ['instruction', 'creation'],
             metadata: [
                 'projet_id' => $this->projet->id,
                 'creator_id' => $this->creator->id,

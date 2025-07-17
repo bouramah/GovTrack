@@ -268,9 +268,9 @@ export default function ProjectsAdvancedFilters({
                 />
               </div>
 
-              {/* Type de projet */}
+              {/* Type d'instruction */}
               <div className="space-y-2">
-                <Label htmlFor="type_projet">Type de projet</Label>
+                <Label htmlFor="type_projet">Type d'instruction</Label>
                 <SearchableSelect
                   options={[
                     { value: "all", label: "Tous les types" },
@@ -284,7 +284,7 @@ export default function ProjectsAdvancedFilters({
                   value={filters.type_projet_id?.toString() || "all"}
                   onValueChange={(value) => updateFilter('type_projet_id', value === "all" ? null : parseInt(value))}
                   placeholder="Tous les types"
-                  searchPlaceholder="Rechercher un type de projet..."
+                  searchPlaceholder="Rechercher un Type d'instruction..."
                 />
               </div>
 

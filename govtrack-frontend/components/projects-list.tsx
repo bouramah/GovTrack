@@ -594,7 +594,7 @@ function ProjectCard({
           </span>
         </div>
 
-        {/* Type de projet */}
+        {/*  Type d'instruction */}
         <div className="text-sm text-gray-600">
           <span className="font-medium">Type :</span> {project.type_projet.nom}
         </div>

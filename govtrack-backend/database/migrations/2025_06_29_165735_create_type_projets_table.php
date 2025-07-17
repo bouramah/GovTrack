@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('type_projets', function (Blueprint $table) {
             $table->id();
-            $table->string('nom')->comment('Nom du type de projet');
+            $table->string('nom')->comment('Nom du type d\'instruction');
             $table->text('description')->nullable()->comment('Description du type');
 
             // SLA (Service Level Agreement) - pour définir les délais par défaut

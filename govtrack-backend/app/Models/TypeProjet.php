@@ -43,7 +43,7 @@ class TypeProjet extends Model
     ];
 
     /**
-     * Relation avec les projets
+     * Relation avec les instructions
      */
     public function projets(): HasMany
     {

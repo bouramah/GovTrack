@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 class TypeProjetController extends Controller
 {
     /**
-     * Afficher la liste des types de projets
+     * Afficher la liste des types d'instructions
      */
     public function index(Request $request): JsonResponse
     {
@@ -46,14 +46,14 @@ class TypeProjetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des types de projets',
+                'message' => 'Erreur lors de la récupération des types d\'instructions',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Créer un nouveau type de projet
+     * Créer un nouveau type d'instruction
      */
     public function store(Request $request): JsonResponse
     {
@@ -75,7 +75,7 @@ class TypeProjetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Type de projet créé avec succès',
+                'message' => 'Type d\'instruction créé avec succès',
                 'data' => $typeProjet
             ], 201);
 
@@ -88,14 +88,14 @@ class TypeProjetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création du type de projet',
+                'message' => 'Erreur lors de la création du type d\'instruction',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Afficher un type de projet spécifique
+     * Afficher un type d'instruction spécifique
      */
     public function show(int $id): JsonResponse
     {
@@ -113,14 +113,14 @@ class TypeProjetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Type de projet non trouvé',
+                'message' => 'Type d\'instruction non trouvé',
                 'error' => $e->getMessage()
             ], 404);
         }
     }
 
     /**
-     * Mettre à jour un type de projet
+     * Mettre à jour un type d'instruction
      */
     public function update(Request $request, int $id): JsonResponse
     {
@@ -142,7 +142,7 @@ class TypeProjetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Type de projet mis à jour avec succès',
+                'message' => 'Type d\'instruction mis à jour avec succès',
                 'data' => $typeProjet->fresh()
             ]);
 
@@ -155,25 +155,25 @@ class TypeProjetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour du type de projet',
+                'message' => 'Erreur lors de la mise à jour du type d\'instruction',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Supprimer un type de projet
+     * Supprimer un type d'instruction
      */
     public function destroy(int $id): JsonResponse
     {
         try {
             $typeProjet = TypeProjet::findOrFail($id);
 
-            // Vérifier s'il y a des projets associés
+            // Vérifier s'il y a des instructions associées
             if ($typeProjet->projets()->count() > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Impossible de supprimer ce type de projet car il est associé à des projets existants'
+                    'message' => 'Impossible de supprimer ce type d\'instruction car il est associé à des instructions existantes'
                 ], 400);
             }
 
@@ -181,20 +181,20 @@ class TypeProjetController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Type de projet supprimé avec succès'
+                'message' => 'Type d\'instruction supprimé avec succès'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression du type de projet',
+                'message' => 'Erreur lors de la suppression du type d\'instruction',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Obtenir les statistiques d'un type de projet
+     * Obtenir les statistiques d'un type d'instruction
      */
     public function statistiques(int $id): JsonResponse
     {
@@ -203,10 +203,10 @@ class TypeProjetController extends Controller
             $projets = $typeProjet->projets;
 
             $stats = [
-                'total_projets' => $projets->count(),
-                'projets_par_statut' => [],
+                'total_instructions' => $projets->count(),
+                'instructions_par_statut' => [],
                 'niveau_execution_moyen' => round($projets->avg('niveau_execution') ?? 0),
-                'projets_en_retard' => $projets->filter(function ($projet) {
+                'instructions_en_retard' => $projets->filter(function ($projet) {
                     return $projet->est_en_retard;
                 })->count(),
                 'duree_moyenne_reelle' => null,
@@ -214,7 +214,7 @@ class TypeProjetController extends Controller
 
             // Répartition par statut
             foreach (\App\Models\Projet::STATUTS as $statut => $libelle) {
-                $stats['projets_par_statut'][$statut] = [
+                $stats['instructions_par_statut'][$statut] = [
                     'libelle' => $libelle,
                     'count' => $projets->where('statut', $statut)->count()
                 ];
@@ -231,7 +231,7 @@ class TypeProjetController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des statistiques',
+                'message' => 'Erreur lors de la récupération des statistiques du type d\'instruction',
                 'error' => $e->getMessage()
             ], 500);
         }

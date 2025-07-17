@@ -16,12 +16,12 @@ class TypeProjetTestUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Créer un rôle "Lecteur Types de Projets" avec permissions limitées
+        // Créer un rôle "Lecteur Types d'Instructions" avec permissions limitées
         $role = Role::firstOrCreate(
-            ['nom' => 'Lecteur Types de Projets'],
+            ['nom' => 'Lecteur Types d\'Instructions'],
             [
-                'nom' => 'Lecteur Types de Projets',
-                'description' => 'Peut uniquement voir les types de projets et leurs statistiques'
+                'nom' => 'Lecteur Types d\'Instructions',
+                'description' => 'Peut uniquement voir les types d\'instructions et leurs statistiques'
             ]
         );
 
@@ -59,7 +59,7 @@ class TypeProjetTestUserSeeder extends Seeder
             $user->roles()->attach($role->id);
         }
 
-        $this->command->info('Utilisateur de test "Lecteur Types de Projets" créé avec succès !');
+        $this->command->info('Utilisateur de test "Lecteur Types d\'Instructions" créé avec succès !');
         $this->command->info('Email: lecteur.typeprojets@govtrack.test');
         $this->command->info('Mot de passe: password123');
     }

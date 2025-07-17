@@ -52,8 +52,8 @@ class ProjetStatusChanged extends Mailable
         $nouveauLibelle = $statuts[$this->nouveauStatut] ?? $this->nouveauStatut;
 
         return new Envelope(
-            subject: "Statut du projet modifié : {$this->projet->titre} ({$ancienLibelle} → {$nouveauLibelle})",
-            tags: ['projet', 'statut', 'modification'],
+            subject: "Statut de l'instruction modifié : {$this->projet->titre} ({$ancienLibelle} → {$nouveauLibelle})",
+            tags: ['instruction', 'statut', 'modification'],
             metadata: [
                 'projet_id' => $this->projet->id,
                 'changer_id' => $this->changer->id,

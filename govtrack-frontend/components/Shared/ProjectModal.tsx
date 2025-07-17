@@ -325,7 +325,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
             )}
           </div>
 
-          {/* Type de projet */}
+          {/*  Type d'instruction */}
           <div className="space-y-2">
             <Label htmlFor="type_projet">Type d'instruction *</Label>
             <SearchableSelect

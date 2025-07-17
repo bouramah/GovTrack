@@ -1,27 +1,27 @@
-# Système de Notifications par Email - Projets
+# Système de Notifications par Email - Instructions
 
 ## Vue d'ensemble
 
-Le système de notifications par email pour les projets permet d'informer automatiquement les parties prenantes des changements importants dans la vie d'un projet.
+Le système de notifications par email pour les instructions permet d'informer automatiquement les parties prenantes des changements importants dans la vie d'une instruction.
 
 ## Types de Notifications
 
-### 1. Création de Projet (`ProjetCreated`)
+### 1. Création d'Instruction (`ProjetCreated`)
 
-**Déclencheur :** Création d'un nouveau projet
+**Déclencheur :** Création d'une nouvelle instruction
 **Destinataires :**
 - Porteur du projet
 - Donneur d'ordre
 - Membres de l'équipe (si des tâches sont assignées)
 
 **Contenu :**
-- Informations du projet (titre, description, dates, etc.)
+- Informations de l'instruction (titre, description, dates, etc.)
 - Informations sur le créateur
-- Lien vers le projet
+- Lien vers l'instruction
 
 ### 2. Changement de Statut (`ProjetStatusChanged`)
 
-**Déclencheur :** Modification du statut d'un projet
+**Déclencheur :** Modification du statut d'une instruction
 **Destinataires :**
 - Porteur du projet
 - Donneur d'ordre
@@ -34,7 +34,7 @@ Le système de notifications par email pour les projets permet d'informer automa
 
 ### 3. Mise à Jour du Niveau d'Exécution (`ProjetExecutionLevelUpdated`)
 
-**Déclencheur :** Modification du niveau d'exécution d'un projet
+**Déclencheur :** Modification du niveau d'exécution d'une instruction
 **Destinataires :**
 - Porteur du projet
 - Donneur d'ordre

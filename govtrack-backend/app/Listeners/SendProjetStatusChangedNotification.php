@@ -74,7 +74,7 @@ class SendProjetStatusChangedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de changement de statut de projet envoyées', [
+        \Log::info('Notifications de changement de statut d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'changer_id' => $changer->id,
@@ -90,7 +90,7 @@ class SendProjetStatusChangedNotification implements ShouldQueue
      */
     public function failed(ProjetStatusChanged $event, \Throwable $exception): void
     {
-        \Log::error('Échec de l\'envoi des notifications de changement de statut de projet', [
+        \Log::error('Échec de l\'envoi des notifications de changement de statut d\'instruction', [
             'projet_id' => $event->projet->id,
             'changer_id' => $event->changer->id,
             'ancien_statut' => $event->ancienStatut,

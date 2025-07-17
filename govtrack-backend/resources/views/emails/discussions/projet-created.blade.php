@@ -97,14 +97,14 @@
             <p>Bonjour <span class="highlight">{{ $recipient->prenom }} {{ $recipient->nom }}</span>,</p>
 
             @if($isReply)
-                <p><strong>{{ $author->prenom }} {{ $author->nom }}</strong> a répondu à votre commentaire sur le projet <strong>{{ $discussion->projet->titre }}</strong>.</p>
+                <p><strong>{{ $author->prenom }} {{ $author->nom }}</strong> a répondu à votre commentaire sur l'instruction <strong>{{ $discussion->projet->titre }}</strong>.</p>
             @else
-                <p><strong>{{ $author->prenom }} {{ $author->nom }}</strong> a posté un nouveau commentaire sur le projet <strong>{{ $discussion->projet->titre }}</strong>.</p>
+                <p><strong>{{ $author->prenom }} {{ $author->nom }}</strong> a posté un nouveau commentaire sur l'instruction <strong>{{ $discussion->projet->titre }}</strong>.</p>
             @endif
 
             <div class="project-info">
-                <h3>📋 Projet : {{ $discussion->projet->titre }}</h3>
-                <p><strong>Type :</strong> {{ $discussion->projet->typeProjet->nom ?? 'Non défini' }}</p>
+                <h3>📋 Instruction : {{ $discussion->projet->titre }}</h3>
+                <p><strong>Type d'instruction :</strong> {{ $discussion->projet->typeProjet->nom ?? 'Non défini' }}</p>
                 <p><strong>Statut :</strong> {{ $discussion->projet->statut_libelle ?? $discussion->projet->statut }}</p>
                 <p><strong>Porteur :</strong> {{ $discussion->projet->porteur->prenom ?? '' }} {{ $discussion->projet->porteur->nom ?? '' }}</p>
             </div>

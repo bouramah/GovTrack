@@ -169,7 +169,7 @@ return [
 
         // Attributs spécifiques à GovTrack
         'titre' => 'titre',
-        'type_projet_id' => 'type de projet',
+        'type_projet_id' => 'type d\'instruction',
         'porteur_id' => 'porteur',
         'donneur_ordre_id' => 'donneur d\'ordre',
         'date_debut_previsionnelle' => 'date de début prévisionnelle',

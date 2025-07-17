@@ -64,7 +64,7 @@ class SendProjetCreatedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de création de projet envoyées', [
+        \Log::info('Notifications de création d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'creator_id' => $creator->id,

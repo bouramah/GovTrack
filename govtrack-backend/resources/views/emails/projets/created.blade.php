@@ -120,14 +120,14 @@
     <div class="container">
         <div class="header">
             <div class="logo">{{ $appName }}</div>
-            <div class="title">Nouveau projet créé</div>
-            <div class="subtitle">Un nouveau projet a été créé dans votre organisation</div>
+            <div class="title">Nouvelle instruction créée</div>
+            <div class="subtitle">Une nouvelle instruction a été créée dans votre organisation</div>
         </div>
 
         <div class="content">
             <p>Bonjour <strong>{{ $recipient->prenom }} {{ $recipient->nom }}</strong>,</p>
 
-            <p>Un nouveau projet a été créé par <strong>{{ $creator->prenom }} {{ $creator->nom }}</strong>.</p>
+            <p>Une nouvelle instruction a été créée par <strong>{{ $creator->prenom }} {{ $creator->nom }}</strong>.</p>
 
             <div class="project-info">
                 <div class="project-title">{{ $projet->titre }}</div>
@@ -138,7 +138,7 @@
                 </div>
 
                 <div class="info-row">
-                    <span class="info-label">Type de projet :</span>
+                    <span class="info-label">Type d'instruction :</span>
                     <span class="info-value">{{ $projet->typeProjet->nom ?? 'Non défini' }}</span>
                 </div>
 

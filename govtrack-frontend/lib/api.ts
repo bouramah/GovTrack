@@ -1527,7 +1527,7 @@ class ApiClient {
       return response.data.data;
     }
     
-    throw new Error(response.data.message || 'Erreur de récupération du type de projet');
+    throw new Error(response.data.message || "Erreur de récupération du type d'instruction");
   }
 
   async createTypeProjet(data: TypeProjetCreateRequest): Promise<TypeProjet> {
@@ -1538,7 +1538,7 @@ class ApiClient {
       return response.data.data;
     }
     
-    throw new Error(response.data.message || 'Erreur de création du type de projet');
+    throw new Error(response.data.message || "Erreur de création du type d'instruction");
   }
 
   async updateTypeProjet(id: number, data: TypeProjetUpdateRequest): Promise<TypeProjet> {
@@ -1549,7 +1549,7 @@ class ApiClient {
       return response.data.data;
     }
     
-    throw new Error(response.data.message || 'Erreur de mise à jour du type de projet');
+    throw new Error(response.data.message || "Erreur de mise à jour du type d'instruction");
   }
 
   async deleteTypeProjet(id: number): Promise<void> {
@@ -1557,7 +1557,7 @@ class ApiClient {
       await this.client.delete(`/v1/type-projets/${id}`);
     
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Erreur de suppression du type de projet');
+      throw new Error(response.data.message || "Erreur de suppression du type d'instruction");
     }
   }
 

@@ -141,20 +141,20 @@
     <div class="container">
         <div class="header">
             <div class="logo">{{ $appName }}</div>
-            <div class="title">Statut du projet modifié</div>
-            <div class="subtitle">Le statut d'un projet a été mis à jour</div>
+            <div class="title">Statut de l'instruction modifié</div>
+            <div class="subtitle">Le statut d'une instruction a été mis à jour</div>
         </div>
 
         <div class="content">
             <p>Bonjour <strong>{{ $recipient->prenom }} {{ $recipient->nom }}</strong>,</p>
 
-            <p>Le statut du projet <strong>{{ $projet->titre }}</strong> a été modifié par <strong>{{ $changer->prenom }} {{ $changer->nom }}</strong>.</p>
+            <p>Le statut de l'instruction <strong>{{ $projet->titre }}</strong> a été modifié par <strong>{{ $changer->prenom }} {{ $changer->nom }}</strong>.</p>
 
             <div class="project-info">
                 <div class="project-title">{{ $projet->titre }}</div>
 
                 <div class="info-row">
-                    <span class="info-label">Type de projet :</span>
+                    <span class="info-label">Type d'instruction :</span>
                     <span class="info-value">{{ $projet->typeProjet->nom ?? 'Non défini' }}</span>
                 </div>
 

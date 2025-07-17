@@ -14,23 +14,23 @@ class TypeProjetPermissionsSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            // Permissions de base pour les types de projets
-            ['nom' => 'view_type_projets_list', 'description' => 'Voir la liste des types de projets'],
-            ['nom' => 'create_type_projet', 'description' => 'Créer un nouveau type de projet'],
-            ['nom' => 'edit_type_projet', 'description' => 'Modifier un type de projet existant'],
-            ['nom' => 'delete_type_projet', 'description' => 'Supprimer un type de projet'],
-            ['nom' => 'view_type_projet_details', 'description' => 'Voir les détails d\'un type de projet'],
+            // Permissions de base pour les types d'instructions
+            ['nom' => 'view_type_projets_list', 'description' => 'Voir la liste des types d\'instructions'],
+            ['nom' => 'create_type_projet', 'description' => 'Créer un nouveau type d\'instruction'],
+            ['nom' => 'edit_type_projet', 'description' => 'Modifier un type d\'instruction existant'],
+            ['nom' => 'delete_type_projet', 'description' => 'Supprimer un type d\'instruction'],
+            ['nom' => 'view_type_projet_details', 'description' => 'Voir les détails d\'un type d\'instruction'],
 
             // Permissions pour les statistiques
-            ['nom' => 'view_type_projet_stats', 'description' => 'Voir les statistiques des types de projets'],
+            ['nom' => 'view_type_projet_stats', 'description' => 'Voir les statistiques des types d\'instructions'],
 
-            // Permissions pour la gestion des projets liés
-            ['nom' => 'view_type_projet_projects', 'description' => 'Voir les projets d\'un type spécifique'],
-            ['nom' => 'manage_type_projet_projects', 'description' => 'Gérer les projets d\'un type spécifique'],
+            // Permissions pour la gestion des instructions liées
+            ['nom' => 'view_type_projet_projects', 'description' => 'Voir les instructions d\'un type spécifique'],
+            ['nom' => 'manage_type_projet_projects', 'description' => 'Gérer les instructions d\'un type spécifique'],
 
             // Permissions pour les paramètres avancés
-            ['nom' => 'configure_type_projet_sla', 'description' => 'Configurer les SLA des types de projets'],
-            ['nom' => 'manage_type_projet_workflow', 'description' => 'Gérer les workflows des types de projets'],
+            ['nom' => 'configure_type_projet_sla', 'description' => 'Configurer les SLA des types d\'instructions'],
+            ['nom' => 'manage_type_projet_workflow', 'description' => 'Gérer les workflows des types d\'instructions'],
         ];
 
         foreach ($permissions as $permission) {
@@ -45,6 +45,6 @@ class TypeProjetPermissionsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Permissions des types de projets créées avec succès !');
+        $this->command->info('Permissions des types d\'instructions créées avec succès !');
     }
 }

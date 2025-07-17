@@ -45,7 +45,7 @@ class ProjetExecutionLevelUpdated extends Mailable
 
         return new Envelope(
             subject: "Niveau d'exécution mis à jour : {$this->projet->titre} ({$this->ancienNiveau}% → {$this->nouveauNiveau}%)",
-            tags: ['projet', 'execution', 'progression'],
+            tags: ['instruction', 'execution', 'progression'],
             metadata: [
                 'projet_id' => $this->projet->id,
                 'updater_id' => $this->updater->id,

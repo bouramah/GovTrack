@@ -358,9 +358,9 @@ export default function DashboardFilters({
                 />
               </div>
 
-              {/* Type de projet */}
+              {/* Type d'instruction */}
               <div className="space-y-2">
-                <Label htmlFor="type_projet">Type de projet</Label>
+                <Label htmlFor="type_projet">Type d'instruction</Label>
                 <SearchableSelect
                   options={[
                     { value: "all", label: "Tous les types" },

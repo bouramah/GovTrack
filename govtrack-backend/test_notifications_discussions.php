@@ -46,7 +46,7 @@ try {
     // Récupérer ou créer un projet de test
     $projet = Projet::first();
     if (!$projet) {
-        echo "❌ Erreur : Aucun projet trouvé pour les tests\n";
+        echo "❌ Erreur : Aucune instruction trouvée pour les tests\n";
         exit(1);
     }
 

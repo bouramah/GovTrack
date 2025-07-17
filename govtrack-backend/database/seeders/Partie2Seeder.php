@@ -33,7 +33,7 @@ class Partie2Seeder extends Seeder
 
     private function createTypesProjets()
     {
-        echo "📋 Création des types de projets...\n";
+        echo "📋 Création des types d'instructions...\n";
 
         $typesProjets = [
             [
@@ -84,7 +84,7 @@ class Partie2Seeder extends Seeder
             ]);
         }
 
-        echo "✅ " . count($typesProjets) . " types de projets créés\n";
+        echo "✅ " . count($typesProjets) . " types d'instructions créés\n";
     }
 
     private function createProjets()
@@ -96,7 +96,7 @@ class Partie2Seeder extends Seeder
         $typesProjets = TypeProjet::all();
 
         if ($users->count() < 3 || $typesProjets->count() == 0) {
-            echo "⚠️ Pas assez d'utilisateurs ou de types de projets pour créer des projets\n";
+            echo "⚠️ Pas assez d'utilisateurs ou de types d'instructions pour créer des instructions\n";
             return;
         }
 

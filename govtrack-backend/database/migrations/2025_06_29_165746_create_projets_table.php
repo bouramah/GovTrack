@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->comment('Description détaillée');
 
             // Relations
-            $table->foreignId('type_projet_id')->constrained('type_projets')->comment('Type de projet');
+            $table->foreignId('type_projet_id')->constrained('type_projets')->comment('Type d\'instruction');
             $table->foreignId('porteur_id')->constrained('users')->comment('Utilisateur porteur principal');
             $table->foreignId('donneur_ordre_id')->constrained('users')->comment('Utilisateur ayant donné l\'ordre');
 
@@ -28,7 +28,7 @@ return new class extends Migration
                 'bloque',
                 'demande_de_cloture',
                 'termine'
-            ])->default('a_faire')->comment('Statut actuel du projet');
+            ])->default('a_faire')->comment('Statut actuel de l\'instruction');
             $table->integer('niveau_execution')->default(0)->comment('Niveau d\'exécution en %');
 
             // Dates prévisionnelles

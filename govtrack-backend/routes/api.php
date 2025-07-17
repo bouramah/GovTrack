@@ -132,7 +132,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // PARTIE 2 - GESTION DES PROJETS ET INSTRUCTIONS
     // =================================================================
 
-    // Types de projets
+    // Types d'instructions
     Route::get('type-projets', [TypeProjetController::class, 'index'])->middleware('permission:view_type_projets_list');
     Route::get('type-projets/{id}', [TypeProjetController::class, 'show'])->middleware('permission:view_type_projet_details');
     Route::get('type-projets/{id}/statistiques', [TypeProjetController::class, 'statistiques'])->middleware('permission:view_type_projet_stats');

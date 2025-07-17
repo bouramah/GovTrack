@@ -453,7 +453,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-500 mb-1">Type de projet</div>
+              <div className="text-sm text-gray-500 mb-1"> Type d'instruction</div>
               <div className="font-medium">{project.type_projet.nom}</div>
               {project.type_projet.description && (
               <div className="text-xs text-gray-500 mt-1">

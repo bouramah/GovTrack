@@ -39,8 +39,8 @@ class DiscussionProjetCreated extends Mailable
     public function envelope(): Envelope
     {
         $subject = $this->isReply
-            ? 'Réponse à votre commentaire sur le projet : ' . $this->discussion->projet->titre
-            : 'Nouveau commentaire sur le projet : ' . $this->discussion->projet->titre;
+            ? 'Réponse à votre commentaire sur l\'instruction : ' . $this->discussion->projet->titre
+            : 'Nouveau commentaire sur l\'instruction : ' . $this->discussion->projet->titre;
 
         return new Envelope(
             subject: $subject,

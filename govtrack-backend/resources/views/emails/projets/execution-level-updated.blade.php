@@ -165,12 +165,12 @@
                 Bonjour {{ $recipient->prenom }} {{ $recipient->nom }},
             </div>
 
-            <p>Le niveau d'exécution du projet a été mis à jour par <strong>{{ $updater->prenom }} {{ $updater->nom }}</strong>.</p>
+            <p>Le niveau d'exécution de l'instruction a été mis à jour par <strong>{{ $updater->prenom }} {{ $updater->nom }}</strong>.</p>
 
             <div class="project-info">
                 <div class="project-title">{{ $projet->titre }}</div>
                 <div class="info-row">
-                    <span class="info-label">Type de projet :</span>
+                    <span class="info-label">Type d'instruction :</span>
                     <span class="info-value">{{ $projet->typeProjet->nom ?? 'Non défini' }}</span>
                 </div>
                 <div class="info-row">
@@ -180,10 +180,10 @@
             </div>
 
             <div class="progress-section">
-                <h3 style="margin-top: 0; color: #155724;">📈 Progression du projet</h3>
-                
+                <h3 style="margin-top: 0; color: #155724;">📈 Progression de l'instruction</h3>
+
                 <div class="progress-change">
-                    {{ $ancienNiveau }}% → {{ $nouveauNiveau }}% 
+                    {{ $ancienNiveau }}% → {{ $nouveauNiveau }}%
                     @if($nouveauNiveau > $ancienNiveau)
                         <span style="color: #28a745;">(+{{ $nouveauNiveau - $ancienNiveau }}%)</span>
                     @elseif($nouveauNiveau < $ancienNiveau)
@@ -208,7 +208,7 @@
             @endif
 
             <div class="details">
-                <h3>📋 Détails du projet</h3>
+                <h3>📋 Détails de l'instruction</h3>
                 <div class="info-row">
                     <span class="info-label">Porteur :</span>
                     <span class="info-value">{{ $projet->porteur->prenom ?? 'Non défini' }} {{ $projet->porteur->nom ?? '' }}</span>
@@ -236,7 +236,7 @@
             </div>
 
             <div style="text-align: center;">
-                <a href="#" class="btn">Voir le projet</a>
+                <a href="#" class="btn">Voir l'instruction</a>
             </div>
 
             <p style="margin-top: 30px; color: #6c757d; font-size: 14px;">
@@ -250,4 +250,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

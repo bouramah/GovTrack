@@ -73,17 +73,17 @@ Cette matrice définit les responsabilités et permissions de chaque rôle dans 
 | | `view_permission_users` | Voir les utilisateurs d'une permission | ✅ | ❌ | ❌ |
 | | `view_permission_roles` | Voir les rôles d'une permission | ✅ | ❌ | ❌ |
 | | `view_permission_stats` | Voir les statistiques d'une permission | ✅ | ❌ | ❌ |
-| **📋 TYPES DE PROJETS** |
-| | `view_type_projets_list` | Voir la liste des types de projets | ✅ | ❌ | ❌ |
-| | `create_type_projet` | Créer un nouveau type de projet | ✅ | ❌ | ❌ |
-| | `edit_type_projet` | Modifier un type de projet existant | ✅ | ❌ | ❌ |
-| | `delete_type_projet` | Supprimer un type de projet | ✅ | ❌ | ❌ |
-| | `view_type_projet_details` | Voir les détails d'un type de projet | ✅ | ❌ | ❌ |
-| | `view_type_projet_stats` | Voir les statistiques des types de projets | ✅ | ❌ | ❌ |
-| | `view_type_projet_projects` | Voir les projets d'un type spécifique | ✅ | ❌ | ❌ |
-| | `manage_type_projet_projects` | Gérer les projets d'un type spécifique | ✅ | ❌ | ❌ |
-| | `configure_type_projet_sla` | Configurer les SLA des types de projets | ✅ | ❌ | ❌ |
-| | `manage_type_projet_workflow` | Gérer les workflows des types de projets | ✅ | ❌ | ❌ |
+| **📋 TYPES D'INSTRUCTIONS** |
+| | `view_type_projets_list` | Voir la liste des types d'instructions | ✅ | ❌ | ❌ |
+| | `create_type_projet` | Créer un nouveau type d'instruction | ✅ | ❌ | ❌ |
+| | `edit_type_projet` | Modifier un type d'instruction existant | ✅ | ❌ | ❌ |
+| | `delete_type_projet` | Supprimer un type d'instruction | ✅ | ❌ | ❌ |
+| | `view_type_projet_details` | Voir les détails d'un type d'instruction | ✅ | ❌ | ❌ |
+| | `view_type_projet_stats` | Voir les statistiques des types d'instructions | ✅ | ❌ | ❌ |
+| | `view_type_projet_projects` | Voir les instructions d'un type spécifique | ✅ | ❌ | ❌ |
+| | `manage_type_projet_projects` | Gérer les instructions d'un type spécifique | ✅ | ❌ | ❌ |
+| | `configure_type_projet_sla` | Configurer les SLA des types d'instructions | ✅ | ❌ | ❌ |
+| | `manage_type_projet_workflow` | Gérer les workflows des types d'instructions | ✅ | ❌ | ❌ |
 | **🚀 GESTION DES PROJETS** |
 | | `view_projects_list` | Voir la liste des projets | ✅ | ✅ | ✅ |
 | | `create_project` | Créer un projet | ✅ | ✅ | ❌ |

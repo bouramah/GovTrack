@@ -118,8 +118,8 @@
             </div>
 
             <div class="project-info">
-                <h3>📋 Projet parent : {{ $discussion->tache->projet->titre }}</h3>
-                <p><strong>Type :</strong> {{ $discussion->tache->projet->typeProjet->nom ?? 'Non défini' }}</p>
+                <h3>📋 Instruction parente : {{ $discussion->tache->projet->titre }}</h3>
+                <p><strong>Type d'instruction :</strong> {{ $discussion->tache->projet->typeProjet->nom ?? 'Non défini' }}</p>
                 <p><strong>Statut :</strong> {{ $discussion->tache->projet->statut_libelle ?? $discussion->tache->projet->statut }}</p>
                 <p><strong>Porteur :</strong> {{ $discussion->tache->projet->porteur->prenom ?? '' }} {{ $discussion->tache->projet->porteur->nom ?? '' }}</p>
             </div>

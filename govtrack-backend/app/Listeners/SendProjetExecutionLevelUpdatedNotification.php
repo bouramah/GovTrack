@@ -74,7 +74,7 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de mise à jour du niveau d\'exécution envoyées', [
+        \Log::info('Notifications de mise à jour du niveau d\'exécution d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'updater_id' => $updater->id,
@@ -91,7 +91,7 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
      */
     public function failed(ProjetExecutionLevelUpdated $event, \Throwable $exception): void
     {
-        \Log::error('Échec de l\'envoi des notifications de mise à jour du niveau d\'exécution', [
+        \Log::error('Échec de l\'envoi des notifications de mise à jour du niveau d\'exécution d\'instruction', [
             'projet_id' => $event->projet->id,
             'updater_id' => $event->updater->id,
             'ancien_niveau' => $event->ancienNiveau,
