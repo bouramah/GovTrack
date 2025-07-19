@@ -325,7 +325,22 @@ export default function MesTachesList({ filters }: MesTachesListProps) {
                   </TableCell>
                   
                   <TableCell>
-                    {tache.responsable ? (
+                    {tache.responsables && tache.responsables.length > 0 ? (
+                      <div className="flex items-center space-x-1">
+                        {tache.responsables.slice(0, 2).map((responsable) => (
+                          <Avatar key={responsable.id} className="h-6 w-6">
+                            <AvatarFallback className="text-xs">
+                              {getInitials(`${responsable.prenom} ${responsable.nom}`)}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {tache.responsables.length > 2 && (
+                          <div className="h-6 w-6 bg-gray-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs text-gray-600">+{tache.responsables.length - 2}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : tache.responsable ? (
                       <div className="flex items-center space-x-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="text-xs">

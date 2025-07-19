@@ -69,7 +69,6 @@ class Tache extends Model
         'description',
         'projet_id',
         'type_tache_id',
-        'responsable_id',
         'statut',
         'niveau_execution',
         'date_debut_previsionnelle',

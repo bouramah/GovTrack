@@ -82,15 +82,21 @@ class TacheController extends Controller
                         ->pluck('user_id');
 
                     // Filtrer les tâches assignées à des membres de l'entité ou ses enfants
-                    $query->whereIn('responsable_id', $utilisateursEntite);
+                    $query->whereHas('responsables', function ($q) use ($utilisateursEntite) {
+                        $q->whereIn('user_id', $utilisateursEntite);
+                    });
                 } else {
                     // Si pas d'affectation d'entité, fallback vers ses tâches personnelles
-                    $query->where('responsable_id', $user->id);
+                    $query->whereHas('responsables', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
                 }
 
             } elseif ($user->hasPermission('view_my_tasks')) {
                 // 👤 NIVEAU 3 : VIEW MY TASKS - Seulement ses tâches
-                $query->where('responsable_id', $user->id);
+                $query->whereHas('responsables', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
 
             } else {
                 // ❌ AUCUNE PERMISSION - Accès refusé
@@ -139,7 +145,9 @@ class TacheController extends Controller
             if ($request->filled('responsable_id')) {
                 // Restriction : seulement si l'utilisateur a view_all_tasks ou view_my_entity_tasks
                 if ($user->hasPermission('view_all_tasks') || $user->hasPermission('view_my_entity_tasks')) {
-                    $query->byResponsable($request->responsable_id);
+                    $query->whereHas('responsables', function ($q) use ($request) {
+                        $q->where('user_id', $request->responsable_id);
+                    });
                 }
             }
 
@@ -155,7 +163,7 @@ class TacheController extends Controller
 
             // Pagination
             $perPage = $request->get('per_page', 15);
-            $taches = $query->paginate($perPage);
+            $taches = $query->with(['projet', 'typeTache', 'responsables'])->paginate($perPage);
 
             return response()->json([
                 'success' => true,
@@ -197,13 +205,13 @@ class TacheController extends Controller
             // Créer la tâche sans responsable principal
             $tache = Tache::create([
                 'titre' => $validated['titre'],
-                'description' => $validated['description'],
+                'description' => $request->input('description'),
                 'projet_id' => $validated['projet_id'],
-                'type_tache_id' => $validated['type_tache_id'],
+                'type_tache_id' => $request->input('type_tache_id'),
                 'statut' => Tache::STATUT_A_FAIRE,
                 'niveau_execution' => 0,
-                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
-                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
+                'date_debut_previsionnelle' => $request->input('date_debut_previsionnelle'),
+                'date_fin_previsionnelle' => $request->input('date_fin_previsionnelle'),
                 'date_creation' => now(),
                 'date_modification' => now(),
                 'creer_par' => $request->user()->email,
@@ -297,10 +305,10 @@ class TacheController extends Controller
 
             $tache->update([
                 'titre' => $validated['titre'],
-                'description' => $validated['description'],
-                'type_tache_id' => $validated['type_tache_id'],
-                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
-                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
+                'description' => $request->input('description'),
+                'type_tache_id' => $request->input('type_tache_id'),
+                'date_debut_previsionnelle' => $request->input('date_debut_previsionnelle'),
+                'date_fin_previsionnelle' => $request->input('date_fin_previsionnelle'),
                 'date_modification' => now(),
                 'modifier_par' => $request->user()->email,
             ]);
@@ -585,7 +593,9 @@ class TacheController extends Controller
             $user = $request->user();
 
             $query = Tache::with(['projet.typeProjet', 'typeTache', 'responsable.affectations.entite', 'responsables', 'piecesJointes.user'])
-                ->where('responsable_id', $user->id);
+                ->whereHas('responsables', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
 
             // Filtres
             if ($request->filled('statut')) {

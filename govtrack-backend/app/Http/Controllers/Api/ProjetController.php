@@ -87,8 +87,8 @@ class ProjetController extends Controller
                     $query->where(function ($q) use ($utilisateursEntite) {
                         $q->whereIn('porteur_id', $utilisateursEntite)
                           ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
-                          ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
-                              $tq->whereIn('responsable_id', $utilisateursEntite);
+                          ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
+                              $tq->whereIn('user_id', $utilisateursEntite);
                           });
                     });
                 } else {
@@ -96,8 +96,8 @@ class ProjetController extends Controller
                     $query->where(function ($q) use ($user) {
                         $q->where('porteur_id', $user->id)
                           ->orWhere('donneur_ordre_id', $user->id)
-                          ->orWhereHas('taches', function ($tq) use ($user) {
-                              $tq->where('responsable_id', $user->id);
+                          ->orWhereHas('taches.responsables', function ($tq) use ($user) {
+                              $tq->where('user_id', $user->id);
                           });
                     });
                 }
@@ -108,8 +108,8 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('porteur_id', $user->id)
                       ->orWhere('donneur_ordre_id', $user->id)
-                      ->orWhereHas('taches', function ($tq) use ($user) {
-                          $tq->where('responsable_id', $user->id);
+                      ->orWhereHas('taches.responsables', function ($tq) use ($user) {
+                          $tq->where('user_id', $user->id);
                       });
                 });
 
@@ -204,8 +204,8 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($utilisateursEntite) {
                     $q->whereIn('porteur_id', $utilisateursEntite)
                       ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
-                      ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
-                          $tq->whereIn('responsable_id', $utilisateursEntite);
+                      ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
+                          $tq->whereIn('user_id', $utilisateursEntite);
                       });
                 });
             }
@@ -753,8 +753,8 @@ class ProjetController extends Controller
                     $query->where(function ($q) use ($utilisateursEntite) {
                         $q->whereIn('porteur_id', $utilisateursEntite)
                           ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
-                          ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
-                              $tq->whereIn('responsable_id', $utilisateursEntite);
+                          ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
+                              $tq->whereIn('user_id', $utilisateursEntite);
                           });
                     });
                 } else {
@@ -762,8 +762,8 @@ class ProjetController extends Controller
                     $query->where(function ($q) use ($user) {
                         $q->where('porteur_id', $user->id)
                           ->orWhere('donneur_ordre_id', $user->id)
-                          ->orWhereHas('taches', function ($tq) use ($user) {
-                              $tq->where('responsable_id', $user->id);
+                          ->orWhereHas('taches.responsables', function ($tq) use ($user) {
+                              $tq->where('user_id', $user->id);
                           });
                     });
                 }
@@ -773,8 +773,8 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('porteur_id', $user->id)
                       ->orWhere('donneur_ordre_id', $user->id)
-                      ->orWhereHas('taches', function ($tq) use ($user) {
-                          $tq->where('responsable_id', $user->id);
+                      ->orWhereHas('taches.responsables', function ($tq) use ($user) {
+                          $tq->where('user_id', $user->id);
                       });
                 });
 
@@ -869,8 +869,8 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($utilisateursEntite) {
                     $q->whereIn('porteur_id', $utilisateursEntite)
                       ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
-                      ->orWhereHas('taches', function ($tq) use ($utilisateursEntite) {
-                          $tq->whereIn('responsable_id', $utilisateursEntite);
+                      ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
+                          $tq->whereIn('user_id', $utilisateursEntite);
                       });
                 });
             }
