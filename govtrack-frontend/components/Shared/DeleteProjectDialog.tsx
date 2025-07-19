@@ -75,7 +75,7 @@ export default function DeleteProjectDialog({
             <AlertTriangle className="h-5 w-5 text-red-500" />
             Confirmer la suppression
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <div className="text-sm text-muted-foreground">
             Êtes-vous sûr de vouloir supprimer l'instruction <strong>"{project.titre}"</strong> ?
             <br />
             <br />
@@ -97,7 +97,7 @@ export default function DeleteProjectDialog({
                 </span>
               </div>
             )}
-          </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>
