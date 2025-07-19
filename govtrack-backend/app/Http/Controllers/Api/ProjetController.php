@@ -85,7 +85,9 @@ class ProjetController extends Controller
                     // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité ou ses enfants
                     // OU projets ayant des tâches assignées à des membres de l'entité ou ses enfants
                     $query->where(function ($q) use ($utilisateursEntite) {
-                        $q->whereIn('porteur_id', $utilisateursEntite)
+                        $q->whereHas('porteurs', function ($pq) use ($utilisateursEntite) {
+                        $pq->whereIn('user_id', $utilisateursEntite);
+                    })
                           ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
                           ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
                               $tq->whereIn('user_id', $utilisateursEntite);
@@ -94,7 +96,9 @@ class ProjetController extends Controller
                 } else {
                     // Si pas d'affectation d'entité, fallback vers ses projets personnels
                     $query->where(function ($q) use ($user) {
-                        $q->where('porteur_id', $user->id)
+                        $q->whereHas('porteurs', function ($pq) use ($user) {
+                        $pq->where('user_id', $user->id);
+                    })
                           ->orWhere('donneur_ordre_id', $user->id)
                           ->orWhereHas('taches.responsables', function ($tq) use ($user) {
                               $tq->where('user_id', $user->id);
@@ -106,7 +110,9 @@ class ProjetController extends Controller
                 // 👤 NIVEAU 3 : VIEW MY PROJECTS - Seulement ses projets
                 // Projets où l'utilisateur est porteur, donneur d'ordre, ou a des tâches
                 $query->where(function ($q) use ($user) {
-                    $q->where('porteur_id', $user->id)
+                    $q->whereHas('porteurs', function ($pq) use ($user) {
+                        $pq->where('user_id', $user->id);
+                    })
                       ->orWhere('donneur_ordre_id', $user->id)
                       ->orWhereHas('taches.responsables', function ($tq) use ($user) {
                           $tq->where('user_id', $user->id);
@@ -177,17 +183,31 @@ class ProjetController extends Controller
             }
 
             // Filtres par utilisateur (selon les permissions)
-            if ($request->filled('porteur_id')) {
+            if ($request->filled('porteur_ids') && is_array($request->porteur_ids)) {
                 // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
                 if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byPorteur($request->porteur_id);
+                    $query->whereHas('porteurs', function ($q) use ($request) {
+                        $q->whereIn('user_id', $request->porteur_ids);
+                    });
+                }
+            } elseif ($request->filled('porteur_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->whereHas('porteurs', function ($q) use ($request) {
+                        $q->where('user_id', $request->porteur_id);
+                    });
                 }
             }
 
-            if ($request->filled('donneur_ordre_id')) {
+            if ($request->filled('donneur_ordre_ids') && is_array($request->donneur_ordre_ids)) {
                 // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
                 if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byDonneurOrdre($request->donneur_ordre_id);
+                    $query->whereIn('donneur_ordre_id', $request->donneur_ordre_ids);
+                }
+            } elseif ($request->filled('donneur_ordre_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->where('donneur_ordre_id', $request->donneur_ordre_id);
                 }
             }
 
@@ -202,7 +222,9 @@ class ProjetController extends Controller
 
                 // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
                 $query->where(function ($q) use ($utilisateursEntite) {
-                    $q->whereIn('porteur_id', $utilisateursEntite)
+                    $q->whereHas('porteurs', function ($pq) use ($utilisateursEntite) {
+                        $pq->whereIn('user_id', $utilisateursEntite);
+                    })
                       ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
                       ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
                           $tq->whereIn('user_id', $utilisateursEntite);
@@ -216,7 +238,7 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('titre', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhereHas('porteur', function ($pq) use ($search) {
+                      ->orWhereHas('porteurs', function ($pq) use ($search) {
                           $pq->where('nom', 'like', "%{$search}%")
                              ->orWhere('prenom', 'like', "%{$search}%");
                       })
@@ -259,7 +281,7 @@ class ProjetController extends Controller
                         'date_creation_debut', 'date_creation_fin'
                     ],
                     'user' => $user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')
-                        ? ['porteur_id', 'donneur_ordre_id'] : [],
+                        ? ['porteur_ids', 'donneur_ordre_ids'] : [],
                     'entity' => $user->hasPermission('view_all_projects') ? ['entite_id'] : []
                 ],
                 'description' => $user->hasPermission('view_all_projects') ? 'Accès complet à toutes les instructions' :
@@ -751,7 +773,9 @@ class ProjetController extends Controller
                         ->pluck('user_id');
 
                     $query->where(function ($q) use ($utilisateursEntite) {
-                        $q->whereIn('porteur_id', $utilisateursEntite)
+                        $q->whereHas('porteurs', function ($pq) use ($utilisateursEntite) {
+                        $pq->whereIn('user_id', $utilisateursEntite);
+                    })
                           ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
                           ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
                               $tq->whereIn('user_id', $utilisateursEntite);
@@ -760,7 +784,9 @@ class ProjetController extends Controller
                 } else {
                     // Fallback vers ses projets personnels
                     $query->where(function ($q) use ($user) {
-                        $q->where('porteur_id', $user->id)
+                        $q->whereHas('porteurs', function ($pq) use ($user) {
+                        $pq->where('user_id', $user->id);
+                    })
                           ->orWhere('donneur_ordre_id', $user->id)
                           ->orWhereHas('taches.responsables', function ($tq) use ($user) {
                               $tq->where('user_id', $user->id);
@@ -771,7 +797,9 @@ class ProjetController extends Controller
             } elseif ($user->hasPermission('view_my_projects')) {
                 // 👤 NIVEAU 3 : VIEW MY PROJECTS - Seulement ses projets
                 $query->where(function ($q) use ($user) {
-                    $q->where('porteur_id', $user->id)
+                    $q->whereHas('porteurs', function ($pq) use ($user) {
+                        $pq->where('user_id', $user->id);
+                    })
                       ->orWhere('donneur_ordre_id', $user->id)
                       ->orWhereHas('taches.responsables', function ($tq) use ($user) {
                           $tq->where('user_id', $user->id);
@@ -842,17 +870,31 @@ class ProjetController extends Controller
             }
 
             // Filtres par utilisateur (selon les permissions)
-            if ($request->filled('porteur_id')) {
+            if ($request->filled('porteur_ids') && is_array($request->porteur_ids)) {
                 // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
                 if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byPorteur($request->porteur_id);
+                    $query->whereHas('porteurs', function ($q) use ($request) {
+                        $q->whereIn('user_id', $request->porteur_ids);
+                    });
+                }
+            } elseif ($request->filled('porteur_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->whereHas('porteurs', function ($q) use ($request) {
+                        $q->where('user_id', $request->porteur_id);
+                    });
                 }
             }
 
-            if ($request->filled('donneur_ordre_id')) {
+            if ($request->filled('donneur_ordre_ids') && is_array($request->donneur_ordre_ids)) {
                 // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
                 if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
-                    $query->byDonneurOrdre($request->donneur_ordre_id);
+                    $query->whereIn('donneur_ordre_id', $request->donneur_ordre_ids);
+                }
+            } elseif ($request->filled('donneur_ordre_id')) {
+                // Restriction : seulement si l'utilisateur a view_all_projects ou view_my_entity_projects
+                if ($user->hasPermission('view_all_projects') || $user->hasPermission('view_my_entity_projects')) {
+                    $query->where('donneur_ordre_id', $request->donneur_ordre_id);
                 }
             }
 
@@ -867,7 +909,9 @@ class ProjetController extends Controller
 
                 // Filtrer les projets où porteur ou donneur d'ordre fait partie de l'entité
                 $query->where(function ($q) use ($utilisateursEntite) {
-                    $q->whereIn('porteur_id', $utilisateursEntite)
+                    $q->whereHas('porteurs', function ($pq) use ($utilisateursEntite) {
+                        $pq->whereIn('user_id', $utilisateursEntite);
+                    })
                       ->orWhereIn('donneur_ordre_id', $utilisateursEntite)
                       ->orWhereHas('taches.responsables', function ($tq) use ($utilisateursEntite) {
                           $tq->whereIn('user_id', $utilisateursEntite);
@@ -881,7 +925,7 @@ class ProjetController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('titre', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhereHas('porteur', function ($pq) use ($search) {
+                      ->orWhereHas('porteurs', function ($pq) use ($search) {
                           $pq->where('nom', 'like', "%{$search}%")
                              ->orWhere('prenom', 'like', "%{$search}%");
                       })
@@ -901,7 +945,7 @@ class ProjetController extends Controller
                 'projets_en_retard' => (clone $query)->enRetard()->count(),
                 'niveau_execution_moyen' => round($query->avg('niveau_execution') ?? 0),
                 'projets_recents' => (clone $query)->orderBy('date_creation', 'desc')
-                    ->with(['typeProjet', 'porteur'])
+                    ->with(['typeProjet', 'porteurs', 'donneurOrdre'])
                     ->take(5)
                     ->get(),
                 'permissions_info' => [

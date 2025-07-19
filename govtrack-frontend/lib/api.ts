@@ -598,7 +598,7 @@ export interface ProjectFilters {
   
   // Filtres par utilisateur (selon permissions)
   porteur_ids?: number[]; // Nouveau : filtrage par plusieurs porteurs
-  donneur_ordre_id?: number;
+  donneur_ordre_ids?: number[]; // Nouveau : filtrage par plusieurs ordonnateurs
   
   // Filtre par entité (selon permissions)
   entite_id?: number;

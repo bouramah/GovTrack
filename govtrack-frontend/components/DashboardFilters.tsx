@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
+import { SearchableMultiSelect, SearchableMultiSelectOption } from "@/components/ui/searchable-multi-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -283,21 +284,21 @@ export default function DashboardFilters({
               />
             </Badge>
           )}
-          {filters.porteur_id && (
+          {filters.porteur_ids && filters.porteur_ids.length > 0 && (
             <Badge variant="outline" className="flex items-center gap-1">
-              Porteur: {users.find(u => u.id === filters.porteur_id)?.display_name}
+              Porteurs: {filters.porteur_ids.length} sélectionné(s)
               <X 
                 className="h-3 w-3 cursor-pointer" 
-                onClick={() => clearFilter('porteur_id')}
+                onClick={() => clearFilter('porteur_ids')}
               />
             </Badge>
           )}
-          {filters.donneur_ordre_id && (
+          {filters.donneur_ordre_ids && filters.donneur_ordre_ids.length > 0 && (
             <Badge variant="outline" className="flex items-center gap-1">
-              Ordonnateur de l'instruction: {users.find(u => u.id === filters.donneur_ordre_id)?.display_name}
+              Ordonnateurs: {filters.donneur_ordre_ids.length} sélectionné(s)
               <X 
                 className="h-3 w-3 cursor-pointer" 
-                onClick={() => clearFilter('donneur_ordre_id')}
+                onClick={() => clearFilter('donneur_ordre_ids')}
               />
             </Badge>
           )}
@@ -403,40 +404,36 @@ export default function DashboardFilters({
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="porteur">Porteur</Label>
-                      <SearchableSelect
-                        options={[
-                          { value: "all", label: "Tous les porteurs" },
-                          ...users.map((user) => ({
-                            value: user.id.toString(),
-                            label: user.display_name,
-                            description: user.email,
-                            badge: user.matricule
-                          }))
-                        ]}
-                        value={filters.porteur_id?.toString() || "all"}
-                        onValueChange={(value) => updateFilter('porteur_id', value === "all" ? null : parseInt(value))}
-                        placeholder="Tous les porteurs"
-                        searchPlaceholder="Rechercher un porteur..."
+                      <Label htmlFor="porteur">Porteurs</Label>
+                      <SearchableMultiSelect
+                        options={users.map((user) => ({
+                          value: user.id.toString(),
+                          label: user.display_name,
+                          description: user.email,
+                          badge: user.matricule
+                        }))}
+                        value={filters.porteur_ids?.map(id => id.toString()) || []}
+                        onValueChange={(values) => updateFilter('porteur_ids', values.map(v => parseInt(v)))}
+                        placeholder="Sélectionner les porteurs..."
+                        searchPlaceholder="Rechercher des porteurs..."
+                        maxSelectedItems={5}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="donneur_ordre">Ordonnateur de l'instruction</Label>
-                      <SearchableSelect
-                        options={[
-                          { value: "all", label: "Tous les donneurs d'ordre" },
-                          ...users.map((user) => ({
-                            value: user.id.toString(),
-                            label: user.display_name,
-                            description: user.email,
-                            badge: user.matricule
-                          }))
-                        ]}
-                        value={filters.donneur_ordre_id?.toString() || "all"}
-                        onValueChange={(value) => updateFilter('donneur_ordre_id', value === "all" ? null : parseInt(value))}
-                        placeholder="Tous les donneurs d'ordre"
-                        searchPlaceholder="Rechercher un Ordonnateur de l'instruction..."
+                      <Label htmlFor="donneur_ordre">Ordonnateurs de l'instruction</Label>
+                      <SearchableMultiSelect
+                        options={users.map((user) => ({
+                          value: user.id.toString(),
+                          label: user.display_name,
+                          description: user.email,
+                          badge: user.matricule
+                        }))}
+                        value={filters.donneur_ordre_ids?.map(id => id.toString()) || []}
+                        onValueChange={(values) => updateFilter('donneur_ordre_ids', values.map(v => parseInt(v)))}
+                        placeholder="Sélectionner les ordonnateurs..."
+                        searchPlaceholder="Rechercher des ordonnateurs..."
+                        maxSelectedItems={5}
                       />
                     </div>
                   </div>

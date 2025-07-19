@@ -69,7 +69,7 @@ export default function ProjectDashboard({ className }: ProjectDashboardProps) {
           available_filters: {
             basic: ['statut', 'type_projet_id', 'en_retard', 'niveau_execution_min', 'niveau_execution_max', 'search'],
             date: ['date_debut_previsionnelle_debut', 'date_debut_previsionnelle_fin', 'date_fin_previsionnelle_debut', 'date_fin_previsionnelle_fin', 'date_creation_debut', 'date_creation_fin'],
-            user: data.permissions_info.level === 'all_projects' || data.permissions_info.level === 'entity_projects' ? ['porteur_id', 'donneur_ordre_id'] : [],
+            user: data.permissions_info.level === 'all_projects' || data.permissions_info.level === 'entity_projects' ? ['porteur_ids', 'donneur_ordre_ids'] : [],
             entity: data.permissions_info.level === 'all_projects' ? ['entite_id'] : []
           },
           description: data.permissions_info.description
