@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\Auditable;
 
@@ -111,11 +112,31 @@ class Tache extends Model
     }
 
     /**
-     * Relation avec le responsable
+     * Relation avec le responsable principal (compatibilité)
      */
     public function responsable(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'responsable_id');
+        return $this->belongsTo(User::class, 'responsable_principal_id');
+    }
+
+    /**
+     * Relation avec tous les responsables de la tâche
+     */
+    public function responsables(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'tache_responsables', 'tache_id', 'user_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire'])
+                    ->wherePivot('statut', true)
+                    ->whereNull('date_fin_assignation');
+    }
+
+    /**
+     * Relation avec tous les responsables de la tâche (incluant l'historique)
+     */
+    public function responsablesHistorique(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'tache_responsables', 'tache_id', 'user_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire']);
     }
 
     /**
@@ -151,11 +172,21 @@ class Tache extends Model
     }
 
     /**
-     * Scope par responsable
+     * Scope par responsable principal (compatibilité)
      */
     public function scopeByResponsable($query, $userId)
     {
-        return $query->where('responsable_id', $userId);
+        return $query->where('responsable_principal_id', $userId);
+    }
+
+    /**
+     * Scope par responsable (nouveau système)
+     */
+    public function scopeByResponsableMultiple($query, $userId)
+    {
+        return $query->whereHas('responsables', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
     }
 
     /**

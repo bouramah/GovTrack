@@ -6,7 +6,6 @@ export interface Tache {
   titre: string;
   description: string | null;
   projet_id: number;
-  responsable_id: number | null;
   type_tache_id?: number | null;
   statut: TacheStatut;
   niveau_execution: number;
@@ -27,6 +26,20 @@ export interface Tache {
       id: number;
       nom: string;
     };
+    // Porteurs multiples (nouveau système)
+    porteurs?: {
+      id: number;
+      nom: string;
+      prenom: string;
+      email: string;
+      pivot: {
+        date_assignation: string;
+        date_fin_assignation?: string;
+        statut: boolean;
+        commentaire?: string;
+      };
+    }[];
+    // Porteur principal (pour compatibilité)
     porteur?: {
       id: number;
       nom: string;
@@ -34,6 +47,21 @@ export interface Tache {
       email: string;
     };
   };
+  // Responsables multiples (nouveau système)
+  responsables?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+    matricule: string;
+    pivot: {
+      date_assignation: string;
+      date_fin_assignation?: string;
+      statut: boolean;
+      commentaire?: string;
+    };
+  }[];
+  // Responsable principal (pour compatibilité)
   responsable?: {
     id: number;
     nom: string;
@@ -115,7 +143,7 @@ export interface CreateTacheRequest {
   titre: string;
   description?: string;
   projet_id: number;
-  responsable_id?: number;
+  responsable_ids?: number[]; // Nouveau : tableau d'IDs des responsables
   type_tache_id?: number;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
@@ -124,7 +152,6 @@ export interface CreateTacheRequest {
 export interface UpdateTacheRequest {
   titre?: string;
   description?: string;
-  responsable_id?: number;
   type_tache_id?: number;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
@@ -142,7 +169,7 @@ export interface ChangeTacheStatutRequest {
 export interface TacheFilters {
   projet_id?: number;
   statut?: TacheStatut;
-  responsable_id?: number;
+  responsable_ids?: number[]; // Nouveau : filtrage par plusieurs responsables
   entite_id?: number;
   type_tache_id?: number;
   en_retard?: boolean;

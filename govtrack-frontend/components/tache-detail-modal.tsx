@@ -123,13 +123,31 @@ export default function TacheDetailModal({ tache }: TacheDetailModalProps) {
             </div>
           </div>
 
-          {/* Responsable */}
+          {/* Responsables */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
               <User className="h-4 w-4 mr-2" />
-              Responsable
+              Responsables
             </h4>
-            {tache.responsable ? (
+            {tache.responsables && tache.responsables.length > 0 ? (
+              <div className="space-y-2">
+                {tache.responsables.map((responsable) => (
+                  <div key={responsable.id} className="flex items-center">
+                    <Avatar className="h-8 w-8 mr-3">
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">
+                        {getInitials(`${responsable.prenom} ${responsable.nom}`)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {responsable.prenom} {responsable.nom}
+                      </p>
+                      <p className="text-xs text-gray-500">{responsable.email}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : tache.responsable ? (
               <div className="flex items-center">
                 <Avatar className="h-8 w-8 mr-3">
                   <AvatarFallback className="bg-blue-100 text-blue-700 text-sm">

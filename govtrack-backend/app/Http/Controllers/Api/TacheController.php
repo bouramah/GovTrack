@@ -55,7 +55,7 @@ class TacheController extends Controller
     {
         try {
             $user = $request->user();
-            $query = Tache::with(['projet', 'typeTache', 'responsable.affectations.entite', 'piecesJointes.user']);
+            $query = Tache::with(['projet', 'typeTache', 'responsable.affectations.entite', 'responsables', 'piecesJointes.user']);
 
             // ========================================
             // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES TÂCHES
@@ -188,22 +188,39 @@ class TacheController extends Controller
                 'description' => 'nullable|string',
                 'projet_id' => 'required|exists:projets,id',
                 'type_tache_id' => 'nullable|exists:type_taches,id',
-                'responsable_id' => 'nullable|exists:users,id',
+                'responsable_ids' => 'nullable|array',
+                'responsable_ids.*' => 'exists:users,id',
                 'date_debut_previsionnelle' => 'nullable|date',
                 'date_fin_previsionnelle' => 'nullable|date|after_or_equal:date_debut_previsionnelle',
             ]);
 
+            // Créer la tâche sans responsable principal
             $tache = Tache::create([
-                ...$validated,
+                'titre' => $validated['titre'],
+                'description' => $validated['description'],
+                'projet_id' => $validated['projet_id'],
+                'type_tache_id' => $validated['type_tache_id'],
                 'statut' => Tache::STATUT_A_FAIRE,
                 'niveau_execution' => 0,
+                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
+                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
                 'date_creation' => now(),
                 'date_modification' => now(),
                 'creer_par' => $request->user()->email,
                 'modifier_par' => $request->user()->email,
             ]);
 
-            $tache->load(['projet', 'typeTache', 'responsable']);
+            // Assigner les responsables via la table pivot
+            if (!empty($validated['responsable_ids'])) {
+                foreach ($validated['responsable_ids'] as $responsableId) {
+                    $tache->responsables()->attach($responsableId, [
+                        'date_assignation' => now(),
+                        'statut' => true
+                    ]);
+                }
+            }
+
+            $tache->load(['projet', 'typeTache', 'responsables']);
 
             // Déclencher l'événement de création de tâche
             event(new TacheCreated($tache, $request->user()));
@@ -238,11 +255,11 @@ class TacheController extends Controller
             $tache = Tache::with([
                 'projet.typeProjet',
                 'typeTache',
-                'responsable',
+                'responsables',
                 'piecesJointes.user',
                 'discussions.user',
                 'historiqueStatuts.user',
-                'projet.porteur'
+                'projet.porteurs'
             ])->findOrFail($id);
 
             return response()->json([
@@ -271,22 +288,38 @@ class TacheController extends Controller
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'type_tache_id' => 'nullable|exists:type_taches,id',
-                'responsable_id' => 'nullable|exists:users,id',
+                'responsable_ids' => 'nullable|array',
+                'responsable_ids.*' => 'exists:users,id',
                 'date_debut_previsionnelle' => 'nullable|date',
                 'date_fin_previsionnelle' => 'nullable|date|after_or_equal:date_debut_previsionnelle',
                 'niveau_execution' => 'sometimes|integer|min:0|max:100',
             ]);
 
             $tache->update([
-                ...$validated,
+                'titre' => $validated['titre'],
+                'description' => $validated['description'],
+                'type_tache_id' => $validated['type_tache_id'],
+                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
+                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
                 'date_modification' => now(),
                 'modifier_par' => $request->user()->email,
             ]);
 
+            // Mettre à jour les responsables multiples
+            $tache->responsables()->detach(); // Supprimer tous les responsables actuels
+            if (!empty($validated['responsable_ids'])) {
+                foreach ($validated['responsable_ids'] as $responsableId) {
+                    $tache->responsables()->attach($responsableId, [
+                        'date_assignation' => now(),
+                        'statut' => true
+                    ]);
+                }
+            }
+
             // Mettre à jour le niveau du projet parent
             $tache->mettreAJourNiveauProjet();
 
-            $tache->load(['projet', 'responsable']);
+            $tache->load(['projet', 'responsables']);
 
             return response()->json([
                 'success' => true,
@@ -351,7 +384,7 @@ class TacheController extends Controller
     public function changerStatut(Request $request, int $id): JsonResponse
     {
         try {
-            $tache = Tache::with(['projet.porteur', 'responsable'])->findOrFail($id);
+            $tache = Tache::with(['projet.porteurs', 'responsables'])->findOrFail($id);
 
             $validated = $request->validate([
                 'nouveau_statut' => 'required|in:' . implode(',', array_keys(Tache::STATUTS)),
@@ -364,24 +397,28 @@ class TacheController extends Controller
 
             // VALIDATION DES PERMISSIONS POUR CHANGER LE STATUT
             // Récupérer les IDs des personnes autorisées
-            $responsableTacheId = $tache->responsable_id;
-            $porteurProjetId = $tache->projet->porteur_id;
+            $responsablesTacheIds = $tache->responsables->pluck('id')->toArray();
+            $porteursProjetIds = $tache->projet->porteurs->pluck('id')->toArray();
 
             // Pour tous les statuts sauf "terminé" : responsable de la tâche OU porteur du projet
             if ($nouveauStatut !== Tache::STATUT_TERMINE) {
-                if ($currentUserId !== $responsableTacheId && $currentUserId !== $porteurProjetId) {
+                if (!in_array($currentUserId, $responsablesTacheIds) && !in_array($currentUserId, $porteursProjetIds)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Seuls le responsable de la tâche ou le porteur du projet peuvent modifier ce statut',
+                        'message' => 'Seuls les responsables de la tâche ou les porteurs du projet peuvent modifier ce statut',
                         'permissions' => [
-                            'responsable_tache' => [
-                                'id' => $tache->responsable->id ?? null,
-                                'nom' => $tache->responsable ? $tache->responsable->nom . ' ' . $tache->responsable->prenom : 'Non défini'
-                            ],
-                            'porteur_projet' => [
-                                'id' => $tache->projet->porteur->id ?? null,
-                                'nom' => $tache->projet->porteur ? $tache->projet->porteur->nom . ' ' . $tache->projet->porteur->prenom : 'Non défini'
-                            ]
+                            'responsables_tache' => $tache->responsables->map(function($user) {
+                                return [
+                                    'id' => $user->id,
+                                    'nom' => $user->nom . ' ' . $user->prenom
+                                ];
+                            })->toArray(),
+                            'porteurs_projet' => $tache->projet->porteurs->map(function($user) {
+                                return [
+                                    'id' => $user->id,
+                                    'nom' => $user->nom . ' ' . $user->prenom
+                                ];
+                            })->toArray()
                         ]
                     ], 403);
                 }
@@ -452,12 +489,13 @@ class TacheController extends Controller
             // Validation pour le passage au statut "terminé"
             if ($nouveauStatut === Tache::STATUT_TERMINE) {
                 $projet = $tache->projet;
+                $porteursProjetIds = $projet->porteurs->pluck('id')->toArray();
 
-                // Seul le porteur du projet peut terminer une tâche
-                if ($projet->porteur_id !== $request->user()->id) {
+                // Seuls les porteurs du projet peuvent terminer une tâche
+                if (!in_array($request->user()->id, $porteursProjetIds)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Seul le porteur du projet peut terminer une tâche'
+                        'message' => 'Seuls les porteurs du projet peuvent terminer une tâche'
                     ], 403);
                 }
             }
@@ -546,7 +584,7 @@ class TacheController extends Controller
         try {
             $user = $request->user();
 
-            $query = Tache::with(['projet.typeProjet', 'typeTache', 'responsable.affectations.entite', 'piecesJointes.user'])
+            $query = Tache::with(['projet.typeProjet', 'typeTache', 'responsable.affectations.entite', 'responsables', 'piecesJointes.user'])
                 ->where('responsable_id', $user->id);
 
             // Filtres
@@ -738,6 +776,150 @@ class TacheController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la mise à jour du niveau d\'exécution',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================
+    // NOUVELLES MÉTHODES POUR RESPONSABLES MULTIPLES
+    // ========================================
+
+    /**
+     * Assigner des responsables à une tâche
+     */
+    public function assignerResponsables(Request $request, int $id): JsonResponse
+    {
+        try {
+            $tache = Tache::findOrFail($id);
+
+            $validated = $request->validate([
+                'user_ids' => 'required|array|min:1',
+                'user_ids.*' => 'exists:users,id',
+                'commentaire' => 'nullable|string'
+            ]);
+
+            // Vérifier les permissions
+            $user = $request->user();
+            if (!$user->hasPermission('manage_task_responsables') &&
+                !$tache->responsables()->where('user_id', $user->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour gérer les responsables de cette tâche'
+                ], 403);
+            }
+
+            $assignations = [];
+            foreach ($validated['user_ids'] as $userId) {
+                // Vérifier si l'utilisateur n'est pas déjà responsable
+                if (!$tache->responsables()->where('user_id', $userId)->exists()) {
+                    $tache->responsables()->attach($userId, [
+                        'date_assignation' => now(),
+                        'statut' => true,
+                        'commentaire' => $validated['commentaire'] ?? null
+                    ]);
+                    $assignations[] = $userId;
+                }
+            }
+
+            $tache->load('responsables.user');
+
+            return response()->json([
+                'success' => true,
+                'message' => count($assignations) > 0 ? 'Responsables assignés avec succès' : 'Aucun nouveau responsable assigné',
+                'data' => [
+                    'tache_id' => $tache->id,
+                    'responsables_assignes' => $assignations,
+                    'responsables_actuels' => $tache->responsables
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'assignation des responsables',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Retirer un responsable d'une tâche
+     */
+    public function retirerResponsable(Request $request, int $id, int $userId): JsonResponse
+    {
+        try {
+            $tache = Tache::findOrFail($id);
+
+            // Vérifier les permissions
+            $user = $request->user();
+            if (!$user->hasPermission('manage_task_responsables') &&
+                !$tache->responsables()->where('user_id', $user->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour gérer les responsables de cette tâche'
+                ], 403);
+            }
+
+            // Vérifier si l'utilisateur est responsable
+            if (!$tache->responsables()->where('user_id', $userId)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cet utilisateur n\'est pas responsable de cette tâche'
+                ], 404);
+            }
+
+            // Désactiver l'assignation (ne pas supprimer pour garder l'historique)
+            $tache->responsables()->updateExistingPivot($userId, [
+                'date_fin_assignation' => now(),
+                'statut' => false
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Responsable retiré avec succès',
+                'data' => [
+                    'tache_id' => $tache->id,
+                    'user_id' => $userId
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du retrait du responsable',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Lister les responsables d'une tâche
+     */
+    public function listerResponsables(int $id): JsonResponse
+    {
+        try {
+            $tache = Tache::with(['responsables.user', 'responsablesHistorique.user'])->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tache_id' => $tache->id,
+                    'responsables_actuels' => $tache->responsables,
+                    'responsables_historique' => $tache->responsablesHistorique
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des responsables',
                 'error' => $e->getMessage()
             ], 500);
         }

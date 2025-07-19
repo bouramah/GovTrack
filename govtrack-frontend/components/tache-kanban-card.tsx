@@ -303,9 +303,24 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
               )}
             </div>
 
-            {/* Responsable */}
+            {/* Responsables */}
             <div className="flex items-center justify-between">
-              {tache.responsable ? (
+              {tache.responsables && tache.responsables.length > 0 ? (
+                <div className="flex items-center space-x-1">
+                  {tache.responsables.slice(0, 2).map((responsable) => (
+                    <Avatar key={responsable.id} className="h-6 w-6">
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                        {getInitials(`${responsable.prenom} ${responsable.nom}`)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {tache.responsables.length > 2 && (
+                    <div className="h-6 w-6 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-gray-600">+{tache.responsables.length - 2}</span>
+                    </div>
+                  )}
+                </div>
+              ) : tache.responsable ? (
                 <div className="flex items-center">
                   <Avatar className="h-6 w-6 mr-2">
                     <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
@@ -347,7 +362,11 @@ export default function TacheKanbanCard({ tache, onTaskUpdate, onTaskDelete }: T
         <DialogHeader>
           <DialogTitle>{tache.titre}</DialogTitle>
           <DialogDescription>
-            {tache.projet?.titre} • {tache.responsable ? `${tache.responsable.prenom} ${tache.responsable.nom}` : 'Non assignée'}
+            {tache.projet?.titre} • {tache.responsables && tache.responsables.length > 0 
+              ? `${tache.responsables.length} responsable${tache.responsables.length > 1 ? 's' : ''}` 
+              : tache.responsable 
+                ? `${tache.responsable.prenom} ${tache.responsable.nom}` 
+                : 'Non assignée'}
           </DialogDescription>
         </DialogHeader>
         {loadingDetail ? (

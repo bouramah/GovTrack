@@ -599,22 +599,53 @@ function ProjectCard({
           <span className="font-medium">Type :</span> {project.type_projet.nom}
         </div>
 
-        {/* Porteur et Ordonnateur de l'instruction */}
+        {/* Porteurs et Ordonnateur de l'instruction */}
         <div className="flex items-center justify-between">
           <div className="flex -space-x-2">
-            <Avatar className="h-8 w-8 border-2 border-white">
-              <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
-                {getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}
-              </AvatarFallback>
-            </Avatar>
-            <Avatar className="h-8 w-8 border-2 border-white">
-              <AvatarFallback className="text-xs bg-green-100 text-green-700">
-                {getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}
-              </AvatarFallback>
-            </Avatar>
+            {project.porteurs && project.porteurs.length > 0 ? (
+              <>
+                {project.porteurs.slice(0, 3).map((porteur, index) => (
+                  <Avatar key={porteur.id} className="h-8 w-8 border-2 border-white">
+                    <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
+                      {getInitials(`${porteur.prenom} ${porteur.nom}`)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {project.porteurs.length > 3 && (
+                  <div className="h-8 w-8 border-2 border-white bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-600">+{project.porteurs.length - 3}</span>
+                  </div>
+                )}
+              </>
+            ) : project.porteur ? (
+              <Avatar className="h-8 w-8 border-2 border-white">
+                <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
+                  {getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-8 w-8 border-2 border-white">
+                <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+                  ?
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {project.donneur_ordre ? (
+              <Avatar className="h-8 w-8 border-2 border-white">
+                <AvatarFallback className="text-xs bg-green-100 text-green-700">
+                  {getInitials(`${project.donneur_ordre.prenom} ${project.donneur_ordre.nom}`)}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-8 w-8 border-2 border-white">
+                <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+                  ?
+                </AvatarFallback>
+              </Avatar>
+            )}
           </div>
           <span className="text-xs text-gray-500">
-            Porteur & Ordonnateur de l'instruction
+            Porteurs & Ordonnateur de l'instruction
           </span>
         </div>
 

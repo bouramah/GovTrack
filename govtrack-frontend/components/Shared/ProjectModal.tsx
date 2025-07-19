@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { apiClient, Project, ProjectCreateRequest, ProjectUpdateRequest, TypeProjet, User } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
+import { SearchableMultiSelect, SearchableMultiSelectOption } from '@/components/ui/searchable-multi-select';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -31,12 +32,13 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
   const [loading, setLoading] = useState(false);
   const [typeProjets, setTypeProjets] = useState<TypeProjet[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState<ProjectCreateRequest>({
     titre: '',
     description: '',
     type_projet_id: 0,
-    porteur_id: 0,
+    porteur_ids: [],
     donneur_ordre_id: 0,
     date_debut_previsionnelle: '',
     date_fin_previsionnelle: '',
@@ -62,16 +64,19 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
 
       // Charger les utilisateurs
       const usersResponse = await apiClient.getUsersDetailed({ per_page: 1000 });
-      setUsers(usersResponse.data || []);
+      console.log('usersResponse:', usersResponse);
+      const usersData = usersResponse.data || [];
+      console.log('usersData:', usersData);
+      setUsers(usersData);
 
-      // Si on édite, pré-remplir le formulaire
+            // Si on édite, pré-remplir le formulaire
       if (project) {
         setFormData({
           titre: project.titre,
           description: project.description,
           type_projet_id: project.type_projet.id,
-          porteur_id: project.porteur.id,
-          donneur_ordre_id: project.donneur_ordre.id,
+          porteur_ids: project.porteurs ? project.porteurs.map(p => p.id) : [project.porteur?.id].filter(Boolean) as number[],
+          donneur_ordre_id: project.donneur_ordre?.id || 0,
           date_debut_previsionnelle: project.date_debut_previsionnelle.split('T')[0],
           date_fin_previsionnelle: project.date_fin_previsionnelle?.split('T')[0] || '',
           justification_modification_dates: project.justification_modification_dates || ''
@@ -82,7 +87,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           titre: '',
           description: '',
           type_projet_id: 0,
-          porteur_id: 0,
+          porteur_ids: [],
           donneur_ordre_id: 0,
           date_debut_previsionnelle: '',
           date_fin_previsionnelle: '',
@@ -132,10 +137,10 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
       });
       return;
     }
-    if (!formData.porteur_id) {
+    if (!formData.porteur_ids || formData.porteur_ids.length === 0) {
       toast({
         title: "Erreur",
-        description: 'Le porteur est obligatoire',
+        description: 'Au moins un porteur est obligatoire',
         variant: "destructive",
       });
       return;
@@ -259,6 +264,13 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
     badge: user.matricule
   }));
 
+  const userMultiOptions: SearchableMultiSelectOption[] = users.map((user) => ({
+    value: user.id.toString(),
+    label: `${user.prenom} ${user.nom}`,
+    description: user.email,
+    badge: user.matricule
+  }));
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -328,49 +340,68 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           {/*  Type d'instruction */}
           <div className="space-y-2">
             <Label htmlFor="type_projet">Type d'instruction *</Label>
-            <SearchableSelect
-              options={typeProjetOptions}
-              value={formData.type_projet_id ? formData.type_projet_id.toString() : undefined}
-              onValueChange={(value) => handleInputChange('type_projet_id', parseInt(value))}
-              placeholder="Sélectionner un type d'instruction..."
-              searchPlaceholder="Rechercher un type d'instruction..."
-              emptyMessage="Aucun type d'instruction trouvé."
-              className={serverErrors.type_projet_id ? "border-red-500 focus:border-red-500" : ""}
-            />
+            {typeProjetOptions.length > 0 ? (
+              <SearchableSelect
+                options={typeProjetOptions}
+                value={formData.type_projet_id ? formData.type_projet_id.toString() : undefined}
+                onValueChange={(value) => handleInputChange('type_projet_id', parseInt(value))}
+                placeholder="Sélectionner un type d'instruction..."
+                searchPlaceholder="Rechercher un type d'instruction..."
+                emptyMessage="Aucun type d'instruction trouvé."
+                className={serverErrors.type_projet_id ? "border-red-500 focus:border-red-500" : ""}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-10 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
+                Chargement des types d'instruction...
+              </div>
+            )}
             {serverErrors.type_projet_id && (
               <p className="text-sm text-red-600">{serverErrors.type_projet_id[0]}</p>
             )}
           </div>
 
-          {/* Porteur */}
+          {/* Porteurs */}
           <div className="space-y-2">
-            <Label htmlFor="porteur">Porteur *</Label>
-            <SearchableSelect
-              options={userOptions}
-              value={formData.porteur_id ? formData.porteur_id.toString() : undefined}
-              onValueChange={(value) => handleInputChange('porteur_id', parseInt(value))}
-              placeholder="Sélectionner le porteur..."
-              searchPlaceholder="Rechercher un utilisateur..."
-              emptyMessage="Aucun utilisateur trouvé."
-              className={serverErrors.porteur_id ? "border-red-500 focus:border-red-500" : ""}
-            />
-            {serverErrors.porteur_id && (
-              <p className="text-sm text-red-600">{serverErrors.porteur_id[0]}</p>
+            <Label htmlFor="porteurs">Porteurs *</Label>
+            {userMultiOptions.length > 0 ? (
+              <SearchableMultiSelect
+                options={userMultiOptions}
+                value={formData.porteur_ids.map(id => id.toString())}
+                onValueChange={(values) => handleInputChange('porteur_ids', values.map(v => parseInt(v)))}
+                placeholder="Sélectionner les porteurs..."
+                searchPlaceholder="Rechercher des utilisateurs..."
+                emptyMessage="Aucun utilisateur trouvé."
+                className={serverErrors.porteur_ids ? "border-red-500 focus:border-red-500" : ""}
+                maxSelectedItems={5}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-10 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
+                Chargement des utilisateurs...
+              </div>
+            )}
+            {serverErrors.porteur_ids && (
+              <p className="text-sm text-red-600">{serverErrors.porteur_ids[0]}</p>
             )}
           </div>
 
           {/* Ordonnateur de l'instruction */}
           <div className="space-y-2">
             <Label htmlFor="donneur_ordre">Ordonnateur de l'instruction *</Label>
-            <SearchableSelect
-              options={userOptions}
-              value={formData.donneur_ordre_id ? formData.donneur_ordre_id.toString() : undefined}
-              onValueChange={(value) => handleInputChange('donneur_ordre_id', parseInt(value))}
-              placeholder="Sélectionner le Ordonnateur de l'instruction..."
-              searchPlaceholder="Rechercher un utilisateur..."
-              emptyMessage="Aucun utilisateur trouvé."
-              className={serverErrors.donneur_ordre_id ? "border-red-500 focus:border-red-500" : ""}
-            />
+            {userOptions.length > 0 ? (
+              <SearchableSelect
+                options={userOptions}
+                value={formData.donneur_ordre_id > 0 ? formData.donneur_ordre_id.toString() : undefined}
+                onValueChange={(value) => handleInputChange('donneur_ordre_id', parseInt(value))}
+                placeholder="Sélectionner le Ordonnateur de l'instruction..."
+                searchPlaceholder="Rechercher un utilisateur..."
+                emptyMessage="Aucun utilisateur trouvé."
+                className={serverErrors.donneur_ordre_id ? "border-red-500 focus:border-red-500" : ""}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-10 px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
+                Chargement des utilisateurs...
+              </div>
+            )}
             {serverErrors.donneur_ordre_id && (
               <p className="text-sm text-red-600">{serverErrors.donneur_ordre_id[0]}</p>
             )}

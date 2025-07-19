@@ -13,6 +13,7 @@ import { apiClient } from "@/lib/api";
 import type { Tache, TacheStatut } from "@/types/tache";
 import { TACHE_STATUTS_KANBAN } from "@/types/tache";
 import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
+import { SearchableMultiSelect, SearchableMultiSelectOption } from "@/components/ui/searchable-multi-select";
 
 interface NewTaskModalProps {
   open: boolean;
@@ -37,7 +38,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
     titre: '',
     description: '',
     projet_id: '',
-    responsable_id: '',
+    responsable_ids: [] as number[],
     type_tache_id: '',
     date_debut_previsionnelle: '',
     date_fin_previsionnelle: '',
@@ -118,7 +119,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         titre: task.titre,
         description: task.description || '',
         projet_id: task.projet_id?.toString() || '',
-        responsable_id: task.responsable_id?.toString() || '',
+        responsable_ids: task.responsables ? task.responsables.map(r => r.id) : (task.responsable ? [task.responsable.id] : []),
         type_tache_id: task.type_tache_id?.toString() || '',
         date_debut_previsionnelle: task.date_debut_previsionnelle || '',
         date_fin_previsionnelle: task.date_fin_previsionnelle || '',
@@ -130,7 +131,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         titre: '',
         description: '',
         projet_id: projet_id?.toString() || '',
-        responsable_id: '',
+        responsable_ids: [],
         type_tache_id: '',
         date_debut_previsionnelle: '',
         date_fin_previsionnelle: '',
@@ -204,7 +205,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
         const updateData = {
           titre: formData.titre.trim(),
           description: formData.description.trim() || undefined,
-          responsable_id: formData.responsable_id ? parseInt(formData.responsable_id) : undefined,
+          responsable_ids: formData.responsable_ids.length > 0 ? formData.responsable_ids : undefined,
           type_tache_id: formData.type_tache_id ? parseInt(formData.type_tache_id) : undefined,
           date_debut_previsionnelle: formData.date_debut_previsionnelle || undefined,
           date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined
@@ -217,7 +218,7 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
           titre: formData.titre.trim(),
           description: formData.description.trim() || undefined,
           projet_id: parseInt(formData.projet_id),
-          responsable_id: formData.responsable_id ? parseInt(formData.responsable_id) : undefined,
+          responsable_ids: formData.responsable_ids.length > 0 ? formData.responsable_ids : undefined,
           type_tache_id: formData.type_tache_id ? parseInt(formData.type_tache_id) : undefined,
           date_debut_previsionnelle: formData.date_debut_previsionnelle || undefined,
           date_fin_previsionnelle: formData.date_fin_previsionnelle || undefined
@@ -267,6 +268,13 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
       badge: user.matricule
     }))
   ];
+
+  const userMultiOptions: SearchableMultiSelectOption[] = users.map(user => ({
+    value: user.id.toString(),
+    label: `${user.prenom} ${user.nom}`,
+    description: user.email,
+    badge: user.matricule
+  }));
 
   const projectOptions: SearchableSelectOption[] = [
     ...projects.map(project => ({
@@ -337,19 +345,20 @@ export default function NewTaskModal({ open, onOpenChange, task, projet_id, onSu
             </div>
           )}
 
-          {/* Responsable */}
+          {/* Responsables */}
           <div className="space-y-2">
-            <Label htmlFor="responsable">Responsable</Label>
-            <SearchableSelect
-              options={userOptions}
-              value={formData.responsable_id || 'none'}
-              onValueChange={(value) => handleInputChange('responsable_id', value === 'none' ? '' : value)}
-              placeholder="Sélectionner un responsable"
-              searchPlaceholder="Rechercher un responsable..."
+            <Label htmlFor="responsables">Responsables</Label>
+            <SearchableMultiSelect
+              options={userMultiOptions}
+              value={formData.responsable_ids.map(id => id.toString())}
+              onValueChange={(values) => handleInputChange('responsable_ids', values.map(v => parseInt(v)))}
+              placeholder="Sélectionner les responsables..."
+              searchPlaceholder="Rechercher des responsables..."
               disabled={loadingUsers}
+              maxSelectedItems={5}
             />
-            {serverErrors.responsable_id && (
-              <p className="text-sm text-red-600">{serverErrors.responsable_id[0]}</p>
+            {serverErrors.responsable_ids && (
+              <p className="text-sm text-red-600">{serverErrors.responsable_ids[0]}</p>
             )}
           </div>
 

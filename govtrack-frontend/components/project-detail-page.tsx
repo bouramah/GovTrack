@@ -419,20 +419,44 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-500 mb-1">Porteur</div>
-              <div className="flex items-center">
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                    {getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-sm">
-                    {project.porteur.prenom} {project.porteur.nom}
-                  </div>
-                  <div className="text-xs text-gray-500">{project.porteur.email}</div>
+              <div className="text-sm text-gray-500 mb-1">Porteurs</div>
+              {project.porteurs && project.porteurs.length > 0 ? (
+                <div className="space-y-2">
+                  {project.porteurs.map((porteur, index) => (
+                    <div key={porteur.id} className="flex items-center">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                          {getInitials(`${porteur.prenom} ${porteur.nom}`)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-sm">
+                          {porteur.prenom} {porteur.nom}
+                        </div>
+                        <div className="text-xs text-gray-500">{porteur.email}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : project.porteur ? (
+                <div className="flex items-center">
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                      {getInitials(`${project.porteur.prenom} ${project.porteur.nom}`)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium text-sm">
+                      {project.porteur.prenom} {project.porteur.nom}
+                    </div>
+                    <div className="text-xs text-gray-500">{project.porteur.email}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <div className="text-sm text-gray-500">Aucun porteur assigné</div>
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">

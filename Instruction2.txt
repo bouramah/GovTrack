@@ -1,0 +1,118 @@
+Analyse d'Impact Révisée : Porteurs ET Responsables Multiples
+📊 État Actuel
+Actuellement, le système fonctionne avec :
+1 porteur principal par projet (porteur_id)
+1 donneur d'ordre par projet (donneur_ordre_id)
+1 responsable par tâche (responsable_id)
+�� Changement Demandé
+Permettre d'associer plusieurs personnes :
+Porteurs multiples par instruction (sans rôles hiérarchiques)
+Responsables multiples par tâche (sans rôles hiérarchiques)
+🏗️ Impact Technique Global
+
+3. Frontend 🎨
+Types TypeScript
+Apply
+}
+Composants à Modifier
+ProjectModal.tsx
+Apply
+>
+NewTaskModal.tsx
+Apply
+>
+ProjectDetailPage.tsx
+Apply
+>
+TacheDetailModal.tsx
+Apply
+>
+Nouveaux Composants
+MultiSelect.tsx
+Apply
+}
+4. Notifications 📧
+Listeners à Modifier
+SendProjetCreatedNotification.php
+Apply
+}
+SendTacheCreatedNotification.php
+Apply
+}
+Autres Listeners Impactés
+SendProjetStatusChangedNotification.php
+SendProjetExecutionLevelUpdatedNotification.php
+SendTacheStatusChangedNotification.php
+SendTacheExecutionLevelUpdatedNotification.php
+SendDiscussionProjetCreatedNotification.php
+SendDiscussionTacheCreatedNotification.php
+5. Permissions et Sécurité 🔐
+Middleware CheckPermission.php
+Apply
+}
+Hooks Frontend
+Apply
+}
+6. Interface Utilisateur ��
+Nouvelles Fonctionnalités UI
+Gestion des Porteurs/Responsables
+Modal d'assignation multiple
+Liste des assignés avec dates d'assignation
+Actions : ajouter, retirer
+Historique des assignations
+Tableaux de Bord
+Filtres par porteur/responsable (sélection multiple)
+Statistiques par assigné
+Vues personnalisées selon les assignations
+Kanban et Calendrier
+Affichage des assignés multiples sur les cartes
+Filtres par assigné dans les vues
+7. Migration des Données 📊
+Script de Migration
+Apply
+}
+8. Tests 🧪
+Tests à Ajouter/Modifier
+Tests unitaires pour les nouvelles relations
+Tests d'intégration pour l'API des assignations multiples
+Tests de permissions avec assignations multiples
+Tests de notifications avec plusieurs assignés
+Tests frontend pour les nouveaux composants
+9. Documentation 📚
+Mise à Jour Nécessaire
+README backend et frontend
+Documentation API avec nouveaux endpoints
+Guide des permissions mis à jour
+Changelog détaillé
+🚨 Risques et Considérations
+Risques Techniques
+Performance : Requêtes plus complexes avec JOINs multiples
+Compatibilité : Code existant qui utilise porteur_id et responsable_id
+Migration : Données existantes à migrer
+Tests : Tous les tests à adapter
+Risques Métier
+Responsabilité : Qui est responsable final ?
+Notifications : Spam si trop d'assignés
+Permissions : Logique plus complexe
+Formation : Utilisateurs à former
+📋 Plan d'Implémentation Recommandé
+Phase 1 : Backend Foundation
+Créer les migrations et les modèles
+Implémenter les nouvelles relations
+Adapter les contrôleurs API
+Modifier le système de permissions
+Phase 2 : Frontend Adaptation
+Créer les nouveaux composants UI (MultiSelect)
+Adapter les formulaires existants
+Modifier les types TypeScript
+Tester l'interface utilisateur
+Phase 3 : Notifications et Tests
+Adapter tous les listeners de notifications
+Écrire les tests complets
+Tester les permissions
+Validation métier
+Phase 4 : Migration et Déploiement
+Script de migration des données
+Tests en environnement de staging
+Formation des utilisateurs
+Déploiement progressif

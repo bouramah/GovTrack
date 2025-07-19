@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\Auditable;
@@ -45,7 +46,6 @@ class Projet extends Model
         'titre',
         'description',
         'type_projet_id',
-        'porteur_id',
         'donneur_ordre_id',
         'statut',
         'niveau_execution',
@@ -82,11 +82,32 @@ class Projet extends Model
     }
 
     /**
-     * Relation avec le porteur du projet
+     * Relation avec le porteur principal du projet (pour compatibilité avec l'ancien système)
+     * @deprecated Utiliser porteurs() à la place
      */
     public function porteur(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'porteur_id');
+        return $this->belongsTo(User::class, 'porteur_principal_id');
+    }
+
+    /**
+     * Relation avec tous les porteurs du projet
+     */
+    public function porteurs(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'projet_porteurs', 'projet_id', 'user_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire'])
+                    ->wherePivot('statut', true)
+                    ->whereNull('date_fin_assignation');
+    }
+
+    /**
+     * Relation avec tous les porteurs du projet (incluant l'historique)
+     */
+    public function porteursHistorique(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'projet_porteurs', 'projet_id', 'user_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire']);
     }
 
     /**
@@ -138,11 +159,22 @@ class Projet extends Model
     }
 
     /**
-     * Scope par porteur
+     * Scope par porteur principal (pour compatibilité avec l'ancien système)
+     * @deprecated Utiliser scopeByPorteurMultiple() à la place
      */
     public function scopeByPorteur($query, $userId)
     {
-        return $query->where('porteur_id', $userId);
+        return $query->where('porteur_principal_id', $userId);
+    }
+
+    /**
+     * Scope par porteur (nouveau système)
+     */
+    public function scopeByPorteurMultiple($query, $userId)
+    {
+        return $query->whereHas('porteurs', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
     }
 
     /**

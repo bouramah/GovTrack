@@ -190,7 +190,22 @@ export interface Project {
     nom: string;
     description?: string;
   };
-  porteur: {
+  // Porteurs multiples (nouveau système)
+  porteurs?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    matricule: string;
+    email: string;
+    pivot: {
+      date_assignation: string;
+      date_fin_assignation?: string;
+      statut: boolean;
+      commentaire?: string;
+    };
+  }[];
+  // Porteur principal (pour compatibilité avec l'ancien système)
+  porteur?: {
     id: number;
     nom: string;
     prenom: string;
@@ -218,7 +233,7 @@ export interface ProjectCreateRequest {
   titre: string;
   description: string;
   type_projet_id: number;
-  porteur_id: number;
+  porteur_ids: number[]; // Nouveau : tableau d'IDs des porteurs
   donneur_ordre_id: number;
   date_debut_previsionnelle: string;
   date_fin_previsionnelle?: string;
@@ -229,7 +244,6 @@ export interface ProjectUpdateRequest {
   titre?: string;
   description?: string;
   type_projet_id?: number;
-  porteur_id?: number;
   donneur_ordre_id?: number;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
@@ -289,19 +303,33 @@ export interface Task {
   date_debut_reelle?: string;
   date_fin_reelle?: string;
   projet_id: number;
-  responsable_id: number;
-  type_tache_id?: number;
-  type_tache?: {
+  // Responsables multiples (nouveau système)
+  responsables?: {
     id: number;
     nom: string;
-    couleur: string;
-  };
+    prenom: string;
+    matricule: string;
+    email: string;
+    pivot: {
+      date_assignation: string;
+      date_fin_assignation?: string;
+      statut: boolean;
+      commentaire?: string;
+    };
+  }[];
+  // Responsable principal (pour compatibilité avec l'ancien système)
   responsable?: {
     id: number;
     nom: string;
     prenom: string;
     matricule: string;
     email: string;
+  };
+  type_tache_id?: number;
+  type_tache?: {
+    id: number;
+    nom: string;
+    couleur: string;
   };
   date_creation: string;
   date_modification?: string;
@@ -569,7 +597,7 @@ export interface ProjectFilters {
   date_creation_fin?: string;
   
   // Filtres par utilisateur (selon permissions)
-  porteur_id?: number;
+  porteur_ids?: number[]; // Nouveau : filtrage par plusieurs porteurs
   donneur_ordre_id?: number;
   
   // Filtre par entité (selon permissions)
@@ -1986,8 +2014,10 @@ class ApiClient {
     if (filters?.type_tache_id) {
       queryParams.append('type_tache_id', filters.type_tache_id.toString());
     }
-    if (filters?.responsable_id) {
-      queryParams.append('responsable_id', filters.responsable_id.toString());
+    if (filters?.responsable_ids && filters.responsable_ids.length > 0) {
+      filters.responsable_ids.forEach(id => {
+        queryParams.append('responsable_ids[]', id.toString());
+      });
     }
     if (filters?.entite_id) {
       queryParams.append('entite_id', filters.entite_id.toString());

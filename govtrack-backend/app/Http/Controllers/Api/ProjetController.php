@@ -56,7 +56,7 @@ class ProjetController extends Controller
     {
         try {
             $user = $request->user();
-            $query = Projet::with(['typeProjet', 'porteur', 'donneurOrdre']);
+            $query = Projet::with(['typeProjet', 'porteur', 'donneurOrdre', 'porteurs']);
 
             // ========================================
             // SYSTÈME DE PERMISSIONS POUR L'AFFICHAGE DES PROJETS
@@ -297,7 +297,8 @@ class ProjetController extends Controller
                 'titre' => 'required|string|max:255',
                 'description' => 'required|string',
                 'type_projet_id' => 'required|exists:type_projets,id',
-                'porteur_id' => 'required|exists:users,id',
+                'porteur_ids' => 'required|array|min:1',
+                'porteur_ids.*' => 'exists:users,id',
                 'donneur_ordre_id' => 'required|exists:users,id',
                 'date_debut_previsionnelle' => 'required|date|after_or_equal:today',
                 'date_fin_previsionnelle' => 'nullable|date|after:date_debut_previsionnelle',
@@ -325,15 +326,30 @@ class ProjetController extends Controller
                 }
             }
 
+            // Créer le projet sans porteur principal (utilisation uniquement des tables pivot)
             $projet = Projet::create([
-                ...$validated,
+                'titre' => $validated['titre'],
+                'description' => $validated['description'],
+                'type_projet_id' => $validated['type_projet_id'],
+                'donneur_ordre_id' => $validated['donneur_ordre_id'],
                 'statut' => Projet::STATUT_A_FAIRE,
                 'niveau_execution' => 0,
+                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
+                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
+                'justification_modification_dates' => $validated['justification_modification_dates'] ?? null,
                 'date_creation' => now(),
                 'date_modification' => now(),
                 'creer_par' => $request->user()->email,
                 'modifier_par' => $request->user()->email,
             ]);
+
+            // Assigner tous les porteurs
+            foreach ($validated['porteur_ids'] as $porteurId) {
+                $projet->porteurs()->attach($porteurId, [
+                    'date_assignation' => now(),
+                    'statut' => true
+                ]);
+            }
 
             // Créer l'historique initial
             $projet->historiqueStatuts()->create([
@@ -378,9 +394,9 @@ class ProjetController extends Controller
         try {
             $projet = Projet::with([
                 'typeProjet',
-                'porteur',
+                'porteurs',
                 'donneurOrdre',
-                'taches.responsable',
+                'taches.responsables',
                 'historiqueStatuts.user',
                 'piecesJointes.user',
                 'discussions.user'
@@ -417,7 +433,8 @@ class ProjetController extends Controller
                 'titre' => 'required|string|max:255',
                 'description' => 'required|string',
                 'type_projet_id' => 'required|exists:type_projets,id',
-                'porteur_id' => 'required|exists:users,id',
+                'porteur_ids' => 'required|array|min:1',
+                'porteur_ids.*' => 'exists:users,id',
                 'donneur_ordre_id' => 'required|exists:users,id',
                 'date_debut_previsionnelle' => 'required|date',
                 'date_fin_previsionnelle' => 'required|date|after:date_debut_previsionnelle',
@@ -453,12 +470,27 @@ class ProjetController extends Controller
             }
 
             $projet->update([
-                ...$validated,
+                'titre' => $validated['titre'],
+                'description' => $validated['description'],
+                'type_projet_id' => $validated['type_projet_id'],
+                'donneur_ordre_id' => $validated['donneur_ordre_id'],
+                'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
+                'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
+                'justification_modification_dates' => $validated['justification_modification_dates'] ?? null,
                 'date_modification' => now(),
                 'modifier_par' => $request->user()->email,
             ]);
 
-            $projet->load(['typeProjet', 'porteur', 'donneurOrdre']);
+            // Mettre à jour les porteurs multiples
+            $projet->porteurs()->detach(); // Supprimer tous les porteurs actuels
+            foreach ($validated['porteur_ids'] as $porteurId) {
+                $projet->porteurs()->attach($porteurId, [
+                    'date_assignation' => now(),
+                    'statut' => true
+                ]);
+            }
+
+            $projet->load(['typeProjet', 'porteurs', 'donneurOrdre']);
 
             return response()->json([
                 'success' => true,
@@ -1268,6 +1300,150 @@ class ProjetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la récupération de l\'historique',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========================================
+    // NOUVELLES MÉTHODES POUR PORTEURS MULTIPLES
+    // ========================================
+
+    /**
+     * Assigner des porteurs à un projet
+     */
+    public function assignerPorteurs(Request $request, int $id): JsonResponse
+    {
+        try {
+            $projet = Projet::findOrFail($id);
+
+            $validated = $request->validate([
+                'user_ids' => 'required|array|min:1',
+                'user_ids.*' => 'exists:users,id',
+                'commentaire' => 'nullable|string'
+            ]);
+
+            // Vérifier les permissions
+            $user = $request->user();
+            if (!$user->hasPermission('manage_project_porteurs') &&
+                !$projet->porteurs()->where('user_id', $user->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour gérer les porteurs de ce projet'
+                ], 403);
+            }
+
+            $assignations = [];
+            foreach ($validated['user_ids'] as $userId) {
+                // Vérifier si l'utilisateur n'est pas déjà porteur
+                if (!$projet->porteurs()->where('user_id', $userId)->exists()) {
+                    $projet->porteurs()->attach($userId, [
+                        'date_assignation' => now(),
+                        'statut' => true,
+                        'commentaire' => $validated['commentaire'] ?? null
+                    ]);
+                    $assignations[] = $userId;
+                }
+            }
+
+            $projet->load('porteurs.user');
+
+            return response()->json([
+                'success' => true,
+                'message' => count($assignations) > 0 ? 'Porteurs assignés avec succès' : 'Aucun nouveau porteur assigné',
+                'data' => [
+                    'projet_id' => $projet->id,
+                    'porteurs_assignes' => $assignations,
+                    'porteurs_actuels' => $projet->porteurs
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'assignation des porteurs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Retirer un porteur d'un projet
+     */
+    public function retirerPorteur(Request $request, int $id, int $userId): JsonResponse
+    {
+        try {
+            $projet = Projet::findOrFail($id);
+
+            // Vérifier les permissions
+            $user = $request->user();
+            if (!$user->hasPermission('manage_project_porteurs') &&
+                !$projet->porteurs()->where('user_id', $user->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour gérer les porteurs de ce projet'
+                ], 403);
+            }
+
+            // Vérifier si l'utilisateur est porteur
+            if (!$projet->porteurs()->where('user_id', $userId)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cet utilisateur n\'est pas porteur de ce projet'
+                ], 404);
+            }
+
+            // Désactiver l'assignation (ne pas supprimer pour garder l'historique)
+            $projet->porteurs()->updateExistingPivot($userId, [
+                'date_fin_assignation' => now(),
+                'statut' => false
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Porteur retiré avec succès',
+                'data' => [
+                    'projet_id' => $projet->id,
+                    'user_id' => $userId
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du retrait du porteur',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Lister les porteurs d'un projet
+     */
+    public function listerPorteurs(int $id): JsonResponse
+    {
+        try {
+            $projet = Projet::with(['porteurs.user', 'porteursHistorique.user'])->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'projet_id' => $projet->id,
+                    'porteurs_actuels' => $projet->porteurs,
+                    'porteurs_historique' => $projet->porteursHistorique
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des porteurs',
                 'error' => $e->getMessage()
             ], 500);
         }

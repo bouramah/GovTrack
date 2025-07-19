@@ -146,11 +146,22 @@ class User extends Authenticatable
     // === RELATIONS PARTIE 2 - PROJETS ET INSTRUCTIONS ===
 
     /**
-     * Projets dont l'utilisateur est porteur
+     * Projets dont l'utilisateur est porteur principal (compatibilité)
      */
     public function projetsPortes(): HasMany
     {
-        return $this->hasMany(Projet::class, 'porteur_id');
+        return $this->hasMany(Projet::class, 'porteur_principal_id');
+    }
+
+    /**
+     * Projets dont l'utilisateur est porteur (nouveau système)
+     */
+    public function projetsPortesMultiple(): BelongsToMany
+    {
+        return $this->belongsToMany(Projet::class, 'projet_porteurs', 'user_id', 'projet_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire'])
+                    ->wherePivot('statut', true)
+                    ->whereNull('pivot_date_fin_assignation');
     }
 
     /**
@@ -162,11 +173,22 @@ class User extends Authenticatable
     }
 
     /**
-     * Tâches assignées à l'utilisateur
+     * Tâches assignées à l'utilisateur (compatibilité)
      */
     public function tachesAssignees(): HasMany
     {
-        return $this->hasMany(Tache::class, 'responsable_id');
+        return $this->hasMany(Tache::class, 'responsable_principal_id');
+    }
+
+    /**
+     * Tâches assignées à l'utilisateur (nouveau système)
+     */
+    public function tachesAssigneesMultiple(): BelongsToMany
+    {
+        return $this->belongsToMany(Tache::class, 'tache_responsables', 'user_id', 'tache_id')
+                    ->withPivot(['date_assignation', 'date_fin_assignation', 'statut', 'commentaire'])
+                    ->wherePivot('statut', true)
+                    ->whereNull('pivot_date_fin_assignation');
     }
 
     /**

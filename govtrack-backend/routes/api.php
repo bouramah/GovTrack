@@ -173,6 +173,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Historique des projets
     Route::get('projets/{id}/historique', [ProjetController::class, 'historique'])->middleware('permission:view_project_history');
 
+    // Gestion des porteurs multiples de projets
+    Route::post('projets/{id}/porteurs', [ProjetController::class, 'assignerPorteurs'])->middleware('permission:manage_project_porteurs');
+    Route::delete('projets/{id}/porteurs/{userId}', [ProjetController::class, 'retirerPorteur'])->middleware('permission:manage_project_porteurs');
+    Route::get('projets/{id}/porteurs', [ProjetController::class, 'listerPorteurs'])->middleware('permission:view_project_details');
+
     // Tâches - routes spéciales d'abord
     Route::get('taches/mes-taches', [TacheController::class, 'mesTaches'])->middleware('permission:view_tasks_list');
 
@@ -189,6 +194,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     // Gestion du niveau d'exécution des tâches
     Route::post('taches/{id}/niveau-execution', [TacheController::class, 'mettreAJourNiveauExecution'])->middleware('permission:edit_task');
+
+    // Gestion des responsables multiples de tâches
+    Route::post('taches/{id}/responsables', [TacheController::class, 'assignerResponsables'])->middleware('permission:manage_task_responsables');
+    Route::delete('taches/{id}/responsables/{userId}', [TacheController::class, 'retirerResponsable'])->middleware('permission:manage_task_responsables');
+    Route::get('taches/{id}/responsables', [TacheController::class, 'listerResponsables'])->middleware('permission:view_task_details');
 
     // =================================================================
     // DISCUSSIONS - COLLABORATION SUR PROJETS ET TÂCHES
