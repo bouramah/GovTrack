@@ -50,6 +50,8 @@ import ProjectModal from "@/components/Shared/ProjectModal";
 import DeleteProjectDialog from "@/components/Shared/DeleteProjectDialog";
 import ProjectExecutionLevelModal from "@/components/Shared/ProjectExecutionLevelModal";
 import ProjectsAdvancedFilters from "./projects-advanced-filters";
+import { PriorityBadge } from "./Shared/PriorityBadge";
+import { FavoriteButton } from "./Shared/FavoriteButton";
 
 interface ProjectsListProps {
   viewMode: "grid" | "list";
@@ -164,12 +166,32 @@ export default function ProjectsList({
     window.location.href = `/projects/${project.id}?tab=timeline`;
   };
 
-  const handleToggleStar = (project: ApiProject) => {
-    // TODO: Implémenter la fonctionnalité de favoris
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "La gestion des favoris sera bientôt disponible",
-    });
+  const handleToggleStar = async (project: ApiProject) => {
+    try {
+      const response = await apiClient.toggleProjectFavorite(project.id);
+      
+      if (response.success && response.data) {
+        // Mettre à jour l'état local du projet
+        const updatedProjects = projects.map(p => 
+          p.id === project.id 
+            ? { ...p, est_favori_utilisateur: response.data!.est_favori }
+            : p
+        );
+        setProjects(updatedProjects);
+        setFilteredProjects(updatedProjects);
+        
+        toast({
+          title: response.data!.est_favori ? 'Ajouté aux favoris' : 'Retiré des favoris',
+          description: response.message,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de la modification des favoris',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleStatusChange = (project: ApiProject) => {
@@ -541,14 +563,16 @@ function ProjectCard({
             </CardDescription>
           </div>
           <div className="flex items-center space-x-1 ml-2">
-            <Button
-              variant="ghost"
+            <FavoriteButton
+              projectId={project.id}
+              isFavorite={project.est_favori_utilisateur ?? false}
+              onToggle={(isFavorite) => {
+                const updatedProject = { ...project, est_favori_utilisateur: isFavorite };
+                onToggleStar(updatedProject);
+              }}
               size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => onToggleStar(project)}
-            >
-              <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
-            </Button>
+              variant="ghost"
+            />
             <ProjectActions
               project={project}
               onViewDetails={onViewDetails}
@@ -565,17 +589,22 @@ function ProjectCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Statut et progression */}
+        {/* Statut, priorité et progression */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Badge
-              className={cn(
-                "font-medium",
-                getStatusColor(project.statut)
+            <div className="flex items-center space-x-2">
+              <Badge
+                className={cn(
+                  "font-medium",
+                  getStatusColor(project.statut)
+                )}
+              >
+                {getStatusLabel(project.statut)}
+              </Badge>
+              {project.priorite && (
+                <PriorityBadge priorite={project.priorite} size="sm" />
               )}
-            >
-              {getStatusLabel(project.statut)}
-            </Badge>
+            </div>
             <span className="text-sm font-medium text-gray-700">
               {project.niveau_execution}%
             </span>
@@ -714,14 +743,16 @@ function ProjectRow({
                 >
                   {project.titre}
                 </h3>
-                <Button
-                  variant="ghost"
+                <FavoriteButton
+                  projectId={project.id}
+                  isFavorite={project.est_favori_utilisateur ?? false}
+                  onToggle={(isFavorite) => {
+                    const updatedProject = { ...project, est_favori_utilisateur: isFavorite };
+                    onToggleStar(updatedProject);
+                  }}
                   size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => onToggleStar(project)}
-                >
-                  <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
-                </Button>
+                  variant="ghost"
+                />
               </div>
               <p className="text-sm text-gray-600 truncate">
                 {project.description || "Aucune description disponible"}
@@ -737,14 +768,19 @@ function ProjectRow({
               <div className="text-xs text-gray-500">Progression</div>
             </div>
             
-            <Badge
-              className={cn(
-                "font-medium",
-                getStatusColor(project.statut)
+            <div className="flex items-center space-x-2">
+              <Badge
+                className={cn(
+                  "font-medium",
+                  getStatusColor(project.statut)
+                )}
+              >
+                {getStatusLabel(project.statut)}
+              </Badge>
+              {project.priorite && (
+                <PriorityBadge priorite={project.priorite} size="sm" />
               )}
-            >
-              {getStatusLabel(project.statut)}
-            </Badge>
+            </div>
             
             <ProjectActions
               project={project}

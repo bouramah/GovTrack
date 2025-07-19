@@ -47,6 +47,7 @@ import ProjectDiscussionsList from "@/components/Shared/ProjectDiscussionsList";
 import ProjectTasksTab from "@/components/Shared/ProjectTasksTab";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Topbar from "./Shared/Topbar";
+import { PriorityBadge } from "./Shared/PriorityBadge";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -332,6 +333,9 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
                   >
                     {getStatusLabel(project.statut)}
                   </Badge>
+                  {project.priorite && (
+                    <PriorityBadge priorite={project.priorite} size="sm" />
+                  )}
                   {project.est_en_retard && (
                     <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
                       En retard

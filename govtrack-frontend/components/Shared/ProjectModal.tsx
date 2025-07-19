@@ -19,6 +19,7 @@ import { apiClient, Project, ProjectCreateRequest, ProjectUpdateRequest, TypePro
 import { useToast } from '@/components/ui/use-toast';
 import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { SearchableMultiSelect, SearchableMultiSelectOption } from '@/components/ui/searchable-multi-select';
+import { PrioritySelect } from './PrioritySelect';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
     type_projet_id: 0,
     porteur_ids: [],
     donneur_ordre_id: 0,
+    priorite: 'normale',
     date_debut_previsionnelle: '',
     date_fin_previsionnelle: '',
     justification_modification_dates: ''
@@ -77,6 +79,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           type_projet_id: project.type_projet.id,
           porteur_ids: project.porteurs ? project.porteurs.map(p => p.id) : [project.porteur?.id].filter(Boolean) as number[],
           donneur_ordre_id: project.donneur_ordre?.id || 0,
+          priorite: project.priorite || 'normale',
           date_debut_previsionnelle: project.date_debut_previsionnelle.split('T')[0],
           date_fin_previsionnelle: project.date_fin_previsionnelle?.split('T')[0] || '',
           justification_modification_dates: project.justification_modification_dates || ''
@@ -89,6 +92,7 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
           type_projet_id: 0,
           porteur_ids: [],
           donneur_ordre_id: 0,
+          priorite: 'normale',
           date_debut_previsionnelle: '',
           date_fin_previsionnelle: '',
           justification_modification_dates: ''
@@ -404,6 +408,20 @@ export default function ProjectModal({ isOpen, onClose, project, onSuccess }: Pr
             )}
             {serverErrors.donneur_ordre_id && (
               <p className="text-sm text-red-600">{serverErrors.donneur_ordre_id[0]}</p>
+            )}
+          </div>
+
+          {/* Priorité */}
+          <div className="space-y-2">
+            <Label htmlFor="priorite">Priorité</Label>
+            <PrioritySelect
+              value={formData.priorite}
+              onValueChange={(value) => handleInputChange('priorite', value)}
+              placeholder="Sélectionner une priorité"
+              className={serverErrors.priorite ? "border-red-500 focus:border-red-500" : ""}
+            />
+            {serverErrors.priorite && (
+              <p className="text-sm text-red-600">{serverErrors.priorite[0]}</p>
             )}
           </div>
 

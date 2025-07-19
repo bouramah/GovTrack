@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, FileText, Users, BarChart2, MessageSquare, CheckSquare, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Project as ApiProject } from "@/lib/api"
+import { PriorityBadge } from "./Shared/PriorityBadge"
 
 interface ProjectViewDetailsModalProps {
   project: ApiProject | null
@@ -59,6 +60,9 @@ export function ProjectViewDetailsModal({ project, open, onOpenChange }: Project
                 >
                   {project.statut_libelle}
                 </Badge>
+                {project.priorite && (
+                  <PriorityBadge priorite={project.priorite} size="sm" />
+                )}
                 <Badge
                   variant="outline"
                   className="text-xs border-blue-200 text-blue-700"

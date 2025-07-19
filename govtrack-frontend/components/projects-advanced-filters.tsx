@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiClient, ProjectFilters, ProjectPermissions, FilterEntity, FilterUser, TypeProjet } from "@/lib/api";
 import { toast } from "sonner";
+import { PrioritySelect } from "./Shared/PrioritySelect";
 
 interface ProjectsAdvancedFiltersProps {
   filters: ProjectFilters;
@@ -203,6 +204,24 @@ export default function ProjectsAdvancedFilters({
               />
             </Badge>
           )}
+          {filters.priorite && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              Priorité: {filters.priorite}
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => clearFilter('priorite')}
+              />
+            </Badge>
+          )}
+          {filters.favoris && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              Favoris uniquement
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => clearFilter('favoris')}
+              />
+            </Badge>
+          )}
           {filters.porteur_id && (
             <Badge variant="outline" className="flex items-center gap-1">
               Porteur: {users.find(u => u.id === filters.porteur_id)?.display_name}
@@ -299,6 +318,29 @@ export default function ProjectsAdvancedFilters({
                     onCheckedChange={(checked) => updateFilter('en_retard', checked)}
                   />
                   <Label htmlFor="en_retard" className="text-sm">Instructions en retard uniquement</Label>
+                </div>
+              </div>
+
+              {/* Priorité */}
+              <div className="space-y-2">
+                <Label htmlFor="priorite">Priorité</Label>
+                <PrioritySelect
+                  value={filters.priorite}
+                  onValueChange={(value) => updateFilter('priorite', value)}
+                  placeholder="Toutes les priorités"
+                />
+              </div>
+
+              {/* Favoris */}
+              <div className="space-y-2">
+                <Label htmlFor="favoris">Favoris</Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="favoris"
+                    checked={filters.favoris || false}
+                    onCheckedChange={(checked) => updateFilter('favoris', checked)}
+                  />
+                  <Label htmlFor="favoris" className="text-sm">Mes favoris uniquement</Label>
                 </div>
               </div>
             </div>

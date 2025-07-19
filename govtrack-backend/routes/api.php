@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\DiscussionTacheController;
 use App\Http\Controllers\Api\PieceJointeProjetController;
 use App\Http\Controllers\Api\PieceJointeTacheController;
 use App\Http\Controllers\Api\AuditController;
+use App\Http\Controllers\Api\ProjetFavoriController;
 use App\Http\Controllers\Api\PasswordResetController;
 
 /*
@@ -177,6 +178,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('projets/{id}/porteurs', [ProjetController::class, 'assignerPorteurs'])->middleware('permission:manage_project_porteurs');
     Route::delete('projets/{id}/porteurs/{userId}', [ProjetController::class, 'retirerPorteur'])->middleware('permission:manage_project_porteurs');
     Route::get('projets/{id}/porteurs', [ProjetController::class, 'listerPorteurs'])->middleware('permission:view_project_details');
+
+    // Gestion des favoris de projets
+    Route::get('projets/favoris', [ProjetFavoriController::class, 'index'])->middleware('permission:view_projects_list');
+    Route::post('projets/{id}/favoris', [ProjetFavoriController::class, 'store'])->middleware('permission:view_projects_list');
+    Route::delete('projets/{id}/favoris', [ProjetFavoriController::class, 'destroy'])->middleware('permission:view_projects_list');
+    Route::post('projets/{id}/favoris/toggle', [ProjetFavoriController::class, 'toggle'])->middleware('permission:view_projects_list');
 
     // Tâches - routes spéciales d'abord
     Route::get('taches/mes-taches', [TacheController::class, 'mesTaches'])->middleware('permission:view_tasks_list');

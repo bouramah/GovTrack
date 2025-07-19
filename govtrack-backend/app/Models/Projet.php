@@ -40,6 +40,28 @@ class Projet extends Model
     ];
 
     /**
+     * Constantes pour les priorités
+     */
+    public const PRIORITE_FAIBLE = 'faible';
+    public const PRIORITE_NORMALE = 'normale';
+    public const PRIORITE_ELEVEE = 'elevee';
+    public const PRIORITE_CRITIQUE = 'critique';
+
+    public const PRIORITES = [
+        self::PRIORITE_FAIBLE => 'Faible',
+        self::PRIORITE_NORMALE => 'Normale',
+        self::PRIORITE_ELEVEE => 'Élevée',
+        self::PRIORITE_CRITIQUE => 'Critique',
+    ];
+
+    public const PRIORITES_COULEURS = [
+        self::PRIORITE_FAIBLE => 'gray',
+        self::PRIORITE_NORMALE => 'blue',
+        self::PRIORITE_ELEVEE => 'orange',
+        self::PRIORITE_CRITIQUE => 'red',
+    ];
+
+    /**
      * Les attributs qui peuvent être assignés en masse
      */
     protected $fillable = [
@@ -49,6 +71,8 @@ class Projet extends Model
         'donneur_ordre_id',
         'statut',
         'niveau_execution',
+        'priorite',
+        'est_favori',
         'date_debut_previsionnelle',
         'date_fin_previsionnelle',
         'date_debut_reelle',
@@ -71,6 +95,7 @@ class Projet extends Model
         'date_debut_reelle' => 'date',
         'date_fin_reelle' => 'date',
         'niveau_execution' => 'integer',
+        'est_favori' => 'boolean',
     ];
 
     /**
@@ -151,6 +176,23 @@ class Projet extends Model
     }
 
     /**
+     * Relation avec les utilisateurs qui ont mis ce projet en favori
+     */
+    public function favoris(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'projet_favoris', 'projet_id', 'user_id')
+                    ->withPivot('date_ajout');
+    }
+
+    /**
+     * Vérifier si un projet est en favori pour un utilisateur donné
+     */
+    public function estFavoriPour($userId): bool
+    {
+        return $this->favoris()->where('user_id', $userId)->exists();
+    }
+
+    /**
      * Scope par statut
      */
     public function scopeByStatut($query, $statut)
@@ -192,6 +234,34 @@ class Projet extends Model
     {
         return $query->where('date_fin_previsionnelle', '<', now())
                     ->whereNotIn('statut', [self::STATUT_TERMINE]);
+    }
+
+    /**
+     * Scope par priorité
+     */
+    public function scopeByPriorite($query, $priorite)
+    {
+        return $query->where('priorite', $priorite);
+    }
+
+    /**
+     * Scope projets favoris pour un utilisateur
+     */
+    public function scopeFavorisPour($query, $userId)
+    {
+        return $query->whereHas('favoris', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+    }
+
+    /**
+     * Scope projets non favoris pour un utilisateur
+     */
+    public function scopeNonFavorisPour($query, $userId)
+    {
+        return $query->whereDoesntHave('favoris', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
     }
 
     /**
@@ -274,5 +344,36 @@ class Projet extends Model
     public function getNiveauExecutionAutomatiqueAttribute(): bool
     {
         return $this->aDesTaches();
+    }
+
+    /**
+     * Accesseur pour le libellé de la priorité
+     */
+    public function getPrioriteLibelleAttribute(): string
+    {
+        return self::PRIORITES[$this->priorite] ?? $this->priorite;
+    }
+
+    /**
+     * Accesseur pour la couleur de la priorité
+     */
+    public function getPrioriteCouleurAttribute(): string
+    {
+        return self::PRIORITES_COULEURS[$this->priorite] ?? 'gray';
+    }
+
+    /**
+     * Accesseur pour l'icône de la priorité
+     */
+    public function getPrioriteIconeAttribute(): string
+    {
+        $icones = [
+            self::PRIORITE_FAIBLE => 'arrow-down',
+            self::PRIORITE_NORMALE => 'minus',
+            self::PRIORITE_ELEVEE => 'arrow-up',
+            self::PRIORITE_CRITIQUE => 'alert-triangle',
+        ];
+
+        return $icones[$this->priorite] ?? 'minus';
     }
 }

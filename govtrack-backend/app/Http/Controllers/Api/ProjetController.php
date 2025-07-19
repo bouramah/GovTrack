@@ -157,6 +157,16 @@ class ProjetController extends Controller
                 $query->where('niveau_execution', '<=', $request->niveau_execution_max);
             }
 
+            // Filtres pour les priorités
+            if ($request->filled('priorite')) {
+                $query->byPriorite($request->priorite);
+            }
+
+            // Filtres pour les favoris
+            if ($request->filled('favoris') && $request->boolean('favoris')) {
+                $query->favorisPour($user->id);
+            }
+
             // Filtres de date
             if ($request->filled('date_debut_previsionnelle_debut')) {
                 $query->where('date_debut_previsionnelle', '>=', $request->date_debut_previsionnelle_debut);
@@ -259,10 +269,11 @@ class ProjetController extends Controller
             $projets = $query->paginate($perPage);
 
             // Ajouter des informations calculées
-            $projets->getCollection()->transform(function ($projet) {
+            $projets->getCollection()->transform(function ($projet) use ($user) {
                 $projet->statut_libelle = $projet->statut_libelle;
                 $projet->est_en_retard = $projet->est_en_retard;
                 $projet->taches_count = $projet->taches()->count();
+                $projet->est_favori_utilisateur = $projet->estFavoriPour($user->id);
                 return $projet;
             });
 
@@ -322,6 +333,7 @@ class ProjetController extends Controller
                 'porteur_ids' => 'required|array|min:1',
                 'porteur_ids.*' => 'exists:users,id',
                 'donneur_ordre_id' => 'required|exists:users,id',
+                'priorite' => 'nullable|in:' . implode(',', array_keys(Projet::PRIORITES)),
                 'date_debut_previsionnelle' => 'required|date|after_or_equal:today',
                 'date_fin_previsionnelle' => 'nullable|date|after:date_debut_previsionnelle',
                 'justification_modification_dates' => 'nullable|string',
@@ -356,6 +368,7 @@ class ProjetController extends Controller
                 'donneur_ordre_id' => $validated['donneur_ordre_id'],
                 'statut' => Projet::STATUT_A_FAIRE,
                 'niveau_execution' => 0,
+                'priorite' => $validated['priorite'] ?? Projet::PRIORITE_NORMALE,
                 'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
                 'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
                 'justification_modification_dates' => $validated['justification_modification_dates'] ?? null,
@@ -411,9 +424,10 @@ class ProjetController extends Controller
     /**
      * Afficher un projet spécifique
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $projet = Projet::with([
                 'typeProjet',
                 'porteurs',
@@ -428,6 +442,14 @@ class ProjetController extends Controller
             $projet->statut_libelle = $projet->statut_libelle;
             $projet->est_en_retard = $projet->est_en_retard;
             $projet->taches_count = $projet->taches->count();
+
+            // Ajouter les informations de priorité
+            $projet->priorite_libelle = $projet->priorite_libelle;
+            $projet->priorite_couleur = $projet->priorite_couleur;
+            $projet->priorite_icone = $projet->priorite_icone;
+
+            // Ajouter l'information de favori pour l'utilisateur connecté
+            $projet->est_favori_utilisateur = $projet->estFavoriPour($user->id);
 
             return response()->json([
                 'success' => true,
@@ -461,6 +483,7 @@ class ProjetController extends Controller
                 'date_debut_previsionnelle' => 'required|date',
                 'date_fin_previsionnelle' => 'required|date|after:date_debut_previsionnelle',
                 'justification_modification_dates' => 'nullable|string',
+                'priorite' => 'nullable|in:' . implode(',', array_keys(Projet::PRIORITES)),
                 'niveau_execution' => 'sometimes|integer|min:0|max:100',
             ]);
 
@@ -496,6 +519,7 @@ class ProjetController extends Controller
                 'description' => $validated['description'],
                 'type_projet_id' => $validated['type_projet_id'],
                 'donneur_ordre_id' => $validated['donneur_ordre_id'],
+                'priorite' => $validated['priorite'] ?? $projet->priorite,
                 'date_debut_previsionnelle' => $validated['date_debut_previsionnelle'],
                 'date_fin_previsionnelle' => $validated['date_fin_previsionnelle'],
                 'justification_modification_dates' => $validated['justification_modification_dates'] ?? null,

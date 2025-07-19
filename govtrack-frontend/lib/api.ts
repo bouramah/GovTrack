@@ -175,6 +175,11 @@ export interface Project {
   statut: string;
   statut_libelle: string;
   niveau_execution: number;
+  priorite: string;
+  priorite_libelle: string;
+  priorite_couleur: string;
+  priorite_icone: string;
+  est_favori_utilisateur: boolean;
   date_debut_previsionnelle: string;
   date_fin_previsionnelle?: string;
   date_debut_reelle?: string;
@@ -232,6 +237,7 @@ export interface ProjectCreateRequest {
   type_projet_id: number;
   porteur_ids: number[]; // Nouveau : tableau d'IDs des porteurs
   donneur_ordre_id: number;
+  priorite?: string;
   date_debut_previsionnelle: string;
   date_fin_previsionnelle?: string;
   justification_modification_dates?: string;
@@ -242,6 +248,7 @@ export interface ProjectUpdateRequest {
   description?: string;
   type_projet_id?: number;
   donneur_ordre_id?: number;
+  priorite?: string;
   date_debut_previsionnelle?: string;
   date_fin_previsionnelle?: string;
   justification_modification_dates?: string;
@@ -581,6 +588,8 @@ export interface ProjectFilters {
   search?: string;
   statut?: string;
   type_projet_id?: number;
+  priorite?: string;
+  favoris?: boolean;
   en_retard?: boolean;
   niveau_execution_min?: number;
   niveau_execution_max?: number;
@@ -1893,6 +1902,27 @@ class ApiClient {
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des utilisateurs pour filtres');
     }
+  }
+
+  // Gestion des favoris de projets
+  async getProjectFavorites(): Promise<PaginatedResponse<Project>> {
+    const response = await this.client.get('/v1/projets/favoris');
+    return response.data;
+  }
+
+  async addProjectToFavorites(projectId: number): Promise<ApiResponse<void>> {
+    const response = await this.client.post(`/v1/projets/${projectId}/favoris`);
+    return response.data;
+  }
+
+  async removeProjectFromFavorites(projectId: number): Promise<ApiResponse<void>> {
+    const response = await this.client.delete(`/v1/projets/${projectId}/favoris`);
+    return response.data;
+  }
+
+  async toggleProjectFavorite(projectId: number): Promise<ApiResponse<{ est_favori: boolean; action: string }>> {
+    const response = await this.client.post(`/v1/projets/${projectId}/favoris/toggle`);
+    return response.data;
   }
 
   // =================================================================

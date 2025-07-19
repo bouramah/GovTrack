@@ -200,6 +200,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Projets favoris de l'utilisateur
+     */
+    public function projetsFavoris(): BelongsToMany
+    {
+        return $this->belongsToMany(Projet::class, 'projet_favoris', 'user_id', 'projet_id')
+                    ->withPivot('date_ajout');
+    }
+
+    /**
      * Pièces jointes ajoutées par l'utilisateur sur les projets
      */
     public function piecesJointesProjets(): HasMany
