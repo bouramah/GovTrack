@@ -7,6 +7,7 @@ use App\Mail\ProjetCreated as ProjetCreatedMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SendProjetCreatedNotification implements ShouldQueue
 {
@@ -31,9 +32,12 @@ class SendProjetCreatedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($projet->porteur && $projet->porteur->id !== $creator->id) {
-            $recipients->push($projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($projet->porteurs && $projet->porteurs->count() > 0) {
+            $porteurs = $projet->porteurs->filter(function ($porteur) use ($creator) {
+                return $porteur->id !== $creator->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
         // 2. Ordonnateur de l'instruction
@@ -41,12 +45,12 @@ class SendProjetCreatedNotification implements ShouldQueue
             $recipients->push($projet->donneurOrdre);
         }
 
-        // 3. Membres de l'équipe (si le projet a des tâches assignées)
+        // 3. Membres de l'équipe (responsables des tâches du projet)
         $membresEquipe = $projet->taches()
-            ->with('assignations.utilisateur')
+            ->with('responsables')
             ->get()
             ->flatMap(function ($tache) {
-                return $tache->assignations->pluck('utilisateur');
+                return $tache->responsables;
             })
             ->unique('id')
             ->filter(function ($user) use ($creator) {
@@ -64,7 +68,7 @@ class SendProjetCreatedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de création d\'instruction envoyées', [
+        Log::info('Notifications de création d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'creator_id' => $creator->id,
@@ -78,7 +82,7 @@ class SendProjetCreatedNotification implements ShouldQueue
      */
     public function failed(ProjetCreated $event, \Throwable $exception): void
     {
-        \Log::error('Échec de l\'envoi des notifications de création de projet', [
+        Log::error('Échec de l\'envoi des notifications de création de projet', [
             'projet_id' => $event->projet->id,
             'creator_id' => $event->creator->id,
             'error' => $exception->getMessage(),

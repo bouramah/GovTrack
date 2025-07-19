@@ -7,6 +7,7 @@ use App\Mail\ProjetStatusChanged as ProjetStatusChangedMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SendProjetStatusChangedNotification implements ShouldQueue
 {
@@ -34,9 +35,12 @@ class SendProjetStatusChangedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($projet->porteur && $projet->porteur->id !== $changer->id) {
-            $recipients->push($projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($projet->porteurs && $projet->porteurs->count() > 0) {
+            $porteurs = $projet->porteurs->filter(function ($porteur) use ($changer) {
+                return $porteur->id !== $changer->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
         // 2. Ordonnateur de l'instruction
@@ -44,12 +48,12 @@ class SendProjetStatusChangedNotification implements ShouldQueue
             $recipients->push($projet->donneurOrdre);
         }
 
-        // 3. Membres de l'équipe (si le projet a des tâches assignées)
+        // 3. Membres de l'équipe (responsables des tâches du projet)
         $membresEquipe = $projet->taches()
-            ->with('assignations.utilisateur')
+            ->with('responsables')
             ->get()
             ->flatMap(function ($tache) {
-                return $tache->assignations->pluck('utilisateur');
+                return $tache->responsables;
             })
             ->unique('id')
             ->filter(function ($user) use ($changer) {
@@ -74,7 +78,7 @@ class SendProjetStatusChangedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de changement de statut d\'instruction envoyées', [
+        Log::info('Notifications de changement de statut d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'changer_id' => $changer->id,
@@ -90,7 +94,7 @@ class SendProjetStatusChangedNotification implements ShouldQueue
      */
     public function failed(ProjetStatusChanged $event, \Throwable $exception): void
     {
-        \Log::error('Échec de l\'envoi des notifications de changement de statut d\'instruction', [
+        Log::error('Échec de l\'envoi des notifications de changement de statut d\'instruction', [
             'projet_id' => $event->projet->id,
             'changer_id' => $event->changer->id,
             'ancien_statut' => $event->ancienStatut,

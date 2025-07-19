@@ -31,7 +31,7 @@ class SendDiscussionTacheCreatedNotification implements ShouldQueue
         $isReply = $event->isReply;
 
         // Charger les relations nécessaires
-        $discussion->load(['tache.responsable', 'tache.projet.porteur', 'parent.user']);
+        $discussion->load(['tache.responsables', 'tache.projet.porteurs', 'parent.user']);
 
         $recipients = collect();
 
@@ -42,14 +42,20 @@ class SendDiscussionTacheCreatedNotification implements ShouldQueue
             }
         } else {
             // Pour un nouveau commentaire, notifier :
-            // 1. Le responsable de la tâche (sauf si c'est lui qui a posté)
-            if ($discussion->tache->responsable && $discussion->tache->responsable->id !== $author->id) {
-                $recipients->push($discussion->tache->responsable);
+            // 1. Tous les responsables de la tâche (sauf si c'est eux qui ont posté)
+            if ($discussion->tache->responsables && $discussion->tache->responsables->count() > 0) {
+                $responsables = $discussion->tache->responsables->filter(function ($responsable) use ($author) {
+                    return $responsable->id !== $author->id;
+                });
+                $recipients = $recipients->merge($responsables);
             }
 
-            // 2. Le porteur du projet (sauf si c'est lui qui a posté)
-            if ($discussion->tache->projet->porteur && $discussion->tache->projet->porteur->id !== $author->id) {
-                $recipients->push($discussion->tache->projet->porteur);
+            // 2. Tous les porteurs du projet (sauf si c'est eux qui ont posté)
+            if ($discussion->tache->projet->porteurs && $discussion->tache->projet->porteurs->count() > 0) {
+                $porteurs = $discussion->tache->projet->porteurs->filter(function ($porteur) use ($author) {
+                    return $porteur->id !== $author->id;
+                });
+                $recipients = $recipients->merge($porteurs);
             }
         }
 

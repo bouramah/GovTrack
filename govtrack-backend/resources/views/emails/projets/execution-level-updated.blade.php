@@ -210,8 +210,14 @@
             <div class="details">
                 <h3>📋 Détails de l'instruction</h3>
                 <div class="info-row">
-                    <span class="info-label">Porteur :</span>
-                    <span class="info-value">{{ $projet->porteur->prenom ?? 'Non défini' }} {{ $projet->porteur->nom ?? '' }}</span>
+                    <span class="info-label">Porteurs :</span>
+                    <span class="info-value">
+                        @if($projet->porteurs && $projet->porteurs->count() > 0)
+                            {{ $projet->porteurs->pluck('prenom')->implode(', ') }} {{ $projet->porteurs->pluck('nom')->implode(', ') }}
+                        @else
+                            Non assigné
+                        @endif
+                    </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Ordonnateur de l'instruction :</span>

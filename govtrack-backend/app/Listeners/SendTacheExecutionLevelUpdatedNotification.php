@@ -35,14 +35,20 @@ class SendTacheExecutionLevelUpdatedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($tache->projet->porteur && $tache->projet->porteur->id !== $updater->id) {
-            $recipients->push($tache->projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($tache->projet->porteurs && $tache->projet->porteurs->count() > 0) {
+            $porteurs = $tache->projet->porteurs->filter(function ($porteur) use ($updater) {
+                return $porteur->id !== $updater->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
-        // 2. Responsable de la tâche (si différent de celui qui met à jour)
-        if ($tache->responsable && $tache->responsable->id !== $updater->id) {
-            $recipients->push($tache->responsable);
+        // 2. Tous les responsables de la tâche (si différents de celui qui met à jour)
+        if ($tache->responsables && $tache->responsables->count() > 0) {
+            $responsables = $tache->responsables->filter(function ($responsable) use ($updater) {
+                return $responsable->id !== $updater->id;
+            });
+            $recipients = $recipients->merge($responsables);
         }
 
         // 3. Ordonnateur de l'instruction du projet (si différent de celui qui met à jour)

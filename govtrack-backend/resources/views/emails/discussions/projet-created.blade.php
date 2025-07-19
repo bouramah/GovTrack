@@ -106,7 +106,13 @@
                 <h3>📋 Instruction : {{ $discussion->projet->titre }}</h3>
                 <p><strong>Type d'instruction :</strong> {{ $discussion->projet->typeProjet->nom ?? 'Non défini' }}</p>
                 <p><strong>Statut :</strong> {{ $discussion->projet->statut_libelle ?? $discussion->projet->statut }}</p>
-                <p><strong>Porteur :</strong> {{ $discussion->projet->porteur->prenom ?? '' }} {{ $discussion->projet->porteur->nom ?? '' }}</p>
+                <p><strong>Porteurs :</strong>
+                    @if($discussion->projet->porteurs && $discussion->projet->porteurs->count() > 0)
+                        {{ $discussion->projet->porteurs->pluck('prenom')->implode(', ') }} {{ $discussion->projet->porteurs->pluck('nom')->implode(', ') }}
+                    @else
+                        Non assigné
+                    @endif
+                </p>
             </div>
 
             @if($isReply && $parentMessage)

@@ -35,14 +35,20 @@ class SendTacheStatusChangedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($tache->projet->porteur && $tache->projet->porteur->id !== $changer->id) {
-            $recipients->push($tache->projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($tache->projet->porteurs && $tache->projet->porteurs->count() > 0) {
+            $porteurs = $tache->projet->porteurs->filter(function ($porteur) use ($changer) {
+                return $porteur->id !== $changer->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
-        // 2. Responsable de la tâche (si différent de celui qui change)
-        if ($tache->responsable && $tache->responsable->id !== $changer->id) {
-            $recipients->push($tache->responsable);
+        // 2. Tous les responsables de la tâche (si différents de celui qui change)
+        if ($tache->responsables && $tache->responsables->count() > 0) {
+            $responsables = $tache->responsables->filter(function ($responsable) use ($changer) {
+                return $responsable->id !== $changer->id;
+            });
+            $recipients = $recipients->merge($responsables);
         }
 
         // 3. Ordonnateur de l'instruction du projet (si différent de celui qui change)

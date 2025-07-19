@@ -159,10 +159,12 @@
                 </div>
             @endif
 
-            @if($tache->responsable)
+            @if($tache->responsables && $tache->responsables->count() > 0)
                 <div class="info-row">
-                    <span class="info-label">Responsable :</span>
-                    <span class="info-value">{{ $tache->responsable->prenom }} {{ $tache->responsable->nom }}</span>
+                    <span class="info-label">Responsables :</span>
+                    <span class="info-value">
+                        {{ $tache->responsables->pluck('prenom')->implode(', ') }} {{ $tache->responsables->pluck('nom')->implode(', ') }}
+                    </span>
                 </div>
             @endif
 
@@ -200,8 +202,14 @@
                 <span class="info-value">{{ $tache->projet->titre }}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Porteur :</span>
-                <span class="info-value">{{ $tache->projet->porteur->prenom }} {{ $tache->projet->porteur->nom }}</span>
+                <span class="info-label">Porteurs :</span>
+                <span class="info-value">
+                    @if($tache->projet->porteurs && $tache->projet->porteurs->count() > 0)
+                        {{ $tache->projet->porteurs->pluck('prenom')->implode(', ') }} {{ $tache->projet->porteurs->pluck('nom')->implode(', ') }}
+                    @else
+                        Non assigné
+                    @endif
+                </span>
             </div>
             @if($tache->projet->donneurOrdre)
                 <div class="info-row">

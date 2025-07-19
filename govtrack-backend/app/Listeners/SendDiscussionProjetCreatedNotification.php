@@ -31,7 +31,7 @@ class SendDiscussionProjetCreatedNotification implements ShouldQueue
         $isReply = $event->isReply;
 
         // Charger les relations nécessaires
-        $discussion->load(['projet.porteur', 'projet.donneurOrdre', 'projet.taches.responsable', 'parent.user']);
+        $discussion->load(['projet.porteurs', 'projet.donneurOrdre', 'projet.taches.responsables', 'parent.user']);
 
         $recipients = collect();
 
@@ -42,9 +42,12 @@ class SendDiscussionProjetCreatedNotification implements ShouldQueue
             }
         } else {
             // Pour un nouveau commentaire, notifier :
-            // 1. Le porteur du projet (sauf si c'est lui qui a posté)
-            if ($discussion->projet->porteur && $discussion->projet->porteur->id !== $author->id) {
-                $recipients->push($discussion->projet->porteur);
+            // 1. Tous les porteurs du projet (sauf si c'est eux qui ont posté)
+            if ($discussion->projet->porteurs && $discussion->projet->porteurs->count() > 0) {
+                $porteurs = $discussion->projet->porteurs->filter(function ($porteur) use ($author) {
+                    return $porteur->id !== $author->id;
+                });
+                $recipients = $recipients->merge($porteurs);
             }
 
             // 2. Le donneur d'ordre (sauf si c'est lui qui a posté)
@@ -52,10 +55,13 @@ class SendDiscussionProjetCreatedNotification implements ShouldQueue
                 $recipients->push($discussion->projet->donneurOrdre);
             }
 
-            // 3. L'équipe (responsables des tâches du projet)
+            // 3. L'équipe (tous les responsables des tâches du projet)
             $discussion->projet->taches->each(function ($tache) use ($recipients, $author) {
-                if ($tache->responsable && $tache->responsable->id !== $author->id) {
-                    $recipients->push($tache->responsable);
+                if ($tache->responsables && $tache->responsables->count() > 0) {
+                    $responsables = $tache->responsables->filter(function ($responsable) use ($author) {
+                        return $responsable->id !== $author->id;
+                    });
+                    $recipients = $recipients->merge($responsables);
                 }
             });
         }

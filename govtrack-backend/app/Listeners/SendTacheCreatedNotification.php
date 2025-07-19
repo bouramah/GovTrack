@@ -32,14 +32,20 @@ class SendTacheCreatedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($tache->projet->porteur && $tache->projet->porteur->id !== $creator->id) {
-            $recipients->push($tache->projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($tache->projet->porteurs && $tache->projet->porteurs->count() > 0) {
+            $porteurs = $tache->projet->porteurs->filter(function ($porteur) use ($creator) {
+                return $porteur->id !== $creator->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
-        // 2. Responsable de la tâche (si différent du créateur)
-        if ($tache->responsable && $tache->responsable->id !== $creator->id) {
-            $recipients->push($tache->responsable);
+        // 2. Tous les responsables de la tâche (si différents du créateur)
+        if ($tache->responsables && $tache->responsables->count() > 0) {
+            $responsables = $tache->responsables->filter(function ($responsable) use ($creator) {
+                return $responsable->id !== $creator->id;
+            });
+            $recipients = $recipients->merge($responsables);
         }
 
         // 3. Ordonnateur de l'instruction du projet (si différent du créateur)

@@ -112,8 +112,10 @@
                 <h3>✅ Tâche : {{ $discussion->tache->titre }}</h3>
                 <p><strong>Statut :</strong> {{ $discussion->tache->statut_libelle ?? $discussion->tache->statut }}</p>
                 <p><strong>Niveau d'exécution :</strong> {{ $discussion->tache->niveau_execution }}%</p>
-                @if($discussion->tache->responsable)
-                    <p><strong>Responsable :</strong> {{ $discussion->tache->responsable->prenom }} {{ $discussion->tache->responsable->nom }}</p>
+                @if($discussion->tache->responsables && $discussion->tache->responsables->count() > 0)
+                    <p><strong>Responsables :</strong>
+                        {{ $discussion->tache->responsables->pluck('prenom')->implode(', ') }} {{ $discussion->tache->responsables->pluck('nom')->implode(', ') }}
+                    </p>
                 @endif
             </div>
 
@@ -121,7 +123,13 @@
                 <h3>📋 Instruction parente : {{ $discussion->tache->projet->titre }}</h3>
                 <p><strong>Type d'instruction :</strong> {{ $discussion->tache->projet->typeProjet->nom ?? 'Non défini' }}</p>
                 <p><strong>Statut :</strong> {{ $discussion->tache->projet->statut_libelle ?? $discussion->tache->projet->statut }}</p>
-                <p><strong>Porteur :</strong> {{ $discussion->tache->projet->porteur->prenom ?? '' }} {{ $discussion->tache->projet->porteur->nom ?? '' }}</p>
+                <p><strong>Porteurs :</strong>
+                    @if($discussion->tache->projet->porteurs && $discussion->tache->projet->porteurs->count() > 0)
+                        {{ $discussion->tache->projet->porteurs->pluck('prenom')->implode(', ') }} {{ $discussion->tache->projet->porteurs->pluck('nom')->implode(', ') }}
+                    @else
+                        Non assigné
+                    @endif
+                </p>
             </div>
 
             @if($isReply && $parentMessage)

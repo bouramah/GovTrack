@@ -7,6 +7,7 @@ use App\Mail\ProjetExecutionLevelUpdated as ProjetExecutionLevelUpdatedMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
 {
@@ -34,9 +35,12 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
         // Liste des utilisateurs à notifier
         $recipients = collect();
 
-        // 1. Porteur du projet
-        if ($projet->porteur && $projet->porteur->id !== $updater->id) {
-            $recipients->push($projet->porteur);
+        // 1. Tous les porteurs du projet
+        if ($projet->porteurs && $projet->porteurs->count() > 0) {
+            $porteurs = $projet->porteurs->filter(function ($porteur) use ($updater) {
+                return $porteur->id !== $updater->id;
+            });
+            $recipients = $recipients->merge($porteurs);
         }
 
         // 2. Ordonnateur de l'instruction
@@ -44,12 +48,12 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
             $recipients->push($projet->donneurOrdre);
         }
 
-        // 3. Membres de l'équipe (si le projet a des tâches assignées)
+        // 3. Membres de l'équipe (responsables des tâches du projet)
         $membresEquipe = $projet->taches()
-            ->with('assignations.utilisateur')
+            ->with('responsables')
             ->get()
             ->flatMap(function ($tache) {
-                return $tache->assignations->pluck('utilisateur');
+                return $tache->responsables;
             })
             ->unique('id')
             ->filter(function ($user) use ($updater) {
@@ -74,7 +78,7 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
         }
 
         // Log pour debug
-        \Log::info('Notifications de mise à jour du niveau d\'exécution d\'instruction envoyées', [
+        Log::info('Notifications de mise à jour du niveau d\'exécution d\'instruction envoyées', [
             'projet_id' => $projet->id,
             'projet_titre' => $projet->titre,
             'updater_id' => $updater->id,
@@ -91,7 +95,7 @@ class SendProjetExecutionLevelUpdatedNotification implements ShouldQueue
      */
     public function failed(ProjetExecutionLevelUpdated $event, \Throwable $exception): void
     {
-        \Log::error('Échec de l\'envoi des notifications de mise à jour du niveau d\'exécution d\'instruction', [
+        Log::error('Échec de l\'envoi des notifications de mise à jour du niveau d\'exécution d\'instruction', [
             'projet_id' => $event->projet->id,
             'updater_id' => $event->updater->id,
             'ancien_niveau' => $event->ancienNiveau,
