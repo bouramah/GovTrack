@@ -138,7 +138,7 @@ export default function AuditPageContent() {
       const response = await auditApi.getAuditLogs(apiFilters);
       setLogs(response.data);
       setPagination(response.pagination);
-      setStats(response.statistiques);
+      // Ne pas définir les stats ici car elles sont chargées séparément
       setTopTables(response.top_tables);
       setTopUsers(response.top_users);
     } catch (error: any) {
@@ -153,7 +153,8 @@ export default function AuditPageContent() {
   const loadStats = async () => {
     try {
       const response = await auditApi.getAuditStats();
-      setStats(response.data);
+      console.log("Stats response:", response);
+      setStats(response.data.general_stats);
     } catch (error: any) {
       console.error("Erreur lors du chargement des statistiques:", error);
     }

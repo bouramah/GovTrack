@@ -46,6 +46,7 @@ import ProjectAttachmentUploadModal from "@/components/Shared/ProjectAttachmentU
 import ProjectDiscussionsList from "@/components/Shared/ProjectDiscussionsList";
 import ProjectTasksTab from "@/components/Shared/ProjectTasksTab";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Topbar from "./Shared/Topbar";
 
 interface ProjectDetailPageProps {
   id: string;
@@ -204,27 +205,16 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
       {/* Main Content */}
       <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col pt-16">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <Topbar
+          name="Détail de l'instruction"
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Action Bar */}
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="mr-4 lg:hidden"
-                      onClick={() => setSidebarOpen(!sidebarOpen)}
-                    >
-                      <Menu className="h-5 w-5" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Ouvrir/Fermer le menu</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -313,7 +303,7 @@ export default function ProjectDetailPage({ id }: ProjectDetailPageProps) {
               </TooltipProvider>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Project Header */}
         <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-6">

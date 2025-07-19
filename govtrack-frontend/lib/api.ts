@@ -37,9 +37,6 @@ export interface AuditStats {
   deletions: number;
   force_deletions: number;
   restorations: number;
-  today_logs: number;
-  this_week_logs: number;
-  this_month_logs: number;
 }
 
 export interface TopTable {
