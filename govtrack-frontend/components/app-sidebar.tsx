@@ -29,6 +29,7 @@ import {
   Building,
   Shield,
   Activity,
+  Eye,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -66,6 +67,7 @@ export function AppSidebar() {
     ...(hasPermission('view_entities_list') ? [{ href: "/entities", label: "Entités", icon: Building }] : []),
     ...((rolePermissions.canViewList || permissionPermissions.canViewList) ? [{ href: "/roles", label: "Rôles & Permissions", icon: Shield }] : []),
     ...(hasPermission('view_audit_logs') ? [{ href: "/audit", label: "Audit & Traçabilité", icon: Activity }] : []),
+    ...(hasPermission('view_global_login_activities') ? [{ href: "/login-activities", label: "Activités Connexion", icon: Eye }] : []),
     { href: "/settings", label: "Paramètres", icon: Settings },
   ]
 

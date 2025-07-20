@@ -27,6 +27,9 @@ class UserPermissionsSeeder extends Seeder
             ['nom' => 'manage_user_assignments', 'description' => 'Gérer les affectations d\'un utilisateur'],
             ['nom' => 'manage_user_roles', 'description' => 'Gérer les rôles d\'un utilisateur'],
             ['nom' => 'view_user_stats', 'description' => 'Voir les statistiques des utilisateurs'],
+            ['nom' => 'view_user_login_activities', 'description' => 'Voir les activités de connexion d\'un utilisateur'],
+            ['nom' => 'view_global_login_activities', 'description' => 'Voir toutes les activités de connexion (admin)'],
+            ['nom' => 'manage_user_passwords', 'description' => 'Réinitialiser les mots de passe des utilisateurs'],
         ];
 
         // Créer les nouvelles permissions

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NewPasswordNotification;
 use App\Services\PasswordGeneratorService;
+use App\Services\LoginActivityService;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
@@ -730,6 +731,9 @@ class UserController extends Controller
             // Envoyer l'email avec le nouveau mot de passe
             $adminName = $admin->prenom . ' ' . $admin->nom;
             Mail::to($user->email)->send(new NewPasswordNotification($user, $newPassword, $adminName));
+
+            // Enregistrer l'activité de réinitialisation de mot de passe
+            LoginActivityService::logPasswordReset($user, $request);
 
             // Log de l'action
             Log::info("Mot de passe réinitialisé par admin", [

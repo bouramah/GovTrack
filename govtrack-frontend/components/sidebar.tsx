@@ -29,6 +29,7 @@ import {
   FolderOpen,
   FolderKanban,
   Activity,
+  Eye,
 } from "lucide-react";
 import { useState } from "react";
 import { SearchModal } from "./search-modal";
@@ -236,6 +237,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 {permissions.canViewAuditLogs() && (
                   <NavItem href="/audit" icon={Activity}>
                     Audit & Traçabilité
+                  </NavItem>
+                )}
+                {permissions.hasPermission('view_global_login_activities') && (
+                  <NavItem href="/login-activities" icon={Eye}>
+                    Activités Connexion
                   </NavItem>
                 )}
               </div>

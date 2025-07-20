@@ -12,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Services\LoginActivityService;
 
 class AuthController extends Controller
 {
@@ -46,6 +47,9 @@ class AuthController extends Controller
 
             // Créer un nouveau token
             $token = $user->createToken('auth-token')->plainTextToken;
+
+            // Enregistrer l'activité de connexion
+            LoginActivityService::logLogin($user, $request, $token);
 
             // Charger les relations nécessaires
             $user->load(['roles.permissions', 'affectations.poste', 'affectations.entite']);
@@ -101,6 +105,9 @@ class AuthController extends Controller
             ]);
 
         } catch (ValidationException $e) {
+            // Enregistrer la tentative de connexion échouée
+            LoginActivityService::logFailedLogin($request->email, $request);
+
             return response()->json([
                 'message' => 'Erreur de validation',
                 'success' => false,
@@ -121,7 +128,13 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-            $request->user()->currentAccessToken()->delete();
+            $user = $request->user();
+            $token = $user->currentAccessToken();
+
+            // Enregistrer l'activité de déconnexion
+            LoginActivityService::logLogout($user, $request, $token->id);
+
+            $token->delete();
 
             return response()->json([
                 'message' => 'Déconnexion réussie',

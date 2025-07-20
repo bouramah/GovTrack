@@ -2469,6 +2469,136 @@ class ApiClient {
     return response.data;
   }
 
+  // Activités de connexion
+  async getUserLoginActivities(userId: number, params?: {
+    action?: string;
+    date_from?: string;
+    date_to?: string;
+    ip_address?: string;
+    sort_by?: string;
+    sort_order?: string;
+    per_page?: number;
+  }): Promise<ApiResponse<{
+    id: number;
+    action: string;
+    ip_address: string;
+    user_agent: string;
+    location: string | null;
+    device_type: string;
+    browser: string;
+    os: string;
+    session_id: string | null;
+    created_at: string;
+    session_duration: string;
+    user: {
+      id: number;
+      nom: string;
+      prenom: string;
+      email: string;
+    };
+  }[]>> {
+    const response = await this.client.get(`/v1/login-activities/user/${userId}`, { params });
+    return response.data;
+  }
+
+  async getUserLoginStats(userId: number, days?: number): Promise<ApiResponse<{
+    total_logins: number;
+    total_logouts: number;
+    failed_logins: number;
+    password_resets: number;
+    session_expired: number;
+    unique_ips: number;
+    devices: string[];
+    browsers: string[];
+    os_list: string[];
+    last_login: string | null;
+    last_logout: string | null;
+    average_session_duration: number;
+    average_session_duration_formatted: string;
+  }>> {
+    const response = await this.client.get(`/v1/login-activities/user/${userId}/stats`, { 
+      params: { days } 
+    });
+    return response.data;
+  }
+
+  async getGlobalLoginActivities(params?: {
+    action?: string;
+    user_id?: number;
+    date_from?: string;
+    date_to?: string;
+    ip_address?: string;
+    sort_by?: string;
+    sort_order?: string;
+    per_page?: number;
+  }): Promise<ApiResponse<{
+    id: number;
+    action: string;
+    ip_address: string;
+    user_agent: string;
+    location: string | null;
+    device_type: string;
+    browser: string;
+    os: string;
+    session_id: string | null;
+    created_at: string;
+    session_duration: string;
+    user: {
+      id: number;
+      nom: string;
+      prenom: string;
+      email: string;
+    };
+  }[]>> {
+    const response = await this.client.get('/v1/login-activities/global', { params });
+    return response.data;
+  }
+
+  async getGlobalLoginStats(days?: number): Promise<ApiResponse<{
+    total_logins: number;
+    total_logouts: number;
+    failed_logins: number;
+    password_resets: number;
+    session_expired: number;
+    unique_users: number;
+    unique_ips: number;
+    top_devices: Record<string, number>;
+    top_browsers: Record<string, number>;
+    top_os: Record<string, number>;
+    daily_activity: Record<string, {
+      logins: number;
+      logouts: number;
+      failed_logins: number;
+    }>;
+  }>> {
+    const response = await this.client.get('/v1/login-activities/global/stats', { 
+      params: { days } 
+    });
+    return response.data;
+  }
+
+  async getRecentLoginActivities(hours?: number, limit?: number): Promise<ApiResponse<{
+    id: number;
+    action: string;
+    ip_address: string;
+    device_type: string;
+    browser: string;
+    os: string;
+    created_at: string;
+    session_duration: string;
+    user: {
+      id: number;
+      nom: string;
+      prenom: string;
+      email: string;
+    };
+  }[]>> {
+    const response = await this.client.get('/v1/login-activities/recent', { 
+      params: { hours, limit } 
+    });
+    return response.data;
+  }
+
 
 }
 

@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PieceJointeTacheController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\ProjetFavoriController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\LoginActivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -275,5 +276,14 @@ Route::post('v1/auth/reset-password', [PasswordResetController::class, 'reset'])
 
 // Admin reset user password
 Route::post('v1/users/{id}/reset-password', [UserController::class, 'resetPassword'])->middleware(['auth:sanctum','permission:reset_user_password']);
+
+// Activités de connexion
+Route::prefix('v1/login-activities')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('user/{userId}', [LoginActivityController::class, 'getUserActivities'])->middleware('permission:view_user_login_activities');
+    Route::get('user/{userId}/stats', [LoginActivityController::class, 'getUserStats'])->middleware('permission:view_user_login_activities');
+    Route::get('global', [LoginActivityController::class, 'getGlobalActivities'])->middleware('permission:view_global_login_activities');
+    Route::get('global/stats', [LoginActivityController::class, 'getGlobalStats'])->middleware('permission:view_global_login_activities');
+    Route::get('recent', [LoginActivityController::class, 'getRecentActivities'])->middleware('permission:view_user_login_activities');
+});
 
 
