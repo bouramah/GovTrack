@@ -92,24 +92,6 @@ export default function LoginPage() {
                   Système de Gestion des Instructions Ministérielles
                 </CardDescription>
               </div>
-              
-              {/* Branding Simandou */}
-              <div className="flex justify-center items-center space-x-4 mt-6 pt-4 border-t border-gray-100">
-                <div className="text-center">
-                  <img 
-                    src="/branding.png" 
-                    alt="Branding Guinée" 
-                    className="h-12 w-auto mx-auto mb-2"
-                  />
-                </div>
-                <div className="text-center">
-                  <img 
-                    src="/simandou.jpeg" 
-                    alt="Programme Simandou 2040" 
-                    className="h-16 w-auto mx-auto mb-2"
-                  />
-                </div>
-              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -176,6 +158,23 @@ export default function LoginPage() {
                   </a>
                 </div>
               </form>
+              
+              {/* Séparateur */}
+              <div className="border-t border-gray-200 mt-6 pt-4">
+                {/* Logos Simandou */}
+                <div className="flex justify-center items-center space-x-4">
+                  <img 
+                    src="/branding.png" 
+                    alt="Branding Guinée" 
+                    className="h-8 w-auto"
+                  />
+                  <img 
+                    src="/simandou.jpeg" 
+                    alt="Programme Simandou 2040" 
+                    className="h-16 w-auto"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

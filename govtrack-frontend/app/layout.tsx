@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import GlobalNotification from "@/components/global-notification";
+import SimpleFooter from "@/components/Shared/SimpleFooter";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           {children}
+          <SimpleFooter />
           <Toaster />
           <GlobalNotification />
         </AuthProvider>
