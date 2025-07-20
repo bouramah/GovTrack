@@ -107,7 +107,7 @@ export default function LoginPage() {
               <div className="border-t border-gray-200 pt-6">
                 <CardTitle className="text-2xl font-bold text-center text-gray-900">GovTrack</CardTitle>
                 <CardDescription className="text-center text-gray-600 mt-2">
-                  Système de Gestion d'Instructions Gouvernementales
+                  Système de Gestion d'Instructions Ministérielles
                 </CardDescription>
               </div>
             </CardHeader>

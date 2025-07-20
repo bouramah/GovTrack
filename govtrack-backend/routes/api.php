@@ -275,3 +275,5 @@ Route::post('v1/auth/reset-password', [PasswordResetController::class, 'reset'])
 
 // Admin reset user password
 Route::post('v1/users/{id}/reset-password', [UserController::class, 'resetPassword'])->middleware(['auth:sanctum','permission:reset_user_password']);
+
+

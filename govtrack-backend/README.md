@@ -55,7 +55,7 @@ GovTrack Backend est une API REST robuste développée avec Laravel 12 pour la g
 - **Notifications** automatiques
 
 ### 🏢 Gestion Organisationnelle
-- **Hiérarchie des entités** gouvernementales
+- **Hiérarchie des entités** Ministérielles
 - **Gestion des postes** et rôles
 - **Historique des affectations** utilisateurs
 - **Chefs d'entité** avec historique
@@ -108,7 +108,7 @@ govtrack-backend/
 ### Modèles Principaux
 
 - **User** : Utilisateurs du système
-- **Entite** : Entités gouvernementales
+- **Entite** : Entités Ministérielles
 - **Projet** : Projets avec SLA
 - **Tache** : Tâches et sous-tâches
 - **Discussion** : Discussions par projet/tâche

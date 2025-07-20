@@ -9,8 +9,8 @@ import GlobalNotification from "@/components/global-notification";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GovTrack - Système de Gestion d'Instructions Gouvernementales",
-  description: "Plateforme moderne de gestion des instructions gouvernementales avec système de permissions",
+  title: "GovTrack - Système de Gestion d'Instructions ministérielles",
+  description: "Plateforme moderne de gestion des instructions ministérielles avec système de permissions",
 };
 
 export default function RootLayout({

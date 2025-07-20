@@ -310,7 +310,7 @@ export default config
 ### Thèmes
 
 - **Mode clair/sombre** : Support natif
-- **Couleurs gouvernementales** : Palette officielle
+- **Couleurs Ministérielles** : Palette officielle
 - **Personnalisation** : Variables CSS
 
 ## 🔐 Authentification

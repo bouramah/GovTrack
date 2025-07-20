@@ -2454,10 +2454,22 @@ class ApiClient {
   /**
    * Réinitialisation par admin à un mot de passe par défaut
    */
-  async resetUserPassword(userId: number): Promise<any> {
-    const response = await this.client.post(`/v1/users/${userId}/reset-password`);
+  async resetUserPassword(userId: number, passwordType?: 'secure' | 'simple' | 'memorable', passwordLength?: number): Promise<ApiResponse<{
+    user_id: number;
+    user_email: string;
+    admin_name: string;
+    password_sent: boolean;
+    password_type: string;
+    generated_password?: string;
+  }>> {
+    const response = await this.client.post(`/v1/users/${userId}/reset-password`, {
+      password_type: passwordType || 'secure',
+      password_length: passwordLength || 12
+    });
     return response.data;
   }
+
+
 }
 
 export const apiClient = new ApiClient();

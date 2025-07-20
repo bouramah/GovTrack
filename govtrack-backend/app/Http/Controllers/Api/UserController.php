@@ -14,6 +14,10 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NewPasswordNotification;
+use App\Services\PasswordGeneratorService;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -699,24 +703,55 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'password' => 'nullable|string|min:8',
+                'password_type' => 'nullable|in:secure,simple,memorable',
+                'password_length' => 'nullable|integer|min:8|max:20',
             ]);
 
-            $defaultPassword = $request->get('password', config('auth.default_admin_reset_password', 'Default@123'));
+            // Générer un mot de passe aléatoire sécurisé
+            $passwordType = $request->get('password_type', 'secure');
+            $passwordLength = $request->get('password_length', 12);
+
+            $newPassword = match($passwordType) {
+                'secure' => PasswordGeneratorService::generateSecurePassword($passwordLength),
+                'simple' => PasswordGeneratorService::generateSimplePassword($passwordLength),
+                'memorable' => PasswordGeneratorService::generateMemorablePassword(),
+                default => PasswordGeneratorService::generateSecurePassword(12)
+            };
 
             $user = User::findOrFail($id);
-            $user->password = Hash::make($defaultPassword);
+            $admin = $request->user();
+
+            // Mettre à jour le mot de passe
+            $user->password = Hash::make($newPassword);
             $user->date_modification = Carbon::now();
-            $user->modifier_par = $request->user()->email;
+            $user->modifier_par = $admin->email;
             $user->save();
 
-            // Optionnel : notifier l'utilisateur de son nouveau mot de passe
+            // Envoyer l'email avec le nouveau mot de passe
+            $adminName = $admin->prenom . ' ' . $admin->nom;
+            Mail::to($user->email)->send(new NewPasswordNotification($user, $newPassword, $adminName));
+
+            // Log de l'action
+            Log::info("Mot de passe réinitialisé par admin", [
+                'admin_id' => $admin->id,
+                'admin_email' => $admin->email,
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'password_type' => $passwordType,
+                'timestamp' => Carbon::now()
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Mot de passe réinitialisé avec succès',
+                'message' => 'Mot de passe réinitialisé avec succès et envoyé par email',
                 'data' => [
-                    'default_password' => app()->environment('production') ? null : $defaultPassword
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'admin_name' => $adminName,
+                    'password_sent' => true,
+                    'password_type' => $passwordType,
+                    // Ne pas retourner le mot de passe en production
+                    'generated_password' => app()->environment('production') ? null : $newPassword
                 ]
             ]);
 
@@ -727,6 +762,12 @@ class UserController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            Log::error("Erreur lors de la réinitialisation du mot de passe par admin", [
+                'admin_id' => $request->user()->id ?? null,
+                'user_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la réinitialisation du mot de passe',
