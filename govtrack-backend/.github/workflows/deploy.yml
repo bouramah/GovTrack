@@ -44,12 +44,6 @@ jobs:
             🎯 Serveur : ${{ secrets.VPS_HOST }}
             📁 Dossier : /var/www/html/govtrack-backend
             📦 Date : ${{ github.event.head_commit.timestamp }}
-            ------------------------------
-            ✅ Détails du déploiement :
-            - Domaine : https://govtrackbackend.camtechssolutions.com
-            - Auteur du commit : ${{ github.event.head_commit.author.name }}
-            - Message du commit :
-              » ${{ github.event.head_commit.message }}
 
             Merci et bonne journée !
           to: ${{ secrets.EMAIL_TO }}
