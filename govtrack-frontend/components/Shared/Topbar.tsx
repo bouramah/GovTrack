@@ -106,7 +106,7 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
         {/* Right: Logos Simandou and Profile */}
         <div className="flex items-center space-x-4">
           {/* Logos Simandou */}
-          <div className="hidden md:flex items-center space-x-3 mr-6">
+          {/* <div className="hidden md:flex items-center space-x-3 mr-6">
             <img 
               src="/branding.png" 
               alt="Branding Guinée" 
@@ -117,7 +117,7 @@ const Topbar = ({ name, sidebarOpen, setSidebarOpen }: topbarPropsT) => {
               alt="Programme Simandou 2040" 
               className="h-16 w-auto"
             />
-          </div>
+          </div> */}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
