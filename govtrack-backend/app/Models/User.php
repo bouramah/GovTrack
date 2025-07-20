@@ -316,4 +316,226 @@ class User extends Authenticatable
         // Générer l'URL complète depuis le storage public
         return Storage::disk('public')->url($this->photo);
     }
+
+    // ========================================
+    // RELATIONS AVEC LES RÉUNIONS
+    // ========================================
+
+    /**
+     * Types de réunions gérés par l'utilisateur
+     */
+    public function typesReunionsGeres(): BelongsToMany
+    {
+        return $this->belongsToMany(TypeReunion::class, 'type_reunion_gestionnaires', 'user_id', 'type_reunion_id')
+                    ->withPivot('permissions', 'actif', 'date_creation', 'date_modification')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Types de réunions où l'utilisateur est membre permanent
+     */
+    public function typesReunionsMembrePermanent(): BelongsToMany
+    {
+        return $this->belongsToMany(TypeReunion::class, 'type_reunion_membres_permanents', 'user_id', 'type_reunion_id')
+                    ->withPivot('role_defaut', 'actif', 'notifications_par_defaut', 'date_creation', 'date_modification')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Types de réunions où l'utilisateur peut valider les PV
+     */
+    public function typesReunionsValidateurPV(): HasMany
+    {
+        return $this->hasMany(TypeReunionValidateurPV::class, 'user_id');
+    }
+
+    /**
+     * Séries de réunions créées par l'utilisateur
+     */
+    public function seriesReunionsCreees(): HasMany
+    {
+        return $this->hasMany(ReunionSerie::class, 'creer_par');
+    }
+
+    /**
+     * Réunions créées par l'utilisateur
+     */
+    public function reunionsCreees(): HasMany
+    {
+        return $this->hasMany(Reunion::class, 'creer_par');
+    }
+
+    /**
+     * Réunions modifiées par l'utilisateur
+     */
+    public function reunionsModifiees(): HasMany
+    {
+        return $this->hasMany(Reunion::class, 'modifier_par');
+    }
+
+    /**
+     * Réunions où l'utilisateur est participant
+     */
+    public function reunionsParticipant(): HasMany
+    {
+        return $this->hasMany(ReunionParticipant::class, 'user_id');
+    }
+
+    /**
+     * Réunions où l'utilisateur est président
+     */
+    public function reunionsPresident(): HasMany
+    {
+        return $this->hasMany(ReunionParticipant::class, 'user_id')
+                    ->where('role', ReunionParticipant::ROLE_PRESIDENT);
+    }
+
+    /**
+     * Réunions où l'utilisateur est secrétaire
+     */
+    public function reunionsSecretaire(): HasMany
+    {
+        return $this->hasMany(ReunionParticipant::class, 'user_id')
+                    ->where('role', ReunionParticipant::ROLE_SECRETAIRE);
+    }
+
+    /**
+     * PV rédigés par l'utilisateur
+     */
+    public function pvsRediges(): HasMany
+    {
+        return $this->hasMany(ReunionPV::class, 'redige_par_id');
+    }
+
+    /**
+     * PV validés par l'utilisateur
+     */
+    public function pvsValides(): HasMany
+    {
+        return $this->hasMany(ReunionPV::class, 'valide_par_id');
+    }
+
+    /**
+     * Réunions où l'utilisateur a validé le PV
+     */
+    public function reunionsPVValidees(): HasMany
+    {
+        return $this->hasMany(Reunion::class, 'pv_valide_par_id');
+    }
+
+    /**
+     * Notifications de réunions reçues par l'utilisateur
+     */
+    public function notificationsReunions(): HasMany
+    {
+        return $this->hasMany(ReunionNotification::class, 'destinataire_id');
+    }
+
+    /**
+     * Configurations de notifications créées par l'utilisateur
+     */
+    public function configsNotificationsCreees(): HasMany
+    {
+        return $this->hasMany(ReunionNotificationConfig::class, 'creer_par');
+    }
+
+    /**
+     * Configurations de notifications modifiées par l'utilisateur
+     */
+    public function configsNotificationsModifiees(): HasMany
+    {
+        return $this->hasMany(ReunionNotificationConfig::class, 'modifier_par');
+    }
+
+    /**
+     * Workflows de réunions créés par l'utilisateur
+     */
+    public function workflowsReunionsCrees(): HasMany
+    {
+        return $this->hasMany(ReunionWorkflowConfig::class, 'creer_par');
+    }
+
+    /**
+     * Workflows de réunions modifiés par l'utilisateur
+     */
+    public function workflowsReunionsModifies(): HasMany
+    {
+        return $this->hasMany(ReunionWorkflowConfig::class, 'modifier_par');
+    }
+
+    /**
+     * Ordres du jour où l'utilisateur est responsable
+     */
+    public function ordresJourResponsable(): HasMany
+    {
+        return $this->hasMany(ReunionOrdreJour::class, 'responsable_id');
+    }
+
+    /**
+     * Décisions de réunions où l'utilisateur est responsable
+     */
+    public function decisionsReunionsResponsable(): HasMany
+    {
+        return $this->hasMany(ReunionDecision::class, 'responsable_id');
+    }
+
+    /**
+     * Actions de réunions où l'utilisateur est responsable
+     */
+    public function actionsReunionsResponsable(): HasMany
+    {
+        return $this->hasMany(ReunionAction::class, 'responsable_id');
+    }
+
+    /**
+     * Obtenir toutes les réunions où l'utilisateur est impliqué
+     */
+    public function reunionsImpliquees()
+    {
+        $reunionIds = collect();
+
+        // Réunions créées
+        $reunionIds = $reunionIds->merge($this->reunionsCreees()->pluck('id'));
+
+        // Réunions où l'utilisateur est participant
+        $reunionIds = $reunionIds->merge($this->reunionsParticipant()->pluck('reunion_id'));
+
+        // Réunions où l'utilisateur a validé le PV
+        $reunionIds = $reunionIds->merge($this->reunionsPVValidees()->pluck('id'));
+
+        return Reunion::whereIn('id', $reunionIds->unique())->get();
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut gérer un type de réunion
+     */
+    public function peutGererTypeReunion($typeReunionId): bool
+    {
+        return $this->typesReunionsGeres()
+                    ->where('type_reunion_id', $typeReunionId)
+                    ->where('actif', true)
+                    ->exists();
+    }
+
+    /**
+     * Vérifier si l'utilisateur est membre permanent d'un type de réunion
+     */
+    public function estMembrePermanentTypeReunion($typeReunionId): bool
+    {
+        return $this->typesReunionsMembrePermanent()
+                    ->where('type_reunion_id', $typeReunionId)
+                    ->where('actif', true)
+                    ->exists();
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut valider les PV d'un type de réunion
+     */
+    public function peutValiderPVTypeReunion($typeReunionId): bool
+    {
+        return $this->typesReunionsValidateurPV()
+                    ->where('type_reunion_id', $typeReunionId)
+                    ->where('actif', true)
+                    ->exists();
+    }
 }
