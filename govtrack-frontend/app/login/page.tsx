@@ -68,24 +68,6 @@ export default function LoginPage() {
       description: "Accès complet à toutes les instructions et fonctionnalités administratives",
       matricule: "ADM001",
       permissions: "view_all_projects, manage_users, manage_entities"
-    },
-    {
-      nom: "Lamarana Diallo",
-      email: "douty43oulare@gmail.com", 
-      password: "password",
-      role: "Directeur DRH",
-      description: "Directeur de la Direction des Ressources Humaines",
-      matricule: "DIR001",
-      permissions: "view_my_entity_projects, validate_instruction"
-    },
-    {
-      nom: "Wopa Bah",
-      email: "bah@gmail.com",
-      password: "password", 
-      role: "Développeur",
-      description: "Développeur DDV",
-      matricule: "DEV001",
-      permissions: "view_my_projects, create_instruction"
     }
   ];
 
@@ -107,8 +89,26 @@ export default function LoginPage() {
               <div className="border-t border-gray-200 pt-6">
                 <CardTitle className="text-2xl font-bold text-center text-gray-900">GovTrack</CardTitle>
                 <CardDescription className="text-center text-gray-600 mt-2">
-                  Système de Gestion d'Instructions Ministérielles
+                  Système de Gestion des Instructions Ministérielles
                 </CardDescription>
+              </div>
+              
+              {/* Branding Simandou */}
+              <div className="flex justify-center items-center space-x-4 mt-6 pt-4 border-t border-gray-100">
+                <div className="text-center">
+                  <img 
+                    src="/branding.png" 
+                    alt="Branding Guinée" 
+                    className="h-12 w-auto mx-auto mb-2"
+                  />
+                </div>
+                <div className="text-center">
+                  <img 
+                    src="/simandou.jpeg" 
+                    alt="Programme Simandou 2040" 
+                    className="h-16 w-auto mx-auto mb-2"
+                  />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -184,9 +184,9 @@ export default function LoginPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">🧪 Comptes de Démonstration</CardTitle>
+              <CardTitle className="text-lg">🧪 Compte de démonstration</CardTitle>
               <CardDescription>
-                Utilisez un de ces comptes pour tester les différents niveaux de permissions
+                Utilisez ce compte pour tester l'application en tant qu'administrateur
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -237,11 +237,8 @@ export default function LoginPage() {
             <CardFooter className="text-center">
               <div className="w-full space-y-2">
                 <p className="text-xs text-gray-500">
-                  💡 Cliquez sur un compte pour pré-remplir le formulaire
+                  💡 Cliquez sur ce compte pour pré-remplir le formulaire
                 </p>
-                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  ⚡ Backend GovTrack v2.0 avec système de permissions
-                </div>
               </div>
             </CardFooter>
           </Card>
