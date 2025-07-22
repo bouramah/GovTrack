@@ -1,118 +1,530 @@
-Analyse d'Impact Révisée : Porteurs ET Responsables Multiples
-📊 État Actuel
-Actuellement, le système fonctionne avec :
-1 porteur principal par projet (porteur_id)
-1 donneur d'ordre par projet (donneur_ordre_id)
-1 responsable par tâche (responsable_id)
-�� Changement Demandé
-Permettre d'associer plusieurs personnes :
-Porteurs multiples par instruction (sans rôles hiérarchiques)
-Responsables multiples par tâche (sans rôles hiérarchiques)
-🏗️ Impact Technique Global
+✅ Analyse Complète - Couverture des Besoins
+1. CODIR période configurable
+✅ COUVERT :
+ReunionSerie avec périodicité (HEBDOMADAIRE, BIHEBDOMADAIRE, MENSUELLE)
+Génération automatique des réunions
+Possibilité de suspendre temporairement
+2. Ordre du jour (explicite ou implicite)
+✅ COUVERT :
+Reunion.ordre_du_jour_type (EXPLICITE, IMPLICITE, HYBRIDE)
+ReunionOrdreJour pour les points détaillés
+3. Directeurs proposent des sujets
+✅ COUVERT :
+ReunionOrdreJour.entite_proposante_id (ex: Direction d'éthique)
+ReunionOrdreJour.responsable_id (ex: DSI)
+4. Participants donnent projets si ordre du jour non explicite
+✅ COUVERT :
+Interface adaptative selon ordre_du_jour_type
+Possibilité d'ajouter des points dynamiquement
+5. Décisions provisoires/définitives avec responsables
+✅ COUVERT :
+ReunionDecision.type (PROVISOIRE, DEFINITIVE)
+ReunionDecision.responsables (JSON array)
+ReunionAction pour les instructions
+6. Avis avec statuts et pile de validation
+✅ COUVERT :
+ReunionSujet.avis (RESOLU, EN_COURS_DE_RESOLUTION, BLOQUE, AVIS)
+ReunionWorkflowConfig avec pile configurable (PORTEUR, MEMBRES, SG, AG)
+7. Gestion des présences et absences
+✅ COUVERT :
+ReunionParticipant.statut_presence (CONFIRME, ABSENT, EN_ATTENTE)
+ReunionParticipant.notifie_absence (si absent, pas de notif)
+ReunionNotification pour les mails automatiques
+8. Membres CODIR + invités hors CODIR
+✅ COUVERT :
+ReunionParticipant.type (PERMANENT, INVITE)
+TypeReunionMembrePermanent pour les membres fixes
+9. PV pendant CODIR + validation configurable
+✅ COUVERT :
+ReunionPV avec rédaction en temps réel
+TypeReunionValidateurPV configurable
+ReunionGestionnaire peut gérer la configuration
+10. Accès au PV après CODIR
+✅ COUVERT :
+ReunionPV.statut (BROUILLON, VALIDE, PUBLIE)
+Notifications automatiques quand PV disponible
+11. Exemple "Chantier PSD" - Structure complète
+✅ COUVERT :
+Ordre du jour : Chantier PSD
+├── ReunionOrdreJour.titre = "Chantier PSD"
+├── ReunionOrdreJour.entite_proposante_id = Direction d'éthique
+├── ReunionOrdreJour.responsable_id = DSI
+├── ReunionOrdreJour.description = "Du sujet par rapport au chantier"
+│
+├── ReunionSujet.titre = "Gestion d'éthique"
+├── ReunionSujetObjectif[] (multiples)
+│   ├── cible, taux_realisation, pourcentage_decaissement
+│   └── ReunionObjectifDifficulte[] (par entité)
+├── ReunionSujet.difficulte_globale
+├── ReunionSujet.recommandation
+├── ReunionSujet.avis (liste déroulante)
+├── ReunionSujet.commentaire
+└── ReunionSujet.pieces_jointes
 
-3. Frontend 🎨
-Types TypeScript
-Apply
-}
-Composants à Modifier
-ProjectModal.tsx
-Apply
->
-NewTaskModal.tsx
-Apply
->
-ProjectDetailPage.tsx
-Apply
->
-TacheDetailModal.tsx
-Apply
->
-Nouveaux Composants
-MultiSelect.tsx
-Apply
-}
-4. Notifications 📧
-Listeners à Modifier
-SendProjetCreatedNotification.php
-Apply
-}
-SendTacheCreatedNotification.php
-Apply
-}
-Autres Listeners Impactés
-SendProjetStatusChangedNotification.php
-SendProjetExecutionLevelUpdatedNotification.php
-SendTacheStatusChangedNotification.php
-SendTacheExecutionLevelUpdatedNotification.php
-SendDiscussionProjetCreatedNotification.php
-SendDiscussionTacheCreatedNotification.php
-5. Permissions et Sécurité 🔐
-Middleware CheckPermission.php
-Apply
-}
-Hooks Frontend
-Apply
-}
-6. Interface Utilisateur ��
-Nouvelles Fonctionnalités UI
-Gestion des Porteurs/Responsables
-Modal d'assignation multiple
-Liste des assignés avec dates d'assignation
-Actions : ajouter, retirer
-Historique des assignations
-Tableaux de Bord
-Filtres par porteur/responsable (sélection multiple)
-Statistiques par assigné
-Vues personnalisées selon les assignations
-Kanban et Calendrier
-Affichage des assignés multiples sur les cartes
-Filtres par assigné dans les vues
-7. Migration des Données 📊
-Script de Migration
-Apply
-}
-8. Tests 🧪
-Tests à Ajouter/Modifier
-Tests unitaires pour les nouvelles relations
-Tests d'intégration pour l'API des assignations multiples
-Tests de permissions avec assignations multiples
-Tests de notifications avec plusieurs assignés
-Tests frontend pour les nouveaux composants
-9. Documentation 📚
-Mise à Jour Nécessaire
-README backend et frontend
-Documentation API avec nouveaux endpoints
-Guide des permissions mis à jour
-Changelog détaillé
-🚨 Risques et Considérations
-Risques Techniques
-Performance : Requêtes plus complexes avec JOINs multiples
-Compatibilité : Code existant qui utilise porteur_id et responsable_id
-Migration : Données existantes à migrer
-Tests : Tous les tests à adapter
-Risques Métier
-Responsabilité : Qui est responsable final ?
-Notifications : Spam si trop d'assignés
-Permissions : Logique plus complexe
-Formation : Utilisateurs à former
-📋 Plan d'Implémentation Recommandé
-Phase 1 : Backend Foundation
-Créer les migrations et les modèles
-Implémenter les nouvelles relations
-Adapter les contrôleurs API
-Modifier le système de permissions
-Phase 2 : Frontend Adaptation
-Créer les nouveaux composants UI (MultiSelect)
-Adapter les formulaires existants
-Modifier les types TypeScript
-Tester l'interface utilisateur
-Phase 3 : Notifications et Tests
-Adapter tous les listeners de notifications
-Écrire les tests complets
-Tester les permissions
-Validation métier
-Phase 4 : Migration et Déploiement
-Script de migration des données
-Tests en environnement de staging
-Formation des utilisateurs
-Déploiement progressif
+🎯 Points Forts de la Couverture
+Flexibilité Totale
+✅ Configuration par type de réunion
+✅ Niveaux de complexité modifiables
+✅ Fonctionnalités activables/désactivables
+Workflow Complet
+✅ Planification → Exécution → Validation → Suivi
+✅ Notifications automatiques configurables
+✅ Audit trail complet
+Gestion des Permissions
+✅ Gestionnaires par type de réunion
+✅ Permissions granulaires
+✅ Validation configurable
+Interface Adaptative
+✅ Simple pour réunions basiques
+✅ Complexe pour CODIR
+✅ Configuration dynamique
+
+
+
+🏛️ Scénario CODIR - "Suivi des Projets Stratégiques"
+📅 Étape 1 : Configuration Initiale (Administrateur)
+Tables impliquées :
+-- 1. Type de réunion CODIR
+INSERT INTO type_reunions VALUES (
+    1, 'CODIR', 'Comité de Direction', 
+    '#1f2937', 'users', true, 1, 'COMPLEXE',
+    '{"objectifs_multiples": true, "difficultes_par_entite": true, "workflow_validation": true, "pv_validation": true, "quorum_obligatoire": true}',
+    '{"rappel_24h": true, "rappel_1h": true, "confirmation_presence": true, "pv_disponible": true}'
+);
+
+-- 2. Gestionnaire CODIR
+INSERT INTO type_reunion_gestionnaires VALUES (
+    1, 1, 1, -- type_reunion_id, user_id (admin)
+    '{"create": true, "edit": true, "delete": true, "validate_pv": true, "manage_participants": true, "configure_type": true}',
+    true
+);
+
+-- 3. Membres permanents CODIR
+INSERT INTO type_reunion_membres_permanents VALUES 
+(1, 1, 1, 'PRESIDENT', true),    -- Admin (Président)
+(1, 1, 2, 'SECRETAIRE', true),   -- Marie (Secrétaire)
+(1, 1, 3, 'PARTICIPANT', true),  -- Jean (DSI)
+(1, 1, 4, 'PARTICIPANT', true),  -- Sophie (DRH)
+(1, 1, 5, 'PARTICIPANT', true);  -- Pierre (DAF)
+
+-- 4. Série récurrente CODIR
+INSERT INTO reunion_series VALUES (
+    1, 'CODIR Mensuel', 'CODIR mensuel pour suivi stratégique',
+    1, 'MENSUELLE', null, 15, '09:00:00', 180,
+    'Salle de réunion principale', true,
+    '2024-01-15', '2024-12-31', false, '2024-02-15',
+    '{"generer_automatiquement": true, "notifier_gestionnaire": true, "copier_participants": true}'
+);
+
+📋 Étape 2 : Planification de la Réunion (Gestionnaire)
+Tables impliquées :
+-- 5. Réunion générée automatiquement
+INSERT INTO reunions VALUES (
+    1, 'CODIR Février 2024 - Suivi des Projets Stratégiques',
+    'Suivi mensuel des projets stratégiques et points divers',
+    1, 'COMPLEXE', '2024-02-15 09:00:00', '2024-02-15 12:00:00',
+    'Salle de réunion principale', 'PHYSIQUE', null,
+    'MENSUELLE', 1, false, null,
+    '{"objectifs_multiples": true, "difficultes_par_entite": true, "workflow_validation": true, "pv_validation": true}',
+    4, 'EXPLICITE', 'PLANIFIEE', null, null
+);
+
+-- 6. Ordre du jour explicite
+INSERT INTO reunion_ordre_jours VALUES 
+(1, 1, 1, 'Chantier PSD', 'Suivi du projet PSD et difficultés rencontrées', 'SUJET_SPECIFIQUE', 45, 3, 3, 1, 'PLANIFIE', 'DETAILLE'),
+(1, 1, 2, 'Budget Q1', 'Validation du budget Q1 2024', 'SUJET_SPECIFIQUE', 30, 5, 5, null, 'PLANIFIE', 'DETAILLE'),
+(1, 1, 3, 'Points divers', 'Autres points à traiter', 'POINT_DIVERS', 15, null, 1, null, 'PLANIFIE', 'SIMPLE');
+
+-- 7. Participants (copiés automatiquement)
+INSERT INTO reunion_participants VALUES 
+(1, 1, 1, 'PRESIDENT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "rappel_1h": true, "pv_disponible": true}'),
+(1, 1, 2, 'SECRETAIRE', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "rappel_1h": true, "pv_disponible": true}'),
+(1, 1, 3, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "rappel_1h": true, "pv_disponible": true}'),
+(1, 1, 4, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "rappel_1h": true, "pv_disponible": true}'),
+(1, 1, 5, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "rappel_1h": true, "pv_disponible": true}');
+
+-- 8. Invité ponctuel
+INSERT INTO reunion_participants VALUES 
+(1, 1, 6, 'OBSERVATEUR', 'INVITE', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}');
+
+📧 Étape 3 : Notifications et Confirmations
+Tables impliquées :
+-- 9. Notifications envoyées
+INSERT INTO reunion_notifications VALUES 
+(1, 1, 'CONFIRMATION_PRESENCE', 1, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024'),
+(1, 1, 'CONFIRMATION_PRESENCE', 2, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024'),
+(1, 1, 'CONFIRMATION_PRESENCE', 3, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024'),
+(1, 1, 'CONFIRMATION_PRESENCE', 4, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024'),
+(1, 1, 'CONFIRMATION_PRESENCE', 5, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024'),
+(1, 1, 'CONFIRMATION_PRESENCE', 6, '2024-02-10 10:00:00', 'ENVOYE', 'Invitation CODIR Février 2024');
+
+-- 10. Confirmations de présence
+UPDATE reunion_participants SET 
+    statut_presence = 'CONFIRME',
+    present_le = '2024-02-14 15:30:00'
+WHERE reunion_id = 1 AND user_id IN (1, 2, 3, 4, 5);
+
+-- Marie (Secrétaire) est absente
+UPDATE reunion_participants SET 
+    statut_presence = 'ABSENT',
+    absent_le = '2024-02-14 16:00:00',
+    commentaire_absence = 'Congé maladie',
+    notifie_absence = false
+WHERE reunion_id = 1 AND user_id = 2;
+
+📝 Étape 4 : Pendant la Réunion - Point 1 "Chantier PSD"
+Tables impliquées :
+-- 11. Sujet détaillé
+INSERT INTO reunion_sujets VALUES (
+    1, 1, 'Gestion d\'éthique dans le projet PSD',
+    'Discussion sur les enjeux éthiques du projet PSD et les difficultés rencontrées',
+    'Difficultés de coordination entre les entités',
+    'Renforcer la communication inter-services',
+    'EN_COURS_DE_RESOLUTION',
+    'Projet en cours, nécessite un suivi renforcé',
+    '["document1.pdf", "rapport_ethique.docx"]',
+    1, 3, 'DETAILLE', true, true
+);
+
+-- 12. Objectifs multiples
+INSERT INTO reunion_sujet_objectifs VALUES 
+(1, 1, 'Formation équipe éthique', 'Former 100% de l\'équipe aux règles éthiques', 'Sensibilisation complète de l\'équipe', 75, 15.5, '2024-03-15', 'EN_COURS', 1, true),
+(1, 1, 'Audit processus', 'Auditer tous les processus critiques', 'Validation des processus par comité', 60, 25.0, '2024-04-30', 'EN_COURS', 2, true),
+(1, 1, 'Mise en place monitoring', 'Installer système de monitoring éthique', 'Déploiement complet du système', 30, 45.0, '2024-06-15', 'EN_RETARD', 3, true);
+
+-- 13. Difficultés par entité
+INSERT INTO reunion_objectif_difficultes VALUES 
+(1, 1, 4, 'Manque de ressources humaines', 'ELEVE', 'Retard dans la formation', 'Recrutement temporaire', 'IDENTIFIEE'),
+(1, 1, 5, 'Budget insuffisant', 'CRITIQUE', 'Impossibilité de financer l\'audit', 'Demande de budget supplémentaire', 'EN_COURS_RESOLUTION'),
+(1, 2, 4, 'Disponibilité des équipes', 'MOYEN', 'Difficulté à organiser les sessions', 'Planification flexible', 'RESOLUE');
+
+📋 Étape 5 : Décisions et Workflow
+Tables impliquées :
+-- 14. Décision prise
+INSERT INTO reunion_decisions VALUES (
+    1, 1, 1, 'Renforcer le suivi éthique du projet PSD',
+    'DEFINITIVE',
+    '[3, 4, 5]', -- Jean (DSI), Sophie (DRH), Pierre (DAF)
+    '2024-03-31',
+    'EN_COURS'
+);
+
+-- 15. Actions décidées
+INSERT INTO reunion_actions VALUES 
+(1, 1, 'Recruter consultant éthique', 'Recrutement d\'un consultant spécialisé', 3, '2024-03-15', 'A_FAIRE', 'Budget approuvé'),
+(1, 1, 'Organiser réunion inter-services', 'Réunion de coordination DSI-DRH-DAF', 3, '2024-02-28', 'A_FAIRE', 'À planifier'),
+(1, 1, 'Préparer rapport mensuel', 'Rapport de suivi éthique mensuel', 3, '2024-03-15', 'A_FAIRE', 'Template à créer');
+
+-- 16. Workflow de validation
+INSERT INTO reunion_workflow_executions VALUES (
+    1, 1, 1, 1, 'EN_COURS', '2024-02-15 12:00:00', null,
+    '[{"etape": 1, "validateur": 3, "statut": "EN_ATTENTE", "date": "2024-02-15 12:00:00"}]'
+);
+
+📄 Étape 6 : Procès-Verbal
+Tables impliquées :
+-- 17. PV rédigé en temps réel
+INSERT INTO reunion_pvs VALUES (
+    1, 1, 
+    'CODIR Février 2024 - Procès-Verbal
+
+1. Ouverture de séance (09:00)
+Présents : Admin (Président), Jean (DSI), Sophie (DRH), Pierre (DAF), Invité
+Absent : Marie (Secrétaire) - Congé maladie
+
+2. Point 1 : Chantier PSD (09:05-09:50)
+- Sujet : Gestion d\'éthique
+- Objectifs discutés : Formation (75%), Audit (60%), Monitoring (30%)
+- Difficultés identifiées : Ressources DRH, Budget DAF
+- Décision : Renforcement du suivi éthique
+- Responsables : Jean, Sophie, Pierre
+- Actions : Recrutement consultant, Réunion inter-services, Rapport mensuel
+
+3. Point 2 : Budget Q1 (09:50-10:20)
+[...]
+
+4. Points divers (10:20-10:35)
+[...]
+
+Clôture : 10:35',
+    1, '2024-02-15 10:35:00', '2024-02-15 10:35:00', 1
+);
+
+-- 18. Validation du PV (Admin remplace Marie)
+UPDATE reunion_pvs SET 
+    valide_par_id = 1,
+    valide_le = '2024-02-15 11:00:00',
+    statut = 'VALIDE',
+    commentaire_validation = 'PV validé par le Président'
+WHERE reunion_id = 1;
+
+📧 Étape 7 : Finalisation
+Tables impliquées :
+
+-- 19. Réunion terminée
+UPDATE reunions SET 
+    statut = 'TERMINEE',
+    pv_valide_par_id = 1,
+    pv_valide_le = '2024-02-15 11:00:00'
+WHERE id = 1;
+
+-- 20. Notifications PV disponible
+INSERT INTO reunion_notifications VALUES 
+(1, 1, 'PV_DISPONIBLE', 1, '2024-02-15 11:05:00', 'ENVOYE', 'PV CODIR Février 2024 disponible'),
+(1, 1, 'PV_DISPONIBLE', 3, '2024-02-15 11:05:00', 'ENVOYE', 'PV CODIR Février 2024 disponible'),
+(1, 1, 'PV_DISPONIBLE', 4, '2024-02-15 11:05:00', 'ENVOYE', 'PV CODIR Février 2024 disponible'),
+(1, 1, 'PV_DISPONIBLE', 5, '2024-02-15 11:05:00', 'ENVOYE', 'PV CODIR Février 2024 disponible'),
+(1, 1, 'PV_DISPONIBLE', 6, '2024-02-15 11:05:00', 'ENVOYE', 'PV CODIR Février 2024 disponible');
+
+-- 21. PV publié
+UPDATE reunion_pvs SET statut = 'PUBLIE' WHERE reunion_id = 1;
+
+�� Scénario Réunion Technique - "Architecture Système Paiement"
+📅 Étape 1 : Configuration Initiale (Administrateur)
+Tables impliquées :
+-- 1. Type de réunion Technique
+INSERT INTO type_reunions VALUES (
+    2, 'REUNION_TECHNIQUE', 'Réunion technique et architecture', 
+    '#059669', 'settings', true, 2, 'INTERMEDIAIRE',
+    '{"objectifs_multiples": false, "difficultes_par_entite": false, "workflow_validation": true, "pv_validation": true, "quorum_obligatoire": false}',
+    '{"rappel_24h": true, "rappel_1h": false, "confirmation_presence": true, "pv_disponible": true}'
+);
+
+-- 2. Gestionnaire Technique
+INSERT INTO type_reunion_gestionnaires VALUES (
+    2, 2, 3, -- type_reunion_id, user_id (Jean - DSI)
+    '{"create": true, "edit": true, "delete": true, "validate_pv": true, "manage_participants": true, "configure_type": false}',
+    true
+);
+
+-- 3. Membres permanents (équipe technique)
+INSERT INTO type_reunion_membres_permanents VALUES 
+(2, 2, 3, 'PRESIDENT', true),    -- Jean (DSI)
+(2, 2, 7, 'PARTICIPANT', true),  -- Alice (Développeuse)
+(2, 2, 8, 'PARTICIPANT', true),  -- Bob (Architecte)
+(2, 2, 9, 'PARTICIPANT', true);  -- Claire (DevOps)
+
+-- 4. Série récurrente (hebdomadaire)
+INSERT INTO reunion_series VALUES (
+    2, 'Réunions Tech Hebdo', 'Réunions techniques hebdomadaires',
+    2, 'HEBDOMADAIRE', 2, null, '14:00:00', 90, -- Mardi 14h
+    'Salle technique', true,
+    '2024-01-02', '2024-12-31', false, '2024-02-13',
+    '{"generer_automatiquement": true, "notifier_gestionnaire": true, "copier_participants": true}'
+);
+
+📋 Étape 2 : Planification de la Réunion (Jean - DSI)
+Tables impliquées :
+-- 5. Réunion générée automatiquement
+INSERT INTO reunions VALUES (
+    2, 'Architecture Système Paiement - Semaine 7',
+    'Discussion sur l\'architecture du nouveau système de paiement',
+    2, 'INTERMEDIAIRE', '2024-02-13 14:00:00', '2024-02-13 15:30:00',
+    'Salle technique', 'HYBRIDE', 'https://meet.google.com/abc-defg-hij',
+    'HEBDOMADAIRE', 2, false, null,
+    '{"objectifs_multiples": false, "difficultes_par_entite": false, "workflow_validation": true, "pv_validation": true}',
+    2, 'EXPLICITE', 'PLANIFIEE', null, null
+);
+
+-- 6. Ordre du jour explicite (plus simple)
+INSERT INTO reunion_ordre_jours VALUES 
+(2, 2, 1, 'Architecture API', 'Présentation de l\'architecture API REST', 'SUJET_SPECIFIQUE', 30, 8, 8, null, 'PLANIFIE', 'DETAILLE'),
+(2, 2, 2, 'Base de données', 'Choix de la base de données et schéma', 'SUJET_SPECIFIQUE', 25, 9, 9, null, 'PLANIFIE', 'DETAILLE'),
+(2, 2, 3, 'Sécurité', 'Mesures de sécurité à implémenter', 'SUJET_SPECIFIQUE', 20, 7, 7, null, 'PLANIFIE', 'DETAILLE'),
+(2, 2, 4, 'Planning', 'Planning de développement et déploiement', 'SUJET_SPECIFIQUE', 15, 3, 3, null, 'PLANIFIE', 'SIMPLE');
+
+-- 7. Participants
+INSERT INTO reunion_participants VALUES 
+(2, 2, 3, 'PRESIDENT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}'),
+(2, 2, 7, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}'),
+(2, 2, 8, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}'),
+(2, 2, 9, 'PARTICIPANT', 'PERMANENT', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}');
+
+-- 8. Invité externe (expert sécurité)
+INSERT INTO reunion_participants VALUES 
+(2, 2, 10, 'OBSERVATEUR', 'INVITE', 'EN_ATTENTE', null, null, null, true, '{"rappel_24h": true, "pv_disponible": true}');
+
+📧 Étape 3 : Notifications et Confirmations
+Tables impliquées :
+-- 9. Notifications envoyées
+INSERT INTO reunion_notifications VALUES 
+(2, 2, 'CONFIRMATION_PRESENCE', 3, '2024-02-12 10:00:00', 'ENVOYE', 'Invitation Réunion Tech - Architecture Paiement'),
+(2, 2, 'CONFIRMATION_PRESENCE', 7, '2024-02-12 10:00:00', 'ENVOYE', 'Invitation Réunion Tech - Architecture Paiement'),
+(2, 2, 'CONFIRMATION_PRESENCE', 8, '2024-02-12 10:00:00', 'ENVOYE', 'Invitation Réunion Tech - Architecture Paiement'),
+(2, 2, 'CONFIRMATION_PRESENCE', 9, '2024-02-12 10:00:00', 'ENVOYE', 'Invitation Réunion Tech - Architecture Paiement'),
+(2, 2, 'CONFIRMATION_PRESENCE', 10, '2024-02-12 10:00:00', 'ENVOYE', 'Invitation Réunion Tech - Architecture Paiement');
+
+-- 10. Confirmations de présence
+UPDATE reunion_participants SET 
+    statut_presence = 'CONFIRME',
+    present_le = '2024-02-13 13:45:00'
+WHERE reunion_id = 2 AND user_id IN (3, 7, 8, 9, 10);
+
+📝 Étape 4 : Pendant la Réunion - Points Techniques
+Tables impliquées :
+-- 11. Sujets techniques (plus simples)
+INSERT INTO reunion_sujets VALUES 
+(2, 2, 1, 'Architecture API REST',
+    'Présentation de l\'architecture API REST pour le système de paiement',
+    'Complexité de l\'intégration avec les systèmes existants',
+    'Utiliser une approche microservices',
+    'RESOLU',
+    'Architecture validée par l\'équipe',
+    '["architecture_api.pdf", "diagramme_sequence.png"]',
+    null, 8, 'DETAILLE', false, false),
+
+(2, 2, 2, 'Base de données PostgreSQL',
+    'Choix de PostgreSQL comme base de données principale',
+    'Migration des données existantes',
+    'Planifier une migration progressive',
+    'EN_COURS_DE_RESOLUTION',
+    'Tests de performance en cours',
+    '["benchmark_postgresql.pdf", "schema_db.sql"]',
+    null, 9, 'DETAILLE', false, false),
+
+(2, 2, 3, 'Sécurité et Chiffrement',
+    'Implémentation du chiffrement des données sensibles',
+    'Conformité RGPD et standards bancaires',
+    'Utiliser AES-256 et TLS 1.3',
+    'RESOLU',
+    'Standards de sécurité approuvés',
+    '["security_audit.pdf", "encryption_guide.md"]',
+    null, 7, 'DETAILLE', false, false),
+
+(2, 2, 4, 'Planning de développement',
+    'Planning sur 6 mois avec milestones',
+    'Risque de retard sur les tests',
+    'Ajouter une semaine de buffer',
+    'EN_COURS_DE_RESOLUTION',
+    'Planning à affiner avec l\'équipe',
+    '["gantt_chart.pdf", "milestones.xlsx"]',
+    null, 3, 'SIMPLE', false, false);
+
+📋 Étape 5 : Décisions et Actions
+Tables impliquées :
+-- 12. Décisions techniques
+INSERT INTO reunion_decisions VALUES 
+(2, 2, 1, 'Adoption de l\'architecture microservices',
+    'DEFINITIVE',
+    '[7, 8, 9]', -- Alice, Bob, Claire
+    '2024-03-15',
+    'EN_COURS'),
+
+(2, 2, 2, 'Migration PostgreSQL progressive',
+    'DEFINITIVE',
+    '[9, 8]', -- Claire, Bob
+    '2024-04-30',
+    'EN_COURS'),
+
+(2, 2, 3, 'Implémentation sécurité AES-256',
+    'DEFINITIVE',
+    '[7, 10]', -- Alice, Expert sécurité
+    '2024-03-31',
+    'EN_COURS'),
+
+(2, 2, 4, 'Planning de développement 6 mois',
+    'PROVISOIRE',
+    '[3, 7, 8, 9]', -- Toute l\'équipe
+    '2024-02-20',
+    'EN_COURS');
+
+-- 13. Actions techniques
+INSERT INTO reunion_actions VALUES 
+(2, 2, 1, 'Créer POC microservices', 'Développer un proof of concept', 7, '2024-02-28', 'A_FAIRE', 'Utiliser Docker'),
+(2, 2, 1, 'Documenter architecture', 'Rédiger la documentation technique', 8, '2024-03-07', 'A_FAIRE', 'Format Markdown'),
+(2, 2, 2, 'Installer PostgreSQL', 'Installation et configuration', 9, '2024-02-20', 'A_FAIRE', 'Version 15+'),
+(2, 2, 3, 'Audit sécurité', 'Audit complet des mesures', 10, '2024-03-15', 'A_FAIRE', 'Rapport détaillé'),
+(2, 2, 4, 'Réviser planning', 'Ajuster le planning avec buffer', 3, '2024-02-20', 'A_FAIRE', 'Présenter au CODIR');
+
+📄 Étape 6 : Procès-Verbal Technique
+Tables impliquées :
+-- 14. PV technique (plus concis)
+INSERT INTO reunion_pvs VALUES (
+    2, 2, 
+    'Réunion Technique - Architecture Système Paiement
+Date : 13/02/2024 - 14:00-15:30
+Lieu : Salle technique + Visioconférence
+
+Présents : Jean (DSI), Alice, Bob, Claire, Expert Sécurité
+Absents : Aucun
+
+1. Architecture API (14:00-14:30)
+- Présentation de l\'architecture microservices
+- Décision : Adoption de l\'approche microservices
+- Actions : POC Docker (Alice), Documentation (Bob)
+- Échéance : 28/02 pour POC, 07/03 pour doc
+
+2. Base de données (14:30-14:55)
+- Choix PostgreSQL validé
+- Migration progressive sur 3 mois
+- Actions : Installation (Claire), Tests (Bob)
+- Échéance : 20/02 installation, 30/04 migration
+
+3. Sécurité (14:55-15:15)
+- Standards AES-256 + TLS 1.3 approuvés
+- Audit sécurité obligatoire
+- Actions : Audit (Expert), Implémentation (Alice)
+- Échéance : 15/03 audit, 31/03 implémentation
+
+4. Planning (15:15-15:30)
+- Planning 6 mois avec milestones
+- Décision provisoire : Ajouter semaine de buffer
+- Action : Révision planning (Jean)
+- Échéance : 20/02 pour présentation CODIR
+
+Prochaine réunion : Mardi 20/02 - 14:00
+Sujet : Révision planning et début POC',
+    3, '2024-02-13 15:30:00', '2024-02-13 15:30:00', 1
+);
+
+-- 15. Validation du PV (Jean - DSI)
+UPDATE reunion_pvs SET 
+    valide_par_id = 3,
+    valide_le = '2024-02-13 16:00:00',
+    statut = 'VALIDE',
+    commentaire_validation = 'PV validé par le DSI'
+WHERE reunion_id = 2;
+
+📧 Étape 7 : Finalisation
+Tables impliquées :
+-- 16. Réunion terminée
+UPDATE reunions SET 
+    statut = 'TERMINEE',
+    pv_valide_par_id = 3,
+    pv_valide_le = '2024-02-13 16:00:00'
+WHERE id = 2;
+
+-- 17. Notifications PV disponible
+INSERT INTO reunion_notifications VALUES 
+(2, 2, 'PV_DISPONIBLE', 3, '2024-02-13 16:05:00', 'ENVOYE', 'PV Réunion Tech - Architecture Paiement'),
+(2, 2, 'PV_DISPONIBLE', 7, '2024-02-13 16:05:00', 'ENVOYE', 'PV Réunion Tech - Architecture Paiement'),
+(2, 2, 'PV_DISPONIBLE', 8, '2024-02-13 16:05:00', 'ENVOYE', 'PV Réunion Tech - Architecture Paiement'),
+(2, 2, 'PV_DISPONIBLE', 9, '2024-02-13 16:05:00', 'ENVOYE', 'PV Réunion Tech - Architecture Paiement'),
+(2, 2, 'PV_DISPONIBLE', 10, '2024-02-13 16:05:00', 'ENVOYE', 'PV Réunion Tech - Architecture Paiement');
+
+-- 18. PV publié
+UPDATE reunion_pvs SET statut = 'PUBLIE' WHERE reunion_id = 2;
+
+�� Tables Utilisées (18 tables vs 20 pour CODIR)
+type_reunions - Configuration Technique
+type_reunion_gestionnaires - Permissions DSI
+type_reunion_membres_permanents - Équipe technique
+reunion_series - Série hebdomadaire
+reunions - Réunion spécifique
+reunion_ordre_jours - Points techniques
+reunion_participants - Présences
+reunion_notifications - Emails
+reunion_sujets - Sujets techniques
+reunion_decisions - Décisions techniques
+reunion_actions - Actions techniques
+reunion_pvs - Procès-verbal
+reunion_workflow_configs - Configuration workflow
+reunion_workflow_etapes - Étapes validation
+reunion_notification_configs - Configuration notifications
+type_reunion_validateur_pvs - Validateurs PV
+reunion_generees - Génération automatique
+reunion_workflow_executions - Validation
+Tables NON utilisées (vs CODIR) :
+reunion_sujet_objectifs (pas d'objectifs multiples)
+reunion_objectif_difficultes (pas de difficultés par entité)
+Cette réunion technique montre la flexibilité du système : même structure de base, mais fonctionnalités adaptées au niveau de complexité ! 
