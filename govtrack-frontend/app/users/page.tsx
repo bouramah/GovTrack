@@ -228,7 +228,7 @@ export default function UsersPage() {
 
       const [usersResponse, rolesData, entitesData, postesData] = await Promise.all([
         apiClient.getUsersDetailed(userParams),
-        apiClient.getRoles(),
+        apiClient.getRoles({ per_page: 1000 }), // Charger tous les rôles disponibles
         apiClient.getEntitesDetailed(),
         apiClient.getPostes()
       ]);
@@ -432,7 +432,7 @@ export default function UsersPage() {
       setLoadingRoles(true);
       const [userDetailsResponse, allRolesResponse] = await Promise.all([
         apiClient.getUser(userId),
-        apiClient.getRoles()
+        apiClient.getRoles({ per_page: 1000 }) // Charger tous les rôles disponibles
       ]);
       
       setUserRoles(userDetailsResponse.roles || []);

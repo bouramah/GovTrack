@@ -221,6 +221,10 @@ export default function EntitiesPage() {
   // Nouvel état pour toutes les entités disponibles pour le sélecteur de parent
   const [allEntitesForParent, setAllEntitesForParent] = useState<Entite[]>([]);
 
+  // États pour les statistiques globales
+  const [statsWithChef, setStatsWithChef] = useState(0);
+  const [statsRootEntities, setStatsRootEntities] = useState(0);
+
   const entityPermissions = useEntityPermissions();
   const postPermissions = usePostPermissions();
   const organigrammePermissions = useOrganigrammePermissions();
@@ -430,6 +434,10 @@ export default function EntitiesPage() {
       // Initialiser allEntitesForParent avec les entités chargées
       if (allEntitesForParent.length === 0) {
         setAllEntitesForParent(entitesResponse.data || []);
+        // Calculer les statistiques initiales avec les entités chargées
+        const initialEntites = entitesResponse.data || [];
+        setStatsWithChef(initialEntites.filter((e) => e.chef_actuel).length);
+        setStatsRootEntities(initialEntites.filter((e) => !e.parent).length);
       }
     } catch (error: any) {
       console.error("Erreur de chargement:", error);
@@ -473,10 +481,18 @@ export default function EntitiesPage() {
         sort_order: "asc",
       });
       setAllEntitesForParent(response.data || []);
+      
+      // Calculer les statistiques globales
+      const allEntites = response.data || [];
+      setStatsWithChef(allEntites.filter((e) => e.chef_actuel).length);
+      setStatsRootEntities(allEntites.filter((e) => !e.parent).length);
     } catch (error) {
       console.error("Erreur chargement entités pour parent:", error);
       // En cas d'erreur, on utilise les entités déjà chargées
       setAllEntitesForParent(entites);
+      // Calculer les statistiques avec les entités disponibles
+      setStatsWithChef(entites.filter((e) => e.chef_actuel).length);
+      setStatsRootEntities(entites.filter((e) => !e.parent).length);
     }
   };
 
@@ -1118,7 +1134,7 @@ export default function EntitiesPage() {
                     <Building className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{entites.length}</div>
+                    <div className="text-2xl font-bold">{totalItems}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1130,7 +1146,7 @@ export default function EntitiesPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {entites.filter((e) => e.chef_actuel).length}
+                      {statsWithChef}
                     </div>
                   </CardContent>
                 </Card>
@@ -1143,7 +1159,7 @@ export default function EntitiesPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {entites.filter((e) => !e.parent).length}
+                      {statsRootEntities}
                     </div>
                   </CardContent>
                 </Card>
