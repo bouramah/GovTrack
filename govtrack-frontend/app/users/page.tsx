@@ -313,7 +313,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
 
     const validationErrors: string[] = [];
-    if (!affectationFormData.entite_id) validationErrors.push("L'entité est requise");
+    if (!affectationFormData.entite_id) validationErrors.push("Le service est requis");
     if (!affectationFormData.poste_id) validationErrors.push("Le poste est requis");
     if (!affectationFormData.date_debut) validationErrors.push("La date de début est requise");
 
@@ -1510,7 +1510,7 @@ export default function UsersPage() {
                               <p className="text-sm font-medium">{userDetails.affectation_actuelle.poste}</p>
                             </div>
                             <div>
-                              <Label className="text-sm font-medium text-gray-600">Entité</Label>
+                              <Label className="text-sm font-medium text-gray-600">Service</Label>
                               <p className="text-sm">{userDetails.affectation_actuelle.entite}</p>
                             </div>
                             <div>
@@ -1583,7 +1583,7 @@ export default function UsersPage() {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Crown className="h-5 w-5" />
-                          Entités Dirigées
+                          Services Dirigées
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -1837,7 +1837,7 @@ export default function UsersPage() {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="affectation-entite">Entité *</Label>
+                  <Label htmlFor="affectation-entite">Service *</Label>
                   <SearchableSelect
                     options={entites.map((entite) => ({
                       value: entite.id.toString(),
@@ -1847,9 +1847,9 @@ export default function UsersPage() {
                     }))}
                     value={affectationFormData.entite_id}
                     onValueChange={(value) => setAffectationFormData({...affectationFormData, entite_id: value})}
-                    placeholder="Sélectionner une entité"
-                    searchPlaceholder="Rechercher par nom d'entité..."
-                    emptyMessage="Aucune entité trouvée"
+                    placeholder="Sélectionner un service"
+                    searchPlaceholder="Rechercher par nom de service..."
+                    emptyMessage="Aucun service trouvé"
                   />
                 </div>
 

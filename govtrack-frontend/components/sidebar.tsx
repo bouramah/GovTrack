@@ -216,7 +216,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                 )}
                 {permissions.canManageEntities() && (
                   <NavItem href="/entities" icon={Building}>
-                    Entités
+                    Services/Fonctions
                   </NavItem>
                 )}
                 {permissions.canManageUserRoles() && (

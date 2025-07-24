@@ -118,7 +118,7 @@ class EntiteController extends Controller
             if (!$parent) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Entité parent introuvable'
+                    'message' => 'Service parent introuvable'
                 ], 404);
             }
         }
@@ -139,7 +139,7 @@ class EntiteController extends Controller
         return response()->json([
             'success' => true,
             'data' => $entite,
-            'message' => 'Entité créée avec succès'
+            'message' => 'Service créé avec succès'
         ], 201);
     }
 
@@ -191,7 +191,7 @@ class EntiteController extends Controller
         return response()->json([
             'success' => true,
             'data' => $response,
-            'message' => 'Entité récupérée avec succès'
+            'message' => 'Service récupéré avec succès'
         ]);
     }
 
@@ -215,7 +215,7 @@ class EntiteController extends Controller
                 'exists:entites,id',
                 function ($attribute, $value, $fail) use ($id) {
                     if ($value == $id) {
-                        $fail('Une entité ne peut pas être son propre parent.');
+                        $fail('Un Service ne peut pas être son propre parent.');
                     }
 
                     // Vérifier qu'il n'y a pas de cycle dans la hiérarchie
@@ -241,7 +241,7 @@ class EntiteController extends Controller
         return response()->json([
             'success' => true,
             'data' => $entite,
-            'message' => 'Entité mise à jour avec succès'
+            'message' => 'Service mis à jour avec succès'
         ]);
     }
 
@@ -256,7 +256,7 @@ class EntiteController extends Controller
         if ($entite->enfants()->count() > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Impossible de supprimer cette entité car elle a des entités enfants'
+                'message' => 'Impossible de supprimer ce Service car il a des Service enfants'
             ], 422);
         }
 
@@ -264,7 +264,7 @@ class EntiteController extends Controller
         if ($entite->affectations()->where('statut', true)->count() > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Impossible de supprimer cette entité car elle a des employés affectés'
+                'message' => 'Impossible de supprimer ce Service car il a des employés affectés'
             ], 422);
         }
 
@@ -272,7 +272,7 @@ class EntiteController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Entité supprimée avec succès'
+            'message' => 'Service supprimé avec succès'
         ]);
     }
 
@@ -304,7 +304,7 @@ class EntiteController extends Controller
                 'id' => $entite->id,
                 'nom' => $entite->nom,
             ],
-            'message' => 'Entités enfants récupérées avec succès'
+            'message' => 'Services enfants récupérées avec succès'
         ]);
     }
 
@@ -329,7 +329,7 @@ class EntiteController extends Controller
         return response()->json([
             'success' => true,
             'data' => $response,
-            'message' => 'Hiérarchie de l\'entité récupérée avec succès'
+            'message' => 'Hiérarchie du Service récupéré avec succès'
         ]);
     }
 
@@ -354,7 +354,7 @@ class EntiteController extends Controller
         if ($chefActuel && !($validated['terminer_mandat_precedent'] ?? false)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cette entité a déjà un chef actuel. Utilisez terminer_mandat_precedent=true pour terminer automatiquement le mandat précédent.',
+                'message' => 'Ce Service a déjà un chef actuel. Utilisez terminer_mandat_precedent=true pour terminer automatiquement le mandat précédent.',
                 'chef_actuel' => [
                     'user' => [
                         'id' => $chefActuel->user->id,
@@ -409,7 +409,7 @@ class EntiteController extends Controller
                 ],
                 'mandat_precedent_termine' => $chefActuel ? true : false,
             ],
-            'message' => 'Chef affecté avec succès à l\'entité'
+            'message' => 'Chef affecté avec succès au Service'
         ], 201);
     }
 
@@ -431,7 +431,7 @@ class EntiteController extends Controller
         if (!$mandatActuel) {
             return response()->json([
                 'success' => false,
-                'message' => 'Aucun chef actuel trouvé pour cette entité'
+                'message' => 'Aucun chef actuel trouvé pour ce Service'
             ], 404);
         }
 
@@ -822,7 +822,7 @@ class EntiteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Utilisateurs de l\'entité récupérés avec succès',
+                'message' => 'Utilisateurs du Service récupérés avec succès',
                 'data' => $response
             ]);
 

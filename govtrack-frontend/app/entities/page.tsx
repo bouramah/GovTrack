@@ -933,13 +933,13 @@ export default function EntitiesPage() {
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
         <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
           <Topbar
-            name="Gestion des Entités"
+            name="Gestion des Services"
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
           />
           <main className="flex-1 overflow-y-auto p-3 lg:p-6">
       <div className="flex items-center justify-center h-64">
-        <span className="ml-2">Chargement des entités...</span>
+        <span className="ml-2">Chargement des services...</span>
             </div>
           </main>
         </div>
@@ -954,7 +954,7 @@ export default function EntitiesPage() {
 
         <div className="lg:w-[calc(100%-16rem)] lg:ml-64 flex flex-col overflow-hidden pt-16">
           <Topbar
-            name="Gestion des Entités"
+            name="Gestion des Services"
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
           />
@@ -963,7 +963,7 @@ export default function EntitiesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des Entités</h1>
+          <h1 className="text-3xl font-bold">Gestion des Services</h1>
           <p className="text-muted-foreground">
             Gérer la structure organisationnelle et la hiérarchie
           </p>
@@ -971,7 +971,7 @@ export default function EntitiesPage() {
         <CreateEntityGuard>
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Entité
+            Nouveau Service
           </Button>
         </CreateEntityGuard>
       </div>
@@ -980,7 +980,7 @@ export default function EntitiesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Types d'Entité</CardTitle>
+            <CardTitle className="text-sm font-medium">Types de Service</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -989,7 +989,7 @@ export default function EntitiesPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Entités</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Services</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -1009,7 +1009,7 @@ export default function EntitiesPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entités Racines</CardTitle>
+            <CardTitle className="text-sm font-medium">Services Racines</CardTitle>
             <TreePine className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -1022,9 +1022,9 @@ export default function EntitiesPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="entites">Entités</TabsTrigger>
+          <TabsTrigger value="entites">Services</TabsTrigger>
           {entityPermissions.canViewTypesList && (
-            <TabsTrigger value="types">Types d'entité</TabsTrigger>
+            <TabsTrigger value="types">Types de service</TabsTrigger>
           )}
           {postPermissions.canViewList && (
             <TabsTrigger value="postes">Postes</TabsTrigger>
@@ -1072,7 +1072,7 @@ export default function EntitiesPage() {
           {/* Liste des entités */}
           <Card>
             <CardHeader>
-              <CardTitle>Liste des Entités ({filteredEntites.length})</CardTitle>
+              <CardTitle>Liste des Services ({filteredEntites.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -1114,7 +1114,7 @@ export default function EntitiesPage() {
                           {(entite.nombre_enfants || 0) > 0 && (
                             <div className="flex items-center gap-1">
                               <GitBranch className="h-4 w-4" />
-                              <span>{entite.nombre_enfants} sous-entités</span>
+                              <span>{entite.nombre_enfants} sous-services</span>
                             </div>
                           )}
                           <div className="flex items-center gap-1">
@@ -1200,7 +1200,7 @@ export default function EntitiesPage() {
               
               {filteredEntites.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucune entité trouvée
+                  Aucun service trouvé
                 </div>
               )}
 
@@ -1211,7 +1211,7 @@ export default function EntitiesPage() {
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>
-                      Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems} entités
+                      Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems} services
                     </span>
                   </div>
                   
@@ -1301,7 +1301,7 @@ export default function EntitiesPage() {
           <ViewEntityTypesListGuard>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Types d'Entité ({typeEntites.length})</CardTitle>
+              <CardTitle>Types de services ({typeEntites.length})</CardTitle>
               <CreateEntityTypeGuard>
                 <Button onClick={() => setShowCreateTypeModal(true)}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -1356,7 +1356,7 @@ export default function EntitiesPage() {
                     )}
                       <div className="flex justify-between items-center">
                         <Badge variant="secondary">
-                          {entites.filter(e => e.type_entite.id === type.id).length} entités
+                          {entites.filter(e => e.type_entite.id === type.id).length} services
                         </Badge>
                         <div className="text-xs text-muted-foreground">
                           Créé le {new Date(type.date_creation).toLocaleDateString('fr-FR')}
@@ -1369,7 +1369,7 @@ export default function EntitiesPage() {
               {typeEntites.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <p>Aucun type d'entité trouvé</p>
+                  <p>Aucun type de service trouvé</p>
                   <CreateEntityTypeGuard>
                   <Button 
                     variant="outline" 
@@ -1654,7 +1654,7 @@ export default function EntitiesPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
                       <div className="text-center">
                         <div className="text-2xl font-bold">{organigramme.statistiques?.total_entites || 0}</div>
-                        <div className="text-sm text-muted-foreground">Total entités</div>
+                        <div className="text-sm text-muted-foreground">Total services</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold">{organigramme.statistiques?.total_employes_actifs || 0}</div>
@@ -1753,23 +1753,23 @@ export default function EntitiesPage() {
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer une nouvelle entité</DialogTitle>
+            <DialogTitle>Créer une nouveau service</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateEntite} className="space-y-4">
             <div>
-              <Label htmlFor="nom">Nom de l'entité *</Label>
+              <Label htmlFor="nom">Nom du service *</Label>
               <Input
                 id="nom"
                 value={formData.nom}
                 onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                placeholder="Nom de l'entité"
+                placeholder="Nom du service"
                 maxLength={255}
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="type_entite_id">Type d'entité *</Label>
+              <Label htmlFor="type_entite_id">Type de service *</Label>
               <Select value={formData.type_entite_id} onValueChange={(value) => setFormData(prev => ({ ...prev, type_entite_id: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type" />
@@ -1785,13 +1785,13 @@ export default function EntitiesPage() {
             </div>
 
             <div>
-              <Label htmlFor="parent_id">Entité parente</Label>
+              <Label htmlFor="parent_id">Service parent</Label>
               <Select value={formData.parent_id} onValueChange={(value) => setFormData(prev => ({ ...prev, parent_id: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Aucune (entité racine)" />
+                  <SelectValue placeholder="Aucun (service racine)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">Aucune (entité racine)</SelectItem>
+                  <SelectItem value="null">Aucun (service racine)</SelectItem>
                   {entites.map(entite => (
                     <SelectItem key={entite.id} value={entite.id.toString()}>
                       {entite.nom} ({entite.type_entite.nom})
@@ -1807,7 +1807,7 @@ export default function EntitiesPage() {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description de l'entité (optionnel)"
+                placeholder="Description du service (optionnel)"
                 rows={3}
               />
             </div>
@@ -1828,23 +1828,23 @@ export default function EntitiesPage() {
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier l'entité</DialogTitle>
+            <DialogTitle>Modifier le service</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdateEntite} className="space-y-4">
             <div>
-              <Label htmlFor="edit-nom">Nom de l'entité *</Label>
+              <Label htmlFor="edit-nom">Nom du service *</Label>
               <Input
                 id="edit-nom"
                 value={formData.nom}
                 onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                placeholder="Nom de l'entité"
+                placeholder="Nom du service"
                 maxLength={255}
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="edit-type">Type d'entité *</Label>
+              <Label htmlFor="edit-type">Type de service *</Label>
               <Select value={formData.type_entite_id} onValueChange={(value) => setFormData(prev => ({ ...prev, type_entite_id: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type" />
@@ -1860,13 +1860,13 @@ export default function EntitiesPage() {
             </div>
 
             <div>
-              <Label htmlFor="edit-parent">Entité parente</Label>
+              <Label htmlFor="edit-parent">Service parent</Label>
               <Select value={formData.parent_id} onValueChange={(value) => setFormData(prev => ({ ...prev, parent_id: value }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Aucune (entité racine)" />
+                  <SelectValue placeholder="Aucun (service racine)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">Aucune (entité racine)</SelectItem>
+                  <SelectItem value="null">Aucun (service racine)</SelectItem>
                   {entites.filter(e => e.id !== selectedEntite?.id).map(entite => (
                     <SelectItem key={entite.id} value={entite.id.toString()}>
                       {entite.nom} ({entite.type_entite.nom})
@@ -1882,7 +1882,7 @@ export default function EntitiesPage() {
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description de l'entité (optionnel)"
+                placeholder="Description du service (optionnel)"
                 rows={3}
               />
             </div>
@@ -1903,7 +1903,7 @@ export default function EntitiesPage() {
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Détails de l'entité</DialogTitle>
+            <DialogTitle>Détails du service</DialogTitle>
           </DialogHeader>
           {selectedEntite && (
             <div className="space-y-6">
@@ -1919,7 +1919,7 @@ export default function EntitiesPage() {
                 <div>
                   <Label className="text-sm font-medium">Parent</Label>
                   <p className="text-sm text-muted-foreground">
-                    {selectedEntite.parent ? selectedEntite.parent.nom : "Aucun (entité racine)"}
+                    {selectedEntite.parent ? selectedEntite.parent.nom : "Aucun (service racine)"}
                   </p>
                 </div>
                 <div>
@@ -1983,13 +1983,13 @@ export default function EntitiesPage() {
 
               {selectedEntite.enfants && selectedEntite.enfants.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="font-medium">Sous-entités ({selectedEntite.enfants.length})</h4>
+                  <h4 className="font-medium">Sous-services ({selectedEntite.enfants.length})</h4>
                   <div className="space-y-2">
                     {selectedEntite.enfants.map((enfant) => (
                       <div key={enfant.id} className="p-3 border rounded-lg">
                         <p className="font-medium">{enfant.nom}</p>
                         <p className="text-sm text-muted-foreground">
-                          {enfant.type_entite.nom} | {enfant.nombre_enfants || 0} sous-entités
+                          {enfant.type_entite.nom} | {enfant.nombre_enfants || 0} sous-services
                         </p>
                         {enfant.description && (
                           <p className="text-xs text-muted-foreground mt-1">
@@ -2027,7 +2027,7 @@ export default function EntitiesPage() {
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <ChevronRight className="h-4 w-4" />
-                    Entités parentes
+                    Services parents
                   </h4>
                   {entiteHierarchy.parents && entiteHierarchy.parents.length > 0 ? (
                     <div className="space-y-2">
@@ -2049,7 +2049,7 @@ export default function EntitiesPage() {
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <ChevronDown className="h-4 w-4" />
-                    Sous-entités ({enfants.length})
+                    Sous-services ({enfants.length})
                   </h4>
                   {enfants.length > 0 ? (
                     <div className="space-y-2">
@@ -2057,7 +2057,7 @@ export default function EntitiesPage() {
                         <div key={enfant.id} className="p-3 border rounded-lg">
                           <p className="font-medium">{enfant.nom}</p>
                           <p className="text-sm text-muted-foreground">
-                            {enfant.type_entite.nom} | {enfant.nombre_enfants || 0} sous-entités
+                            {enfant.type_entite.nom} | {enfant.nombre_enfants || 0} sous-services
                           </p>
                           {enfant.description && (
                             <p className="text-xs text-muted-foreground mt-1">
@@ -2088,7 +2088,7 @@ export default function EntitiesPage() {
               {entiteToDelete?.nombre_enfants && entiteToDelete.nombre_enfants > 0 && (
                 <div className="mt-2 p-3 bg-destructive/10 rounded border">
                   <p className="text-sm font-medium text-destructive">
-                    ⚠️ Cette entité a {entiteToDelete.nombre_enfants} sous-entités. 
+                    ⚠️ Ce service a {entiteToDelete.nombre_enfants} sous-services. 
                     Vous devez d'abord les supprimer ou les réaffecter.
                   </p>
                 </div>
@@ -2119,9 +2119,9 @@ export default function EntitiesPage() {
       <Dialog open={showChefModal} onOpenChange={setShowChefModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Affecter un chef à l'entité</DialogTitle>
+            <DialogTitle>Affecter un chef au service</DialogTitle>
             <DialogDescription>
-              Entité: {selectedEntiteForAction?.nom}
+              Service: {selectedEntiteForAction?.nom}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAffecterChef} className="space-y-4">
@@ -2425,7 +2425,7 @@ export default function EntitiesPage() {
       <Dialog open={showCreateTypeModal} onOpenChange={setShowCreateTypeModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un nouveau type d'entité</DialogTitle>
+            <DialogTitle>Créer un nouveau type de service</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateTypeEntite} className="space-y-4">
             <div>
@@ -2468,7 +2468,7 @@ export default function EntitiesPage() {
       <Dialog open={showEditTypeModal} onOpenChange={setShowEditTypeModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier le type d'entité</DialogTitle>
+            <DialogTitle>Modifier le type de service</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdateTypeEntite} className="space-y-4">
             <div>
@@ -2511,7 +2511,7 @@ export default function EntitiesPage() {
       <Dialog open={showDetailTypeModal} onOpenChange={setShowDetailTypeModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Détails du type d'entité</DialogTitle>
+            <DialogTitle>Détails du type de service</DialogTitle>
           </DialogHeader>
           {selectedTypeEntite && (
             <div className="space-y-6">
@@ -2521,9 +2521,9 @@ export default function EntitiesPage() {
                   <p className="text-sm text-muted-foreground">{selectedTypeEntite.nom}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Nombre d'entités</Label>
+                  <Label className="text-sm font-medium">Nombre de services</Label>
                   <p className="text-sm text-muted-foreground">
-                    {entites.filter(e => e.type_entite.id === selectedTypeEntite.id).length} entités utilisent ce type
+                    {entites.filter(e => e.type_entite.id === selectedTypeEntite.id).length} services utilisent ce type
                   </p>
                 </div>
                 <div>
@@ -2548,7 +2548,7 @@ export default function EntitiesPage() {
               <Separator />
 
               <div className="space-y-4">
-                <h4 className="font-medium">Entités utilisant ce type ({entites.filter(e => e.type_entite.id === selectedTypeEntite.id).length})</h4>
+                <h4 className="font-medium">Services utilisant ce type ({entites.filter(e => e.type_entite.id === selectedTypeEntite.id).length})</h4>
                 {entites.filter(e => e.type_entite.id === selectedTypeEntite.id).length > 0 ? (
                   <div className="space-y-2">
                     {entites.filter(e => e.type_entite.id === selectedTypeEntite.id).map((entite) => (
@@ -2581,13 +2581,13 @@ export default function EntitiesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer le type d'entité "{typeEntiteToDelete?.nom}" ?
+              Êtes-vous sûr de vouloir supprimer le type de service "{typeEntiteToDelete?.nom}" ?
               Cette action est irréversible.
               {typeEntiteToDelete && entites.filter(e => e.type_entite.id === typeEntiteToDelete.id).length > 0 && (
                 <div className="mt-2 p-3 bg-destructive/10 rounded border">
                   <p className="text-sm font-medium text-destructive">
-                    ⚠️ Ce type est utilisé par {entites.filter(e => e.type_entite.id === typeEntiteToDelete.id).length} entité(s). 
-                    Vous devez d'abord modifier le type de ces entités.
+                    ⚠️ Ce type est utilisé par {entites.filter(e => e.type_entite.id === typeEntiteToDelete.id).length} service(s). 
+                    Vous devez d'abord modifier le type de ces services.
                   </p>
                 </div>
               )}
