@@ -41,7 +41,7 @@ class EntiteController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
+            $perPage = $request->get('per_page', 50);
             $entites = $query->paginate($perPage);
 
             $data = $entites->getCollection()->map(function ($entite) {
