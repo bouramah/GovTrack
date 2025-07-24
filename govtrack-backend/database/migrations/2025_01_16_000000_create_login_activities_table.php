@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('browser')->nullable();
             $table->string('os')->nullable();
             $table->text('session_id')->nullable();
-            $table->timestamps(); // Ajoute created_at et updated_at
+            // $table->timestamps(); // Ajoute created_at et updated_at
             $table->index(['user_id', 'created_at']);
             $table->index(['action', 'created_at']);
             $table->index('ip_address');
