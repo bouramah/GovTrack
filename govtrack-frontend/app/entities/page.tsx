@@ -225,6 +225,9 @@ export default function EntitiesPage() {
   const [statsWithChef, setStatsWithChef] = useState(0);
   const [statsRootEntities, setStatsRootEntities] = useState(0);
 
+  // État pour tous les utilisateurs disponibles pour l'affectation de chef
+  const [allUsersForChef, setAllUsersForChef] = useState<User[]>([]);
+
   const entityPermissions = useEntityPermissions();
   const postPermissions = usePostPermissions();
   const organigrammePermissions = useOrganigrammePermissions();
@@ -418,7 +421,7 @@ export default function EntitiesPage() {
         await Promise.all([
           apiClient.getTypeEntites(),
           apiClient.getEntitesDetailed(entiteParams),
-          apiClient.getUsersDetailed(),
+          apiClient.getUsersDetailed({ per_page: 1000 }),
           apiClient.getPostes(posteParams),
         ]);
 
@@ -438,6 +441,11 @@ export default function EntitiesPage() {
         const initialEntites = entitesResponse.data || [];
         setStatsWithChef(initialEntites.filter((e) => e.chef_actuel).length);
         setStatsRootEntities(initialEntites.filter((e) => !e.parent).length);
+      }
+
+      // Initialiser allUsersForChef avec les utilisateurs chargés
+      if (allUsersForChef.length === 0) {
+        setAllUsersForChef(usersData.data || []);
       }
     } catch (error: any) {
       console.error("Erreur de chargement:", error);
@@ -558,6 +566,22 @@ export default function EntitiesPage() {
     setShowCreateModal(true);
     // Charger toutes les entités disponibles pour le sélecteur de parent
     loadAllEntitesForParent();
+  };
+
+  // Fonction pour charger tous les utilisateurs disponibles pour l'affectation de chef
+  const loadAllUsersForChef = async () => {
+    try {
+      const response = await apiClient.getUsersDetailed({
+        per_page: 1000, // Charger un grand nombre d'utilisateurs
+        sort_by: 'nom',
+        sort_order: 'asc',
+      });
+      setAllUsersForChef(response.data || []);
+    } catch (error) {
+      console.error("Erreur chargement utilisateurs pour chef:", error);
+      // En cas d'erreur, on utilise les utilisateurs déjà chargés
+      setAllUsersForChef(users);
+    }
   };
 
   const handleUpdateEntite = async (e: React.FormEvent) => {
@@ -812,6 +836,8 @@ export default function EntitiesPage() {
   const openChefModal = (entite: EntiteWithDetails) => {
     setSelectedEntiteForAction(entite);
     setShowChefModal(true);
+    // Charger tous les utilisateurs disponibles pour le sélecteur de chef
+    loadAllUsersForChef();
   };
 
   const openTerminerMandatModal = (entite: EntiteWithDetails) => {
@@ -2684,7 +2710,7 @@ export default function EntitiesPage() {
                     <div>
                       <Label htmlFor="user_id">Utilisateur *</Label>
                       <SearchableSelect
-                        options={users.map((user) => ({
+                        options={allUsersForChef.map((user) => ({
                           value: user.id.toString(),
                           label: `${user.prenom} ${user.nom}`,
                           description: `Email: ${user.email}`,
