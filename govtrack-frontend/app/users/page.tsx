@@ -193,6 +193,14 @@ export default function UsersPage() {
   const { user } = useAuth();
   const [isResettingPasswordId, setIsResettingPasswordId] = useState<number|null>(null);
 
+  // États pour les statistiques globales
+  const [globalStats, setGlobalStats] = useState({
+    activeUsers: 0,
+    inactiveUsers: 0,
+    usersWithRoles: 0,
+    usersWithAffectations: 0,
+  });
+
 
 
   useEffect(() => {
@@ -239,6 +247,9 @@ export default function UsersPage() {
       setRoles(rolesData.data || []);
       setEntites(entitesData.data || []);
       setPostes(postesData.data || []);
+      
+      // Charger les statistiques globales
+      await loadGlobalStats();
     } catch (error: any) {
       console.error('Erreur de chargement:', error);
       toast({
@@ -248,6 +259,40 @@ export default function UsersPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fonction pour charger les statistiques globales
+  const loadGlobalStats = async () => {
+    try {
+      // Charger tous les utilisateurs pour calculer les vraies statistiques
+      const allUsersResponse = await apiClient.getUsersDetailed({
+        per_page: 1000, // Charger un grand nombre d'utilisateurs
+        sort_by: 'date_creation',
+        sort_order: 'desc'
+      });
+      
+      const allUsers = allUsersResponse.data || [];
+      
+      // Calculer les statistiques globales
+      const stats = {
+        activeUsers: allUsers.filter(user => user.statut).length,
+        inactiveUsers: allUsers.filter(user => !user.statut).length,
+        usersWithRoles: allUsers.filter(user => user.roles && user.roles.length > 0).length,
+        usersWithAffectations: allUsers.filter(user => user.affectation_actuelle).length,
+      };
+      
+      setGlobalStats(stats);
+    } catch (error) {
+      console.error('Erreur chargement statistiques globales:', error);
+      // En cas d'erreur, utiliser les statistiques de la page actuelle
+      const fallbackStats = {
+        activeUsers: users.filter(user => user.statut).length,
+        inactiveUsers: users.filter(user => !user.statut).length,
+        usersWithRoles: users.filter(user => user.roles && user.roles.length > 0).length,
+        usersWithAffectations: users.filter(user => user.affectation_actuelle).length,
+      };
+      setGlobalStats(fallbackStats);
     }
   };
 
@@ -764,11 +809,11 @@ export default function UsersPage() {
     });
   };
 
-  // Calculs de statistiques basés sur les données réelles
-  const activeUsers = users.filter(user => user.statut).length;
-  const inactiveUsers = users.filter(user => !user.statut).length;
-  const usersWithRoles = users.filter(user => user.roles && user.roles.length > 0).length;
-  const usersWithAffectations = users.filter(user => user.affectation_actuelle).length;
+  // Calculs de statistiques basés sur les données réelles (pour compatibilité)
+  const activeUsers = globalStats.activeUsers;
+  const inactiveUsers = globalStats.inactiveUsers;
+  const usersWithRoles = globalStats.usersWithRoles;
+  const usersWithAffectations = globalStats.usersWithAffectations;
 
   const handleResetUserPassword = async (userId: number, userName: string) => {
     try {
