@@ -411,14 +411,14 @@ class ReunionPVService
             }
 
             // Vérifier que le PV peut être validé
-            if ($pv->statut_validation === 'VALIDE') {
+            if ($pv->statut === 'VALIDE') {
                 return [
                     'success' => false,
                     'message' => 'Ce PV est déjà validé'
                 ];
             }
 
-            if ($pv->statut_validation === 'REJETE') {
+            if ($pv->statut === 'REJETE') {
                 return [
                     'success' => false,
                     'message' => 'Impossible de valider un PV rejeté'
@@ -427,10 +427,10 @@ class ReunionPVService
 
             // Mettre à jour le PV
             $pv->update([
-                'statut_validation' => 'VALIDE',
-                'validateur_id' => $user->id,
-                'date_validation' => now(),
-                'commentaires_validation' => $data['commentaires'] ?? null,
+                'statut' => 'VALIDE',
+                'valide_par_id' => $user->id,
+                'valide_le' => now(),
+                'commentaire_validation' => $data['commentaire_validation'] ?? null,
                 'modifier_par' => $user->id,
                 'date_modification' => now(),
             ]);
@@ -511,7 +511,7 @@ class ReunionPVService
             }
 
             // Vérifier que le PV peut être rejeté
-            if ($pv->statut_validation === 'VALIDE') {
+            if ($pv->statut === 'VALIDE') {
                 return [
                     'success' => false,
                     'message' => 'Impossible de rejeter un PV validé'
@@ -520,10 +520,10 @@ class ReunionPVService
 
             // Mettre à jour le PV
             $pv->update([
-                'statut_validation' => 'REJETE',
-                'validateur_id' => $user->id,
-                'date_validation' => now(),
-                'commentaires_validation' => $data['commentaires'] ?? null,
+                'statut' => 'REJETE',
+                'valide_par_id' => $user->id,
+                'valide_le' => now(),
+                'commentaire_validation' => $data['commentaire_validation'] ?? null,
                 'modifier_par' => $user->id,
                 'date_modification' => now(),
             ]);

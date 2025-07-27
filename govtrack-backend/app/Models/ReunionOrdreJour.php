@@ -22,18 +22,14 @@ class ReunionOrdreJour extends Model
     /**
      * Constantes pour les types
      */
-    public const TYPE_PRESENTATION = 'PRESENTATION';
-    public const TYPE_DISCUSSION = 'DISCUSSION';
-    public const TYPE_DECISION = 'DECISION';
-    public const TYPE_INFORMATION = 'INFORMATION';
-    public const TYPE_PAUSE = 'PAUSE';
+    public const TYPE_SUJET_SPECIFIQUE = 'SUJET_SPECIFIQUE';
+    public const TYPE_POINT_DIVERS = 'POINT_DIVERS';
+    public const TYPE_SUIVI_PROJETS = 'SUIVI_PROJETS';
 
     public const TYPES = [
-        self::TYPE_PRESENTATION => 'Présentation',
-        self::TYPE_DISCUSSION => 'Discussion',
-        self::TYPE_DECISION => 'Décision',
-        self::TYPE_INFORMATION => 'Information',
-        self::TYPE_PAUSE => 'Pause',
+        self::TYPE_SUJET_SPECIFIQUE => 'Sujet Spécifique',
+        self::TYPE_POINT_DIVERS => 'Point Divers',
+        self::TYPE_SUIVI_PROJETS => 'Suivi Projets',
     ];
 
     /**
@@ -63,10 +59,11 @@ class ReunionOrdreJour extends Model
         'duree_estimee_minutes',
         'responsable_id',
         'statut',
-        'niveau_detail',
-        'commentaires',
+        'niveau_detail_requis',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
@@ -95,6 +92,22 @@ class ReunionOrdreJour extends Model
     public function responsable(): BelongsTo
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    /**
+     * Relations avec l'utilisateur créateur
+     */
+    public function createur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec l'utilisateur modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**
@@ -162,11 +175,9 @@ class ReunionOrdreJour extends Model
     public function getTypeCouleurAttribute(): string
     {
         return match($this->type) {
-            self::TYPE_PRESENTATION => 'blue',
-            self::TYPE_DISCUSSION => 'yellow',
-            self::TYPE_DECISION => 'green',
-            self::TYPE_INFORMATION => 'gray',
-            self::TYPE_PAUSE => 'orange',
+            self::TYPE_SUJET_SPECIFIQUE => 'blue',
+            self::TYPE_POINT_DIVERS => 'yellow',
+            self::TYPE_SUIVI_PROJETS => 'green',
             default => 'gray',
         };
     }
@@ -177,11 +188,9 @@ class ReunionOrdreJour extends Model
     public function getTypeIconeAttribute(): string
     {
         return match($this->type) {
-            self::TYPE_PRESENTATION => 'presentation',
-            self::TYPE_DISCUSSION => 'message-circle',
-            self::TYPE_DECISION => 'check-square',
-            self::TYPE_INFORMATION => 'info',
-            self::TYPE_PAUSE => 'coffee',
+            self::TYPE_SUJET_SPECIFIQUE => 'file-text',
+            self::TYPE_POINT_DIVERS => 'message-circle',
+            self::TYPE_SUIVI_PROJETS => 'trending-up',
             default => 'circle',
         };
     }

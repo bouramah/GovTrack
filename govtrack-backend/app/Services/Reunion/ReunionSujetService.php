@@ -29,7 +29,6 @@ class ReunionSujetService
                 'recommandation' => $data['recommandation'] ?? null,
                 'statut' => $data['statut'] ?? 'EN_ATTENTE',
                 'commentaire' => $data['commentaire'] ?? null,
-                'pieces_jointes' => $data['pieces_jointes'] ?? [],
                 'projet_id' => $data['projet_id'] ?? null,
                 'entite_id' => $data['entite_id'] ?? null,
                 'niveau_detail' => $data['niveau_detail'] ?? 'SIMPLE',
@@ -57,6 +56,120 @@ class ReunionSujetService
                 'user_id' => $userId
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Créer plusieurs sujets de réunion en lot avec gestion des pièces jointes
+     */
+    public function createMultipleSujets(array $sujetsList, array $files = [], int $reunionId, int $userId): array
+    {
+        DB::beginTransaction();
+
+        try {
+            // Vérifier que la réunion existe
+            $reunion = Reunion::findOrFail($reunionId);
+
+            $sujetsCrees = [];
+            $erreurs = [];
+
+            foreach ($sujetsList as $index => $sujetData) {
+                try {
+                    // Créer le sujet sans pièces jointes d'abord
+                    $sujet = ReunionSujet::create([
+                        'reunion_ordre_jour_id' => $sujetData['reunion_ordre_jour_id'],
+                        'titre' => $sujetData['titre'],
+                        'description' => $sujetData['description'],
+                        'difficulte_globale' => $sujetData['difficulte_globale'] ?? null,
+                        'recommandation' => $sujetData['recommandation'] ?? null,
+                        'statut' => $sujetData['statut'] ?? 'EN_ATTENTE',
+                        'commentaire' => $sujetData['commentaire'] ?? null,
+                        'pieces_jointes' => [], // Initialiser vide
+                        'projet_id' => $sujetData['projet_id'] ?? null,
+                        'entite_id' => $sujetData['entite_id'] ?? null,
+                        'niveau_detail' => $sujetData['niveau_detail'] ?? 'SIMPLE',
+                        'objectifs_actifs' => $sujetData['objectifs_actifs'] ?? false,
+                        'difficultes_actives' => $sujetData['difficultes_actives'] ?? false,
+                        'creer_par' => $userId,
+                        'modifier_par' => $userId,
+                    ]);
+
+                    // Gérer les pièces jointes pour ce sujet
+                    if (isset($files["sujet_{$index}_files"]) && is_array($files["sujet_{$index}_files"])) {
+                        $piecesJointes = [];
+
+                        foreach ($files["sujet_{$index}_files"] as $file) {
+                            if ($file && $file->isValid()) {
+                                $fileName = time() . '_' . $file->getClientOriginalName();
+                                $filePath = $file->storeAs(
+                                    "reunions/{$reunionId}/sujets/{$sujet->id}",
+                                    $fileName,
+                                    'public'
+                                );
+
+                                $piecesJointes[] = [
+                                    'nom' => $file->getClientOriginalName(),
+                                    'chemin' => $filePath,
+                                    'taille' => $file->getSize(),
+                                    'type' => $file->getMimeType(),
+                                    'uploaded_at' => now()->toISOString()
+                                ];
+                            }
+                        }
+
+                        // Mettre à jour le sujet avec les pièces jointes
+                        $sujet->update(['pieces_jointes' => $piecesJointes]);
+                    }
+
+                    $sujetsCrees[] = $sujet;
+
+                    Log::info('Sujet de réunion créé en lot avec pièces jointes', [
+                        'sujet_id' => $sujet->id,
+                        'reunion_id' => $reunionId,
+                        'titre' => $sujet->titre,
+                        'pieces_jointes_count' => count($sujet->pieces_jointes ?? []),
+                        'user_id' => $userId
+                    ]);
+
+                } catch (Exception $e) {
+                    $erreurs[] = [
+                        'index' => $index,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($erreurs)) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Erreurs lors de la création des sujets',
+                    'errors' => $erreurs
+                ];
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'data' => $sujetsCrees,
+                'message' => count($sujetsCrees) . ' sujets créés avec succès'
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la création multiple des sujets', [
+                'reunion_id' => $reunionId,
+                'sujets_list' => $sujetsList,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des sujets',
+                'error' => $e->getMessage()
+            ];
         }
     }
 

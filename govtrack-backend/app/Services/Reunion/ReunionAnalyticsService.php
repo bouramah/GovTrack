@@ -27,9 +27,9 @@ class ReunionAnalyticsService
         $query = Reunion::whereBetween('date_debut', [$startDate, $endDate]);
 
         $totalReunions = $query->count();
-        $reunionsTerminees = $query->where('status', 'terminee')->count();
-        $reunionsAnnulees = $query->where('status', 'annulee')->count();
-        $reunionsEnCours = $query->where('status', 'en_cours')->count();
+        $reunionsTerminees = $query->where('statut', 'TERMINEE')->count();
+        $reunionsAnnulees = $query->where('statut', 'ANNULEE')->count();
+        $reunionsEnCours = $query->where('statut', 'EN_COURS')->count();
 
         $dureeTotale = $query->get()->sum(function ($reunion) {
             return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
@@ -98,8 +98,8 @@ class ReunionAnalyticsService
                 'date_debut' => $periodStart->toDateString(),
                 'date_fin' => $periodEnd->toDateString(),
                 'total_reunions' => $reunions->count(),
-                'reunions_terminees' => $reunions->where('status', 'terminee')->count(),
-                'reunions_annulees' => $reunions->where('status', 'annulee')->count(),
+                            'reunions_terminees' => $reunions->where('statut', 'TERMINEE')->count(),
+            'reunions_annulees' => $reunions->where('statut', 'ANNULEE')->count(),
                 'duree_totale' => $reunions->sum(function ($reunion) {
                     return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
                 }),
@@ -149,8 +149,8 @@ class ReunionAnalyticsService
                 'entite_id' => $entiteId,
                 'entite_nom' => $entite->nom,
                 'total_reunions' => $totalReunions,
-                'reunions_terminees' => $entiteReunions->where('status', 'terminee')->count(),
-                'reunions_annulees' => $entiteReunions->where('status', 'annulee')->count(),
+                            'reunions_terminees' => $entiteReunions->where('statut', 'TERMINEE')->count(),
+            'reunions_annulees' => $entiteReunions->where('statut', 'ANNULEE')->count(),
                 'duree_totale_heures' => round($dureeTotale / 60, 2),
                 'duree_moyenne_minutes' => $totalReunions > 0 ? round($dureeTotale / $totalReunions, 2) : 0,
                 'participants_uniques' => $entiteReunions->flatMap->participants->unique('user_id')->count(),
@@ -191,8 +191,8 @@ class ReunionAnalyticsService
                 $user = $userParticipations->first()->user;
                 $reunions = $userParticipations->map->reunion;
                 $totalReunions = $reunions->count();
-                $reunionsPresent = $userParticipations->where('status', 'present')->count();
-                $reunionsAbsent = $userParticipations->where('status', 'absent')->count();
+                        $reunionsPresent = $userParticipations->where('statut_presence', 'PRESENT')->count();
+        $reunionsAbsent = $userParticipations->where('statut_presence', 'ABSENT')->count();
 
                 return [
                     'user_id' => $userId,
@@ -237,12 +237,12 @@ class ReunionAnalyticsService
 
         $stats = [
             'total_pv' => $pvs->count(),
-            'pv_valides' => $pvs->where('status', 'valide')->count(),
-            'pv_en_attente' => $pvs->where('status', 'en_attente')->count(),
-            'pv_rejetes' => $pvs->where('status', 'rejete')->count(),
-            'pv_brouillon' => $pvs->where('status', 'brouillon')->count(),
-            'taux_validation' => $pvs->count() > 0 ? round(($pvs->where('status', 'valide')->count() / $pvs->count()) * 100, 2) : 0,
-            'delai_moyen_validation' => $pvs->where('status', 'valide')->avg(function ($pv) {
+            'pv_valides' => $pvs->where('statut', 'VALIDE')->count(),
+            'pv_en_attente' => $pvs->where('statut', 'EN_ATTENTE')->count(),
+            'pv_rejetes' => $pvs->where('statut', 'REJETE')->count(),
+            'pv_brouillon' => $pvs->where('statut', 'BROUILLON')->count(),
+            'taux_validation' => $pvs->count() > 0 ? round(($pvs->where('statut', 'VALIDE')->count() / $pvs->count()) * 100, 2) : 0,
+            'delai_moyen_validation' => $pvs->where('statut', 'VALIDE')->avg(function ($pv) {
                 return Carbon::parse($pv->date_creation)->diffInDays($pv->date_validation);
             }),
             'redacteurs' => $pvs->groupBy('redacteur_id')->map(function ($redacteurPVs, $redacteurId) {
@@ -251,8 +251,8 @@ class ReunionAnalyticsService
                     'redacteur_id' => $redacteurId,
                     'redacteur_nom' => $redacteur->nom . ' ' . $redacteur->prenom,
                     'total_pv' => $redacteurPVs->count(),
-                    'pv_valides' => $redacteurPVs->where('status', 'valide')->count(),
-                    'taux_validation' => $redacteurPVs->count() > 0 ? round(($redacteurPVs->where('status', 'valide')->count() / $redacteurPVs->count()) * 100, 2) : 0
+                                'pv_valides' => $redacteurPVs->where('statut', 'VALIDE')->count(),
+            'taux_validation' => $redacteurPVs->count() > 0 ? round(($redacteurPVs->where('statut', 'VALIDE')->count() / $redacteurPVs->count()) * 100, 2) : 0
                 ];
             })->values()
         ];
@@ -279,7 +279,7 @@ class ReunionAnalyticsService
             if ($participants->isEmpty()) return false;
 
             $dateDebut = Carbon::parse($reunion->date_debut);
-            $premierPresent = $participants->where('status', 'present')
+            $premierPresent = $participants->where('statut_presence', 'PRESENT')
                 ->min('heure_arrivee');
 
             return $premierPresent && Carbon::parse($premierPresent)->gt($dateDebut);
@@ -290,7 +290,7 @@ class ReunionAnalyticsService
             return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
         });
 
-        $dureeReelle = $reunions->where('status', 'terminee')->sum(function ($reunion) {
+        $dureeReelle = $reunions->where('statut', 'TERMINEE')->sum(function ($reunion) {
             return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
         });
 
@@ -345,7 +345,7 @@ class ReunionAnalyticsService
                     'date_debut' => $reunion->date_debut,
                     'date_fin' => $reunion->date_fin,
                     'lieu' => $reunion->lieu,
-                    'status' => $reunion->status,
+                    'statut' => $reunion->statut,
                     'entite' => [
                         'id' => $reunion->entite->id,
                         'nom' => $reunion->entite->nom
@@ -361,7 +361,7 @@ class ReunionAnalyticsService
                             'prenom' => $participant->user->prenom,
                             'email' => $participant->user->email,
                             'role' => $participant->role,
-                            'status' => $participant->status,
+                            'statut_presence' => $participant->statut_presence,
                             'heure_arrivee' => $participant->heure_arrivee
                         ];
                     }),
@@ -369,7 +369,7 @@ class ReunionAnalyticsService
                         return [
                             'id' => $pv->id,
                             'contenu' => $pv->contenu,
-                            'status' => $pv->status,
+                            'statut' => $pv->statut,
                             'date_creation' => $pv->date_creation,
                             'date_validation' => $pv->date_validation
                         ];
@@ -401,8 +401,8 @@ class ReunionAnalyticsService
         if (!empty($filters['type_reunion_id'])) {
             $query->where('type_reunion_id', $filters['type_reunion_id']);
         }
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (!empty($filters['statut'])) {
+            $query->where('statut', $filters['statut']);
         }
 
         $reunions = $query->get();
@@ -426,7 +426,7 @@ class ReunionAnalyticsService
                         return $reunion->participants->count();
                     });
                     $participantsPresent = $reunions->sum(function ($reunion) {
-                        return $reunion->participants->where('status', 'present')->count();
+                        return $reunion->participants->where('statut_presence', 'PRESENT')->count();
                     });
                     $report['taux_presence'] = $totalParticipants > 0 ? round(($participantsPresent / $totalParticipants) * 100, 2) : 0;
                     break;

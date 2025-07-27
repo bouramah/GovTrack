@@ -36,34 +36,45 @@ class ReunionSujet extends Model
     /**
      * Constantes pour les statuts
      */
-    public const STATUT_A_DISCUTER = 'A_DISCUTER';
-    public const STATUT_EN_DISCUSSION = 'EN_DISCUSSION';
     public const STATUT_RESOLU = 'RESOLU';
-    public const STATUT_REPORTE = 'REPORTE';
+    public const STATUT_EN_COURS_DE_RESOLUTION = 'EN_COURS_DE_RESOLUTION';
+    public const STATUT_BLOQUE = 'BLOQUE';
+    public const STATUT_AVIS = 'AVIS';
+    public const STATUT_APPROUVE = 'APPROVE';
+    public const STATUT_REJETE = 'REJETE';
+    public const STATUT_EN_ATTENTE = 'EN_ATTENTE';
 
     public const STATUTS = [
-        self::STATUT_A_DISCUTER => 'À discuter',
-        self::STATUT_EN_DISCUSSION => 'En discussion',
         self::STATUT_RESOLU => 'Résolu',
-        self::STATUT_REPORTE => 'Reporté',
+        self::STATUT_EN_COURS_DE_RESOLUTION => 'En cours de résolution',
+        self::STATUT_BLOQUE => 'Bloqué',
+        self::STATUT_AVIS => 'Avis',
+        self::STATUT_APPROUVE => 'Approuvé',
+        self::STATUT_REJETE => 'Rejeté',
+        self::STATUT_EN_ATTENTE => 'En attente',
     ];
 
     /**
      * Les attributs qui peuvent être assignés en masse
      */
     protected $fillable = [
-        'reunion_id',
+        'reunion_ordre_jour_id',
         'titre',
         'description',
-        'niveau_difficulte',
-        'recommandations',
+        'difficulte_globale',
+        'recommandation',
         'statut',
-        'pieces_jointes',
-        'a_objectifs',
-        'a_difficultes',
-        'commentaires',
+        'commentaire',
+        // pieces_jointes gérées via relation avec PieceJointeSujet
+        'projet_id',
+        'entite_id',
+        'niveau_detail',
+        'objectifs_actifs',
+        'difficultes_actives',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
@@ -71,19 +82,50 @@ class ReunionSujet extends Model
      */
     protected $casts = [
         'pieces_jointes' => 'array',
-        'a_objectifs' => 'boolean',
-        'a_difficultes' => 'boolean',
-        'commentaires' => 'array',
+        'objectifs_actifs' => 'boolean',
+        'difficultes_actives' => 'boolean',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
 
     /**
-     * Relations avec la réunion
+     * Relations avec l'ordre du jour de la réunion
      */
-    public function reunion(): BelongsTo
+    public function ordreJour(): BelongsTo
     {
-        return $this->belongsTo(Reunion::class, 'reunion_id');
+        return $this->belongsTo(ReunionOrdreJour::class, 'reunion_ordre_jour_id');
+    }
+
+    /**
+     * Relations avec le projet
+     */
+    public function projet(): BelongsTo
+    {
+        return $this->belongsTo(Projet::class, 'projet_id');
+    }
+
+    /**
+     * Relations avec l'entité
+     */
+    public function entite(): BelongsTo
+    {
+        return $this->belongsTo(Entite::class, 'entite_id');
+    }
+
+    /**
+     * Relations avec l'utilisateur créateur
+     */
+    public function createur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec l'utilisateur modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**
@@ -95,11 +137,27 @@ class ReunionSujet extends Model
     }
 
     /**
-     * Scope par niveau de difficulté
+     * Relations avec les pièces jointes
      */
-    public function scopeByDifficulte($query, $difficulte)
+    public function piecesJointes(): HasMany
     {
-        return $query->where('niveau_difficulte', $difficulte);
+        return $this->hasMany(PieceJointeSujet::class, 'reunion_sujet_id');
+    }
+
+    /**
+     * Relations avec les avis
+     */
+    public function avis(): HasMany
+    {
+        return $this->hasMany(ReunionSujetAvis::class, 'reunion_sujet_id');
+    }
+
+    /**
+     * Scope par niveau de détail
+     */
+    public function scopeByNiveauDetail($query, $niveauDetail)
+    {
+        return $query->where('niveau_detail', $niveauDetail);
     }
 
     /**
@@ -115,7 +173,7 @@ class ReunionSujet extends Model
      */
     public function scopeAvecObjectifs($query)
     {
-        return $query->where('a_objectifs', true);
+        return $query->where('objectifs_actifs', true);
     }
 
     /**
@@ -123,15 +181,15 @@ class ReunionSujet extends Model
      */
     public function scopeAvecDifficultes($query)
     {
-        return $query->where('a_difficultes', true);
+        return $query->where('difficultes_actives', true);
     }
 
     /**
-     * Obtenir le libellé de la difficulté
+     * Obtenir le libellé du niveau de détail
      */
-    public function getDifficulteLibelleAttribute(): string
+    public function getNiveauDetailLibelleAttribute(): string
     {
-        return self::DIFFICULTES[$this->niveau_difficulte] ?? $this->niveau_difficulte;
+        return $this->niveau_detail === 'SIMPLE' ? 'Simple' : 'Détaillé';
     }
 
     /**
@@ -143,28 +201,26 @@ class ReunionSujet extends Model
     }
 
     /**
-     * Obtenir la couleur de la difficulté
+     * Obtenir la couleur du niveau de détail
      */
-    public function getDifficulteCouleurAttribute(): string
+    public function getNiveauDetailCouleurAttribute(): string
     {
-        return match($this->niveau_difficulte) {
-            self::DIFFICULTE_FACILE => 'green',
-            self::DIFFICULTE_MOYENNE => 'yellow',
-            self::DIFFICULTE_DIFFICILE => 'red',
+        return match($this->niveau_detail) {
+            'SIMPLE' => 'green',
+            'DETAILLE' => 'blue',
             default => 'gray',
         };
     }
 
     /**
-     * Obtenir l'icône de la difficulté
+     * Obtenir l'icône du niveau de détail
      */
-    public function getDifficulteIconeAttribute(): string
+    public function getNiveauDetailIconeAttribute(): string
     {
-        return match($this->niveau_difficulte) {
-            self::DIFFICULTE_FACILE => 'check-circle',
-            self::DIFFICULTE_MOYENNE => 'alert-circle',
-            self::DIFFICULTE_DIFFICILE => 'x-circle',
-            default => 'help-circle',
+        return match($this->niveau_detail) {
+            'SIMPLE' => 'file-text',
+            'DETAILLE' => 'file-text',
+            default => 'file',
         };
     }
 
@@ -174,10 +230,13 @@ class ReunionSujet extends Model
     public function getStatutCouleurAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_A_DISCUTER => 'gray',
-            self::STATUT_EN_DISCUSSION => 'blue',
             self::STATUT_RESOLU => 'green',
-            self::STATUT_REPORTE => 'orange',
+            self::STATUT_EN_COURS_DE_RESOLUTION => 'blue',
+            self::STATUT_BLOQUE => 'red',
+            self::STATUT_AVIS => 'yellow',
+            self::STATUT_APPROUVE => 'green',
+            self::STATUT_REJETE => 'red',
+            self::STATUT_EN_ATTENTE => 'gray',
             default => 'gray',
         };
     }
@@ -188,10 +247,13 @@ class ReunionSujet extends Model
     public function getStatutIconeAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_A_DISCUTER => 'clock',
-            self::STATUT_EN_DISCUSSION => 'message-circle',
             self::STATUT_RESOLU => 'check-circle',
-            self::STATUT_REPORTE => 'calendar',
+            self::STATUT_EN_COURS_DE_RESOLUTION => 'clock',
+            self::STATUT_BLOQUE => 'x-circle',
+            self::STATUT_AVIS => 'message-circle',
+            self::STATUT_APPROUVE => 'check-circle',
+            self::STATUT_REJETE => 'x-circle',
+            self::STATUT_EN_ATTENTE => 'clock',
             default => 'help-circle',
         };
     }

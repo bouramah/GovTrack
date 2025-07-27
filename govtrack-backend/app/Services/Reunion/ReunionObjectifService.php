@@ -58,6 +58,88 @@ class ReunionObjectifService
     }
 
     /**
+     * Créer plusieurs objectifs de réunion en lot
+     */
+    public function createMultipleObjectifs(array $objectifsList, int $reunionId, int $userId): array
+    {
+        DB::beginTransaction();
+
+        try {
+            // Vérifier que la réunion existe
+            $reunion = Reunion::findOrFail($reunionId);
+
+            $objectifsCrees = [];
+            $erreurs = [];
+
+            foreach ($objectifsList as $index => $objectifData) {
+                try {
+                    $objectif = ReunionSujetObjectif::create([
+                        'reunion_sujet_id' => $objectifData['reunion_sujet_id'],
+                        'titre' => $objectifData['titre'],
+                        'description' => $objectifData['description'],
+                        'cible' => $objectifData['cible'],
+                        'taux_realisation' => $objectifData['taux_realisation'] ?? 0,
+                        'pourcentage_decaissement' => $objectifData['pourcentage_decaissement'] ?? 0,
+                        'date_objectif' => $objectifData['date_objectif'],
+                        'statut' => $objectifData['statut'] ?? 'EN_COURS',
+                        'ordre' => $objectifData['ordre'] ?? 1,
+                        'actif' => $objectifData['actif'] ?? true,
+                        'creer_par' => $userId,
+                        'modifier_par' => $userId,
+                    ]);
+
+                    $objectifsCrees[] = $objectif;
+
+                    Log::info('Objectif de réunion créé en lot', [
+                        'objectif_id' => $objectif->id,
+                        'reunion_id' => $reunionId,
+                        'titre' => $objectif->titre,
+                        'user_id' => $userId
+                    ]);
+
+                } catch (Exception $e) {
+                    $erreurs[] = [
+                        'index' => $index,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($erreurs)) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Erreurs lors de la création des objectifs',
+                    'errors' => $erreurs
+                ];
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'data' => $objectifsCrees,
+                'message' => count($objectifsCrees) . ' objectifs créés avec succès'
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la création multiple des objectifs', [
+                'reunion_id' => $reunionId,
+                'objectifs_list' => $objectifsList,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des objectifs',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Mettre à jour un objectif de réunion
      */
     public function updateObjectif(int $objectifId, array $data, int $userId): ReunionSujetObjectif

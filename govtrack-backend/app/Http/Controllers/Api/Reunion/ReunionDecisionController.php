@@ -48,20 +48,15 @@ class ReunionDecisionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'sujet_id' => 'nullable|integer|exists:reunion_sujets,id',
+                'reunion_sujet_id' => 'nullable|integer|exists:reunion_sujets,id',
                 'texte_decision' => 'required|string|max:2000',
-                'type_decision' => 'nullable|string|in:DEFINITIVE,PROVISOIRE',
-                'responsables' => 'nullable|array',
-                'responsables.*' => 'integer|exists:users,id',
+                'type' => 'nullable|string|in:PROVISOIRE,DEFINITIVE',
+                'responsables_ids' => 'nullable|array',
+                'responsables_ids.*' => 'integer|exists:users,id',
                 'date_limite' => 'nullable|date|after:today',
+                'statut' => 'nullable|string|in:EN_ATTENTE,EN_COURS,TERMINEE',
                 'priorite' => 'nullable|string|in:FAIBLE,NORMALE,ELEVEE,CRITIQUE',
                 'commentaire' => 'nullable|string|max:1000',
-                'actions' => 'nullable|array',
-                'actions.*.titre' => 'required|string|max:255',
-                'actions.*.description' => 'nullable|string|max:1000',
-                'actions.*.responsable_id' => 'required|integer|exists:users,id',
-                'actions.*.date_limite' => 'nullable|date|after:today',
-                'actions.*.priorite' => 'nullable|string|in:FAIBLE,NORMALE,ELEVEE,CRITIQUE',
             ]);
 
             if ($validator->fails()) {
@@ -254,4 +249,4 @@ class ReunionDecisionController extends Controller
             ], 500);
         }
     }
-} 
+}

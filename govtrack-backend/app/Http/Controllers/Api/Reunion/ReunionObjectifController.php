@@ -72,19 +72,16 @@ class ReunionObjectifController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'reunion_sujet_id' => 'required|exists:reunion_sujets,id',
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'type_objectif' => 'nullable|in:general,strategique,operationnel,technique',
-                'priorite' => 'nullable|in:haute,normale,basse',
-                'statut' => 'nullable|in:en_cours,termine,annule',
+                'cible' => 'nullable|string',
+                'taux_realisation' => 'nullable|integer|min:0|max:100',
+                'pourcentage_decaissement' => 'nullable|numeric|min:0|max:100',
                 'date_objectif' => 'nullable|date',
-                'indicateurs_mesure' => 'nullable|array',
-                'criteres_succes' => 'nullable|array',
-                'risques_identifies' => 'nullable|array',
-                'actions_requises' => 'nullable|array',
-                'responsable_id' => 'nullable|exists:users,id',
-                'progression' => 'nullable|integer|min:0|max:100',
-                'notes' => 'nullable|string',
+                'statut' => 'nullable|in:EN_COURS,ATTEINT,EN_RETARD',
+                'ordre' => 'nullable|integer|min:1',
+                'actif' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -107,6 +104,51 @@ class ReunionObjectifController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création de l\'objectif',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Créer plusieurs objectifs en lot
+     */
+    public function createMultipleObjectifs(Request $request, int $reunionId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'objectifs' => 'required|array|min:1',
+                'objectifs.*.reunion_sujet_id' => 'required|exists:reunion_sujets,id',
+                'objectifs.*.titre' => 'required|string|max:255',
+                'objectifs.*.description' => 'nullable|string',
+                'objectifs.*.cible' => 'nullable|string',
+                'objectifs.*.taux_realisation' => 'nullable|integer|min:0|max:100',
+                'objectifs.*.pourcentage_decaissement' => 'nullable|numeric|min:0|max:100',
+                'objectifs.*.date_objectif' => 'nullable|date',
+                'objectifs.*.statut' => 'nullable|in:EN_COURS,ATTEINT,EN_RETARD',
+                'objectifs.*.ordre' => 'nullable|integer|min:1',
+                'objectifs.*.actif' => 'nullable|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $result = $this->objectifService->createMultipleObjectifs($request->input('objectifs'), $reunionId, $request->user()->id);
+
+            if ($result['success']) {
+                return response()->json($result, 201);
+            } else {
+                return response()->json($result, 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des objectifs',
                 'error' => $e->getMessage()
             ], 500);
         }

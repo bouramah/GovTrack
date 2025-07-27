@@ -1,0 +1,530 @@
+{
+	"info": {
+		"_postman_id": "type-reunion-complete-test",
+		"name": "GovTrack - TypeReunion Complete Test",
+		"description": "Test complet de toutes les méthodes du TypeReunionService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Configuration Initiale",
+			"item": [
+				{
+					"name": "1.1 Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('admin_token', response.data.token);",
+									"    pm.environment.set('admin_user_id', response.data.user.id);",
+									"    console.log('Admin logged in successfully');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.2 Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('user_token', response.data.token);",
+									"    pm.environment.set('user_id', response.data.user.id);",
+									"    console.log('User logged in successfully');",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. TypeReunionService - Tests Complets",
+			"item": [
+				{
+					"name": "2.1 getTypeReunions - Liste avec filtres",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions?search=CODIR&actif=true&sort_by=nom&sort_order=asc&per_page=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"],
+							"query": [
+								{
+									"key": "search",
+									"value": "CODIR"
+								},
+								{
+									"key": "actif",
+									"value": "true"
+								},
+								{
+									"key": "sort_by",
+									"value": "nom"
+								},
+								{
+									"key": "sort_order",
+									"value": "asc"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success', true);",
+									"});",
+									"pm.test('Response has data property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('data');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.2 getTypeReunions - Liste vide",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions?search=INEXISTANT",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"],
+							"query": [
+								{
+									"key": "search",
+									"value": "INEXISTANT"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "2.3 createTypeReunion - CODIR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"CODIR_TEST\",\n    \"description\": \"Comité de Direction - Test\",\n    \"couleur\": \"#1f2937\",\n    \"icone\": \"users\",\n    \"actif\": true,\n    \"ordre\": 1,\n    \"niveau_complexite\": \"COMPLEXE\",\n    \"fonctionnalites_actives\": {\n        \"objectifs_multiples\": true,\n        \"difficultes_par_entite\": true,\n        \"workflow_validation\": true,\n        \"pv_validation\": true,\n        \"quorum_obligatoire\": true\n    },\n    \"configuration_notifications\": {\n        \"rappel_24h\": true,\n        \"rappel_1h\": true,\n        \"confirmation_presence\": true,\n        \"pv_disponible\": true\n    },\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('type_reunion_codir_id', response.data.id);",
+									"    console.log('CODIR_TEST type created with ID:', response.data.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.4 createTypeReunion - TEAM",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"TEAM_TEST\",\n    \"description\": \"Réunion d'équipe - Test\",\n    \"couleur\": \"#3b82f6\",\n    \"icone\": \"users\",\n    \"actif\": true,\n    \"ordre\": 2,\n    \"niveau_complexite\": \"SIMPLE\",\n    \"fonctionnalites_actives\": {\n        \"objectifs_multiples\": false,\n        \"difficultes_par_entite\": false,\n        \"workflow_validation\": false,\n        \"pv_validation\": false,\n        \"quorum_obligatoire\": false\n    },\n    \"configuration_notifications\": {\n        \"rappel_24h\": true,\n        \"rappel_1h\": false,\n        \"confirmation_presence\": false,\n        \"pv_disponible\": false\n    },\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('type_reunion_team_id', response.data.id);",
+									"    console.log('TEAM_TEST type created with ID:', response.data.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.5 createTypeReunion - VALIDATION",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"VALIDATION_TEST\",\n    \"description\": \"Réunion de validation - Test\",\n    \"couleur\": \"#10b981\",\n    \"icone\": \"check-circle\",\n    \"actif\": true,\n    \"ordre\": 3,\n    \"niveau_complexite\": \"INTERMEDIAIRE\",\n    \"fonctionnalites_actives\": {\n        \"objectifs_multiples\": true,\n        \"difficultes_par_entite\": false,\n        \"workflow_validation\": true,\n        \"pv_validation\": true,\n        \"quorum_obligatoire\": true\n    },\n    \"configuration_notifications\": {\n        \"rappel_24h\": true,\n        \"rappel_1h\": true,\n        \"confirmation_presence\": true,\n        \"pv_disponible\": true\n    },\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('type_reunion_validation_id', response.data.id);",
+									"    console.log('VALIDATION_TEST type created with ID:', response.data.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.6 getTypeReunion - Par ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_codir_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "{{type_reunion_codir_id}}"]
+						}
+					}
+				},
+				{
+					"name": "2.7 getTypeReunion - ID inexistant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/99999",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "99999"]
+						}
+					}
+				},
+				{
+					"name": "2.8 updateTypeReunion - Modification",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Comité de Direction - Version mise à jour\",\n    \"couleur\": \"#dc2626\",\n    \"ordre\": 1,\n    \"fonctionnalites_actives\": {\n        \"objectifs_multiples\": true,\n        \"difficultes_par_entite\": true,\n        \"workflow_validation\": true,\n        \"pv_validation\": true,\n        \"quorum_obligatoire\": true,\n        \"nouvelle_config\": true\n    },\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_codir_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "{{type_reunion_codir_id}}"]
+						}
+					}
+				},
+				{
+					"name": "2.9 getActiveTypeReunions - Types actifs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/actifs",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "actifs"]
+						}
+					}
+				},
+				{
+					"name": "2.10 getStats - Statistiques",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "stats"]
+						}
+					}
+				},
+				{
+					"name": "2.11 deleteTypeReunion - Suppression",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_validation_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions", "{{type_reunion_validation_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Tests de Permissions",
+			"item": [
+				{
+					"name": "3.1 getTypeReunions - User sans permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					}
+				},
+				{
+					"name": "3.2 createTypeReunion - User sans permissions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"TEST_UNAUTHORIZED\",\n    \"description\": \"Test sans permissions\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Tests de Validation",
+			"item": [
+				{
+					"name": "4.1 createTypeReunion - Données invalides",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"\",\n    \"description\": \"\",\n    \"niveau_complexite\": \"INVALID\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					}
+				},
+				{
+					"name": "4.2 createTypeReunion - Nom dupliqué",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"CODIR\",\n    \"description\": \"Test dupliqué\",\n    \"couleur\": \"#1f2937\",\n    \"icone\": \"users\",\n    \"actif\": true,\n    \"priorite\": 1,\n    \"niveau_complexite\": \"COMPLEXE\",\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/types-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "types-reunions"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}

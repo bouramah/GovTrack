@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('reunion_actions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('decision_id');
+            $table->unsignedBigInteger('reunion_id')->nullable();
+            $table->unsignedBigInteger('decision_id')->nullable();
             $table->string('titre', 200);
             $table->text('description');
             $table->unsignedBigInteger('responsable_id');
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->unsignedBigInteger('modifier_par');
 
             // Index
+            $table->index('reunion_id');
             $table->index('decision_id');
             $table->index('responsable_id');
             $table->index('statut');
@@ -37,6 +39,7 @@ return new class extends Migration
             $table->index('progression');
 
             // Foreign keys
+            $table->foreign('reunion_id')->references('id')->on('reunions')->onDelete('cascade');
             $table->foreign('decision_id')->references('id')->on('reunion_decisions')->onDelete('cascade');
             $table->foreign('responsable_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('creer_par')->references('id')->on('users');

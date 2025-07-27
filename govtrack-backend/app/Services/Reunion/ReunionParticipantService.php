@@ -113,8 +113,8 @@ class ReunionParticipantService
                 'reunion_id' => $reunionId,
                 'user_id' => $data['user_id'],
                 'role' => $data['role'] ?? 'PARTICIPANT',
-                'type' => $data['type'] ?? 'INTERNE',
-                'statut_presence' => $data['statut_presence'] ?? 'INVITE',
+                'type' => $data['type'] ?? 'PERMANENT',
+                'statut_presence' => $data['statut_presence'] ?? 'EN_ATTENTE',
                 'nom_affichage' => $data['nom_affichage'] ?? $participantUser->nom_complet,
                 'email_contact' => $data['email_contact'] ?? $participantUser->email,
                 'telephone' => $data['telephone'] ?? $participantUser->telephone,
@@ -122,6 +122,8 @@ class ReunionParticipantService
                 'commentaires' => $data['commentaires'] ?? '',
                 'date_creation' => now(),
                 'date_modification' => now(),
+                'creer_par' => $user->id,
+                'modifier_par' => $user->id,
             ]);
 
             DB::commit();
@@ -423,8 +425,8 @@ class ReunionParticipantService
                         'reunion_id' => $reunionId,
                         'user_id' => $participantData['user_id'],
                         'role' => $participantData['role'] ?? 'PARTICIPANT',
-                        'type' => $participantData['type'] ?? 'INTERNE',
-                        'statut_presence' => $participantData['statut_presence'] ?? 'INVITE',
+                        'type' => $participantData['type'] ?? 'PERMANENT',
+                        'statut_presence' => $participantData['statut_presence'] ?? 'EN_ATTENTE',
                         'nom_affichage' => $participantData['nom_affichage'] ?? $participantUser->nom_complet,
                         'email_contact' => $participantData['email_contact'] ?? $participantUser->email,
                         'telephone' => $participantData['telephone'] ?? $participantUser->telephone,
@@ -432,6 +434,8 @@ class ReunionParticipantService
                         'commentaires' => $participantData['commentaires'] ?? '',
                         'date_creation' => now(),
                         'date_modification' => now(),
+                        'creer_par' => $user->id,
+                        'modifier_par' => $user->id,
                     ]);
 
                     $addedParticipants[] = $participant;

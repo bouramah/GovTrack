@@ -56,6 +56,85 @@ class ReunionDifficulteService
     }
 
     /**
+     * Créer plusieurs difficultés de réunion en lot
+     */
+    public function createMultipleDifficultes(array $difficultesList, int $reunionId, int $userId): array
+    {
+        DB::beginTransaction();
+
+        try {
+            // Vérifier que la réunion existe
+            $reunion = Reunion::findOrFail($reunionId);
+
+            $difficultesCrees = [];
+            $erreurs = [];
+
+            foreach ($difficultesList as $index => $difficulteData) {
+                try {
+                    $difficulte = ReunionObjectifDifficulte::create([
+                        'objectif_id' => $difficulteData['objectif_id'],
+                        'entite_id' => $difficulteData['entite_id'],
+                        'description_difficulte' => $difficulteData['description_difficulte'],
+                        'niveau_difficulte' => $difficulteData['niveau_difficulte'] ?? 'MOYEN',
+                        'impact' => $difficulteData['impact'],
+                        'solution_proposee' => $difficulteData['solution_proposee'] ?? null,
+                        'statut' => $difficulteData['statut'] ?? 'IDENTIFIEE',
+                        'creer_par' => $userId,
+                        'modifier_par' => $userId,
+                    ]);
+
+                    $difficultesCrees[] = $difficulte;
+
+                    Log::info('Difficulté de réunion créée en lot', [
+                        'difficulte_id' => $difficulte->id,
+                        'objectif_id' => $difficulte->objectif_id,
+                        'entite_id' => $difficulte->entite_id,
+                        'user_id' => $userId
+                    ]);
+
+                } catch (Exception $e) {
+                    $erreurs[] = [
+                        'index' => $index,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($erreurs)) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Erreurs lors de la création des difficultés',
+                    'errors' => $erreurs
+                ];
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'data' => $difficultesCrees,
+                'message' => count($difficultesCrees) . ' difficultés créées avec succès'
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la création multiple des difficultés', [
+                'reunion_id' => $reunionId,
+                'difficultes_list' => $difficultesList,
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des difficultés',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Mettre à jour une difficulté de réunion
      */
     public function updateDifficulte(int $difficulteId, array $data): ReunionObjectifDifficulte

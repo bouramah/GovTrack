@@ -117,7 +117,8 @@ class ReunionActionService
             }
 
             $actionData = [
-                'decision_id' => $data['decision_id'],
+                'reunion_id' => $data['reunion_id'] ?? null,
+                'decision_id' => $data['decision_id'] ?? null,
                 'titre' => $data['titre'],
                 'description' => $data['description'],
                 'responsable_id' => $data['responsable_id'],
@@ -126,7 +127,7 @@ class ReunionActionService
                 'commentaire' => $data['commentaire'] ?? null,
                 'pieces_jointes' => $data['pieces_jointes'] ?? [],
                 'priorite' => $data['priorite'] ?? 'NORMALE',
-                'progression' => 0,
+                'progression' => $data['progression'] ?? 0,
                 'creer_par' => $user->id,
                 'modifier_par' => $user->id,
             ];

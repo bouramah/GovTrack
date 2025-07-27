@@ -35,8 +35,9 @@ class ReunionDecisionService
 
             $decisions = ReunionDecision::with([
                 'reunion',
-                'responsables',
-                'actions'
+                'sujet',
+                'createur',
+                'modificateur'
             ])
             ->where('reunion_id', $reunionId)
             ->orderBy('date_creation', 'desc')
@@ -103,26 +104,11 @@ class ReunionDecisionService
 
             $decision = ReunionDecision::create($decisionData);
 
-            // Créer les actions associées si fournies
-            if (isset($data['actions']) && is_array($data['actions'])) {
-                foreach ($data['actions'] as $actionData) {
-                    $actionData['decision_id'] = $decision->id;
-                    $actionData['creer_par'] = $user->id;
-                    $actionData['modifier_par'] = $user->id;
-                    $actionData['date_creation'] = now();
-                    $actionData['date_modification'] = now();
-
-                    // Utiliser le service d'actions pour créer l'action
-                    $actionService = new ReunionActionService();
-                    $actionService->createAction($actionData, $user);
-                }
-            }
-
             DB::commit();
 
             return [
                 'success' => true,
-                'data' => $decision->load('actions'),
+                'data' => $decision->load(['sujet', 'createur', 'modificateur']),
                 'message' => 'Décision créée avec succès'
             ];
 

@@ -54,24 +54,19 @@ class TypeReunionController extends Controller
     {
         $user = $request->user();
 
-        // Validation des données
+        // Validation des données selon la migration
         $validator = Validator::make($request->all(), [
-            'nom' => 'required|string|max:255|unique:type_reunions,nom',
-            'description' => 'nullable|string',
-            'categorie' => 'nullable|in:GENERAL,ADMINISTRATIF,TECHNIQUE,STRATEGIQUE,OPERATIONNEL',
-            'niveau_complexite' => 'nullable|in:SIMPLE,MOYEN,COMPLEXE,TRES_COMPLEXE',
+            'nom' => 'required|string|max:100|unique:type_reunions,nom',
+            'description' => 'required|string',
+            'couleur' => 'required|string|max:7',
+            'icone' => 'required|string|max:50',
             'actif' => 'nullable|boolean',
-            'configuration' => 'nullable|array',
-            'regles_metier' => 'nullable|array',
-            'workflow_defaut' => 'nullable|array',
-            'notifications_defaut' => 'nullable|array',
-            'permissions_requises' => 'nullable|array',
-            'gestionnaires' => 'nullable|array',
-            'gestionnaires.*' => 'exists:users,id',
-            'membres' => 'nullable|array',
-            'membres.*' => 'exists:users,id',
-            'validateurs_pv' => 'nullable|array',
-            'validateurs_pv.*' => 'exists:users,id',
+            'ordre' => 'required|integer',
+            'niveau_complexite' => 'required|in:SIMPLE,INTERMEDIAIRE,COMPLEXE',
+            'fonctionnalites_actives' => 'required|array',
+            'configuration_notifications' => 'required|array',
+            'creer_par' => 'nullable|exists:users,id',
+            'modifier_par' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -195,9 +190,40 @@ class TypeReunionController extends Controller
     }
 
     /**
-     * Récupérer les statistiques d'un type de réunion
+     * Récupérer les statistiques globales des types de réunion
      */
-    public function stats(Request $request, int $id): JsonResponse
+    public function stats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Calculer les statistiques globales
+        $stats = [
+            'total_types' => \App\Models\TypeReunion::count(),
+            'types_actifs' => \App\Models\TypeReunion::where('actif', true)->count(),
+            'types_inactifs' => \App\Models\TypeReunion::where('actif', false)->count(),
+            'total_reunions' => \App\Models\Reunion::count(),
+            'reunions_planifiees' => \App\Models\Reunion::where('statut', 'PLANIFIEE')->count(),
+            'reunions_en_cours' => \App\Models\Reunion::where('statut', 'EN_COURS')->count(),
+            'reunions_terminees' => \App\Models\Reunion::where('statut', 'TERMINEE')->count(),
+            'reunions_annulees' => \App\Models\Reunion::where('statut', 'ANNULEE')->count(),
+            'total_series' => \App\Models\ReunionSerie::count(),
+            'series_actives' => \App\Models\ReunionSerie::where('actif', true)->count(),
+            'total_participants' => \App\Models\ReunionParticipant::count(),
+            'total_workflows' => \App\Models\ReunionWorkflowConfig::count(),
+            'total_notifications' => \App\Models\ReunionNotification::count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+            'message' => 'Statistiques globales des types de réunion récupérées avec succès'
+        ], 200);
+    }
+
+    /**
+     * Récupérer les statistiques d'un type de réunion spécifique
+     */
+    public function statsById(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
 

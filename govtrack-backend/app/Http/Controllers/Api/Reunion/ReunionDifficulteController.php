@@ -72,18 +72,13 @@ class ReunionDifficulteController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'titre' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'type_difficulte' => 'nullable|in:technique,organisationnel,ressource,communication,autre',
-                'niveau_gravite' => 'nullable|in:critique,elevee,moyenne,faible',
-                'statut' => 'nullable|in:ouverte,en_cours,resolue,escaladee',
-                'impact_estime' => 'nullable|in:eleve,modere,faible',
-                'solutions_proposees' => 'nullable|array',
-                'actions_mitigation' => 'nullable|array',
-                'responsable_id' => 'nullable|exists:users,id',
-                'date_limite_resolution' => 'nullable|date',
-                'progression_resolution' => 'nullable|integer|min:0|max:100',
-                'notes' => 'nullable|string',
+                'objectif_id' => 'required|exists:reunion_sujet_objectifs,id',
+                'entite_id' => 'required|exists:entites,id',
+                'description_difficulte' => 'required|string',
+                'niveau_difficulte' => 'required|in:FAIBLE,MOYEN,ELEVE,CRITIQUE',
+                'impact' => 'required|string',
+                'solution_proposee' => 'nullable|string',
+                'statut' => 'nullable|in:IDENTIFIEE,EN_COURS_RESOLUTION,RESOLUE',
             ]);
 
             if ($validator->fails()) {
@@ -94,7 +89,7 @@ class ReunionDifficulteController extends Controller
                 ], 422);
             }
 
-            $difficulte = $this->difficulteService->createDifficulte($request->all(), $reunionId);
+            $difficulte = $this->difficulteService->createDifficulte($request->all(), $reunionId, $request->user()->id);
 
             return response()->json([
                 'success' => true,
@@ -106,6 +101,48 @@ class ReunionDifficulteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création de la difficulté',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Créer plusieurs difficultés en lot
+     */
+    public function createMultipleDifficultes(Request $request, int $reunionId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'difficultes' => 'required|array|min:1',
+                'difficultes.*.objectif_id' => 'required|exists:reunion_sujet_objectifs,id',
+                'difficultes.*.entite_id' => 'required|exists:entites,id',
+                'difficultes.*.description_difficulte' => 'required|string',
+                'difficultes.*.niveau_difficulte' => 'required|in:FAIBLE,MOYEN,ELEVE,CRITIQUE',
+                'difficultes.*.impact' => 'required|string',
+                'difficultes.*.solution_proposee' => 'nullable|string',
+                'difficultes.*.statut' => 'nullable|in:IDENTIFIEE,EN_COURS_RESOLUTION,RESOLUE',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $result = $this->difficulteService->createMultipleDifficultes($request->input('difficultes'), $reunionId, $request->user()->id);
+
+            if ($result['success']) {
+                return response()->json($result, 201);
+            } else {
+                return response()->json($result, 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des difficultés',
                 'error' => $e->getMessage()
             ], 500);
         }

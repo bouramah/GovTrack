@@ -371,9 +371,9 @@ class ReunionController extends Controller
         $validator = Validator::make($request->all(), [
             'participants' => 'required|array|min:1',
             'participants.*.user_id' => 'required|exists:users,id',
-            'participants.*.role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'participants.*.type' => 'nullable|in:INTERNE,EXTERNE',
-            'participants.*.statut_presence' => 'nullable|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
+            'participants.*.role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
+            'participants.*.type' => 'nullable|in:PERMANENT,INVITE',
+            'participants.*.statut_presence' => 'nullable|in:CONFIRME,ABSENT,EN_ATTENTE',
             'participants.*.nom_affichage' => 'nullable|string|max:255',
             'participants.*.email_contact' => 'nullable|email|max:255',
             'participants.*.telephone' => 'nullable|string|max:20',

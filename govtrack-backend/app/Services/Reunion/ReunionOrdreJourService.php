@@ -99,12 +99,11 @@ class ReunionOrdreJourService
                 'ordre' => $data['ordre'],
                 'titre' => $data['titre'],
                 'description' => $data['description'] ?? '',
-                'type' => $data['type'] ?? 'DISCUSSION',
+                'type' => $data['type'] ?? 'POINT_DIVERS',
                 'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? 15,
                 'responsable_id' => $data['responsable_id'] ?? null,
                 'statut' => 'PLANIFIE',
-                'niveau_detail' => $data['niveau_detail'] ?? 'SIMPLE',
-                'commentaires' => $data['commentaires'] ?? [],
+                'niveau_detail_requis' => $data['niveau_detail'] ?? 'SIMPLE',
                 'creer_par' => $user->id,
                 'modifier_par' => $user->id,
                 'date_creation' => now(),
@@ -133,6 +132,89 @@ class ReunionOrdreJourService
             return [
                 'success' => false,
                 'message' => 'Erreur lors de l\'ajout du point à l\'ordre du jour',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Ajouter plusieurs points à l'ordre du jour
+     */
+    public function addMultiplePointsOrdreJour(int $reunionId, array $pointsList, User $user): array
+    {
+        DB::beginTransaction();
+
+        try {
+            $reunion = Reunion::find($reunionId);
+            if (!$reunion) {
+                return [
+                    'success' => false,
+                    'message' => 'Réunion non trouvée'
+                ];
+            }
+
+            // Vérifier les permissions de modification
+            if (!$this->canModifyOrdreJour($reunion, $user)) {
+                return [
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour modifier l\'ordre du jour'
+                ];
+            }
+
+            $pointsCrees = [];
+            $erreurs = [];
+            $dernierOrdre = ReunionOrdreJour::where('reunion_id', $reunionId)->max('ordre') ?? 0;
+
+            foreach ($pointsList as $index => $pointData) {
+                try {
+                    // Déterminer l'ordre automatiquement si non fourni
+                    if (!isset($pointData['ordre'])) {
+                        $dernierOrdre++;
+                        $pointData['ordre'] = $dernierOrdre;
+                    }
+
+                    $pointData['reunion_id'] = $reunionId;
+                    $pointData['creer_par'] = $user->id;
+                    $pointData['modifier_par'] = $user->id;
+
+                    $point = ReunionOrdreJour::create($pointData);
+                    $pointsCrees[] = $point;
+                } catch (\Exception $e) {
+                    $erreurs[] = [
+                        'index' => $index,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($erreurs)) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Erreurs lors de la création des points',
+                    'errors' => $erreurs
+                ];
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'data' => $pointsCrees,
+                'message' => count($pointsCrees) . ' points ajoutés avec succès'
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la création multiple des points', [
+                'reunion_id' => $reunionId,
+                'points_list' => $pointsList,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des points',
                 'error' => $e->getMessage()
             ];
         }
@@ -170,8 +252,7 @@ class ReunionOrdreJourService
                 'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? null,
                 'responsable_id' => $data['responsable_id'] ?? null,
                 'statut' => $data['statut'] ?? null,
-                'niveau_detail' => $data['niveau_detail'] ?? null,
-                'commentaires' => $data['commentaires'] ?? null,
+                'niveau_detail_requis' => $data['niveau_detail'] ?? null,
                 'modifier_par' => $user->id,
                 'date_modification' => now(),
             ], function ($value) {
@@ -427,7 +508,7 @@ class ReunionOrdreJourService
      */
     private function canAccessReunion(Reunion $reunion, User $user): bool
     {
-        return $user->hasPermission('view_reunions') || 
+        return $user->hasPermission('view_reunions') ||
                $reunion->participants()->where('user_id', $user->id)->exists() ||
                $reunion->creer_par === $user->id;
     }
@@ -451,4 +532,4 @@ class ReunionOrdreJourService
         return $user->hasPermission('delete_reunion_ordre_jour') ||
                $reunion->creer_par === $user->id;
     }
-} 
+}

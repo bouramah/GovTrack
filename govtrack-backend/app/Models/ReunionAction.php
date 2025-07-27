@@ -54,6 +54,7 @@ class ReunionAction extends Model
      */
     protected $fillable = [
         'reunion_id',
+        'decision_id',
         'titre',
         'description',
         'responsable_id',
@@ -62,9 +63,11 @@ class ReunionAction extends Model
         'priorite',
         'statut',
         'pieces_jointes',
-        'commentaires',
+        'commentaire',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
@@ -74,7 +77,6 @@ class ReunionAction extends Model
         'date_limite' => 'date',
         'progression' => 'integer',
         'pieces_jointes' => 'array',
-        'commentaires' => 'array',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -88,11 +90,35 @@ class ReunionAction extends Model
     }
 
     /**
+     * Relations avec la décision
+     */
+    public function decision(): BelongsTo
+    {
+        return $this->belongsTo(ReunionDecision::class, 'decision_id');
+    }
+
+    /**
      * Relations avec le responsable
      */
     public function responsable(): BelongsTo
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    /**
+     * Relations avec le créateur
+     */
+    public function createur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec le modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**

@@ -20,33 +20,31 @@ class ReunionObjectifDifficulte extends Model
     protected $table = 'reunion_objectif_difficultes';
 
     /**
-     * Constantes pour les niveaux d'impact
+     * Constantes pour les niveaux de difficulté
      */
-    public const IMPACT_FAIBLE = 'FAIBLE';
-    public const IMPACT_MOYEN = 'MOYEN';
-    public const IMPACT_ELEVE = 'ELEVE';
-    public const IMPACT_CRITIQUE = 'CRITIQUE';
+    public const NIVEAU_FAIBLE = 'FAIBLE';
+    public const NIVEAU_MOYEN = 'MOYEN';
+    public const NIVEAU_ELEVE = 'ELEVE';
+    public const NIVEAU_CRITIQUE = 'CRITIQUE';
 
-    public const IMPACTS = [
-        self::IMPACT_FAIBLE => 'Faible',
-        self::IMPACT_MOYEN => 'Moyen',
-        self::IMPACT_ELEVE => 'Élevé',
-        self::IMPACT_CRITIQUE => 'Critique',
+    public const NIVEAUX = [
+        self::NIVEAU_FAIBLE => 'Faible',
+        self::NIVEAU_MOYEN => 'Moyen',
+        self::NIVEAU_ELEVE => 'Élevé',
+        self::NIVEAU_CRITIQUE => 'Critique',
     ];
 
     /**
-     * Constantes pour les statuts de résolution
+     * Constantes pour les statuts
      */
-    public const STATUT_A_RESOUDRE = 'A_RESOUDRE';
-    public const STATUT_EN_COURS = 'EN_COURS';
-    public const STATUT_RESOLU = 'RESOLU';
-    public const STATUT_ANNULE = 'ANNULE';
+    public const STATUT_IDENTIFIEE = 'IDENTIFIEE';
+    public const STATUT_EN_COURS_RESOLUTION = 'EN_COURS_RESOLUTION';
+    public const STATUT_RESOLUE = 'RESOLUE';
 
     public const STATUTS = [
-        self::STATUT_A_RESOUDRE => 'À résoudre',
-        self::STATUT_EN_COURS => 'En cours',
-        self::STATUT_RESOLU => 'Résolu',
-        self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_IDENTIFIEE => 'Identifiée',
+        self::STATUT_EN_COURS_RESOLUTION => 'En cours de résolution',
+        self::STATUT_RESOLUE => 'Résolue',
     ];
 
     /**
@@ -55,19 +53,21 @@ class ReunionObjectifDifficulte extends Model
     protected $fillable = [
         'objectif_id',
         'entite_id',
-        'description',
-        'niveau_impact',
-        'statut_resolution',
-        'commentaires',
+        'description_difficulte',
+        'niveau_difficulte',
+        'impact',
+        'solution_proposee',
+        'statut',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'commentaires' => 'array',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -89,19 +89,35 @@ class ReunionObjectifDifficulte extends Model
     }
 
     /**
-     * Scope par niveau d'impact
+     * Relations avec l'utilisateur créateur
      */
-    public function scopeByImpact($query, $impact)
+    public function createur(): BelongsTo
     {
-        return $query->where('niveau_impact', $impact);
+        return $this->belongsTo(User::class, 'creer_par');
     }
 
     /**
-     * Scope par statut de résolution
+     * Relations avec l'utilisateur modificateur
      */
-    public function scopeByStatutResolution($query, $statut)
+    public function modificateur(): BelongsTo
     {
-        return $query->where('statut_resolution', $statut);
+        return $this->belongsTo(User::class, 'modifier_par');
+    }
+
+    /**
+     * Scope par niveau de difficulté
+     */
+    public function scopeByNiveauDifficulte($query, $niveau)
+    {
+        return $query->where('niveau_difficulte', $niveau);
+    }
+
+    /**
+     * Scope par statut
+     */
+    public function scopeByStatut($query, $statut)
+    {
+        return $query->where('statut', $statut);
     }
 
     /**
@@ -109,77 +125,75 @@ class ReunionObjectifDifficulte extends Model
      */
     public function scopeNonResolues($query)
     {
-        return $query->whereNotIn('statut_resolution', [self::STATUT_RESOLU, self::STATUT_ANNULE]);
+        return $query->whereNotIn('statut', [self::STATUT_RESOLUE]);
     }
 
     /**
-     * Obtenir le libellé de l'impact
+     * Obtenir le libellé du niveau de difficulté
      */
-    public function getImpactLibelleAttribute(): string
+    public function getNiveauDifficulteLibelleAttribute(): string
     {
-        return self::IMPACTS[$this->niveau_impact] ?? $this->niveau_impact;
+        return self::NIVEAUX[$this->niveau_difficulte] ?? $this->niveau_difficulte;
     }
 
     /**
-     * Obtenir le libellé du statut de résolution
+     * Obtenir le libellé du statut
      */
-    public function getStatutResolutionLibelleAttribute(): string
+    public function getStatutLibelleAttribute(): string
     {
-        return self::STATUTS[$this->statut_resolution] ?? $this->statut_resolution;
+        return self::STATUTS[$this->statut] ?? $this->statut;
     }
 
     /**
-     * Obtenir la couleur de l'impact
+     * Obtenir la couleur du niveau de difficulté
      */
-    public function getImpactCouleurAttribute(): string
+    public function getNiveauDifficulteCouleurAttribute(): string
     {
-        return match($this->niveau_impact) {
-            self::IMPACT_FAIBLE => 'green',
-            self::IMPACT_MOYEN => 'yellow',
-            self::IMPACT_ELEVE => 'orange',
-            self::IMPACT_CRITIQUE => 'red',
+        return match($this->niveau_difficulte) {
+            self::NIVEAU_FAIBLE => 'green',
+            self::NIVEAU_MOYEN => 'yellow',
+            self::NIVEAU_ELEVE => 'orange',
+            self::NIVEAU_CRITIQUE => 'red',
             default => 'gray',
         };
     }
 
     /**
-     * Obtenir l'icône de l'impact
+     * Obtenir l'icône du niveau de difficulté
      */
-    public function getImpactIconeAttribute(): string
+    public function getNiveauDifficulteIconeAttribute(): string
     {
-        return match($this->niveau_impact) {
-            self::IMPACT_FAIBLE => 'minus',
-            self::IMPACT_MOYEN => 'alert-circle',
-            self::IMPACT_ELEVE => 'alert-triangle',
-            self::IMPACT_CRITIQUE => 'alert-octagon',
+        return match($this->niveau_difficulte) {
+            self::NIVEAU_FAIBLE => 'minus',
+            self::NIVEAU_MOYEN => 'alert-circle',
+            self::NIVEAU_ELEVE => 'alert-triangle',
+            self::NIVEAU_CRITIQUE => 'alert-octagon',
             default => 'help-circle',
         };
     }
 
     /**
-     * Obtenir la couleur du statut de résolution
+     * Obtenir la couleur du statut
      */
-    public function getStatutResolutionCouleurAttribute(): string
+    public function getStatutCouleurAttribute(): string
     {
-        return match($this->statut_resolution) {
-            self::STATUT_A_RESOUDRE => 'gray',
-            self::STATUT_EN_COURS => 'blue',
-            self::STATUT_RESOLU => 'green',
-            self::STATUT_ANNULE => 'red',
+        return match($this->statut) {
+            self::STATUT_IDENTIFIEE => 'gray',
+            self::STATUT_EN_COURS_RESOLUTION => 'blue',
+            self::STATUT_RESOLUE => 'green',
             default => 'gray',
         };
     }
 
     /**
-     * Obtenir l'icône du statut de résolution
+     * Obtenir l'icône du statut
      */
-    public function getStatutResolutionIconeAttribute(): string
+    public function getStatutIconeAttribute(): string
     {
-        return match($this->statut_resolution) {
-            self::STATUT_A_RESOUDRE => 'clock',
-            self::STATUT_EN_COURS => 'play',
-            self::STATUT_RESOLU => 'check-circle',
-            self::STATUT_ANNULE => 'x-circle',
+        return match($this->statut) {
+            self::STATUT_IDENTIFIEE => 'clock',
+            self::STATUT_EN_COURS_RESOLUTION => 'play',
+            self::STATUT_RESOLUE => 'check-circle',
             default => 'help-circle',
         };
     }
@@ -189,7 +203,7 @@ class ReunionObjectifDifficulte extends Model
      */
     public function getEstResolueAttribute(): bool
     {
-        return $this->statut_resolution === self::STATUT_RESOLU;
+        return $this->statut === self::STATUT_RESOLUE;
     }
 
     /**
@@ -197,6 +211,6 @@ class ReunionObjectifDifficulte extends Model
      */
     public function getEstCritiqueAttribute(): bool
     {
-        return $this->niveau_impact === self::IMPACT_CRITIQUE;
+        return $this->niveau_difficulte === self::NIVEAU_CRITIQUE;
     }
 }

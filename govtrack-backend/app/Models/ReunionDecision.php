@@ -35,18 +35,27 @@ class ReunionDecision extends Model
     ];
 
     /**
+     * Constantes pour les types
+     */
+    public const TYPE_PROVISOIRE = 'PROVISOIRE';
+    public const TYPE_DEFINITIVE = 'DEFINITIVE';
+
+    public const TYPES = [
+        self::TYPE_PROVISOIRE => 'Provisoire',
+        self::TYPE_DEFINITIVE => 'Définitive',
+    ];
+
+    /**
      * Constantes pour les statuts
      */
-    public const STATUT_A_FAIRE = 'A_FAIRE';
+    public const STATUT_EN_ATTENTE = 'EN_ATTENTE';
     public const STATUT_EN_COURS = 'EN_COURS';
-    public const STATUT_TERMINE = 'TERMINE';
-    public const STATUT_ANNULE = 'ANNULE';
+    public const STATUT_TERMINEE = 'TERMINEE';
 
     public const STATUTS = [
-        self::STATUT_A_FAIRE => 'À faire',
+        self::STATUT_EN_ATTENTE => 'En attente',
         self::STATUT_EN_COURS => 'En cours',
-        self::STATUT_TERMINE => 'Terminé',
-        self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_TERMINEE => 'Terminée',
     ];
 
     /**
@@ -54,23 +63,26 @@ class ReunionDecision extends Model
      */
     protected $fillable = [
         'reunion_id',
-        'titre',
-        'description',
-        'responsable_id',
+        'reunion_sujet_id',
+        'texte_decision',
+        'type',
+        'responsables_ids',
         'date_limite',
-        'priorite',
         'statut',
-        'commentaires',
+        'priorite',
+        'commentaire',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
+        'responsables_ids' => 'array',
         'date_limite' => 'date',
-        'commentaires' => 'array',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -84,11 +96,27 @@ class ReunionDecision extends Model
     }
 
     /**
-     * Relations avec le responsable
+     * Relations avec le sujet de réunion
      */
-    public function responsable(): BelongsTo
+    public function sujet(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'responsable_id');
+        return $this->belongsTo(ReunionSujet::class, 'reunion_sujet_id');
+    }
+
+    /**
+     * Relations avec l'utilisateur créateur
+     */
+    public function createur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec l'utilisateur modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**
@@ -113,7 +141,7 @@ class ReunionDecision extends Model
     public function scopeEnRetard($query)
     {
         return $query->where('date_limite', '<', now()->toDateString())
-                     ->whereNotIn('statut', [self::STATUT_TERMINE, self::STATUT_ANNULE]);
+                     ->whereNotIn('statut', [self::STATUT_TERMINEE]);
     }
 
     /**
@@ -138,7 +166,7 @@ class ReunionDecision extends Model
     public function getEstEnRetardAttribute(): bool
     {
         return $this->date_limite && $this->date_limite < now()->toDateString()
-               && !in_array($this->statut, [self::STATUT_TERMINE, self::STATUT_ANNULE]);
+               && !in_array($this->statut, [self::STATUT_TERMINEE]);
     }
 
     /**

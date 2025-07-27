@@ -218,23 +218,24 @@ class ReunionSerieService
                 ];
             }
 
-            // Préparer les données
+            // Préparer les données selon la migration
             $serieData = [
                 'nom' => $data['nom'],
                 'description' => $data['description'] ?? '',
+                'type_reunion_id' => $data['type_reunion_id'] ?? 1,
                 'periodicite' => $data['periodicite'],
-                'date_debut' => $data['date_debut'],
-                'date_fin' => $data['date_fin'] ?? null,
-                'heure_debut' => $data['heure_debut'] ?? '09:00:00',
-                'heure_fin' => $data['heure_fin'] ?? '11:00:00',
                 'jour_semaine' => $data['jour_semaine'] ?? null,
                 'jour_mois' => $data['jour_mois'] ?? null,
-                'configuration_recurrence' => $data['configuration_recurrence'] ?? [],
+                'heure_debut' => $data['heure_debut'] ?? '09:00:00',
+                'duree_minutes' => $data['duree_minutes'] ?? 120,
+                'lieu_defaut' => $data['lieu_defaut'] ?? 'Salle de réunion',
                 'actif' => $data['actif'] ?? true,
-                'creer_par' => $user->id,
-                'modifier_par' => $user->id,
-                'date_creation' => now(),
-                'date_modification' => now(),
+                'date_debut_serie' => $data['date_debut'],
+                'date_fin_serie' => $data['date_fin'] ?? null,
+                'suspendue' => $data['suspendue'] ?? false,
+                'configuration_recurrence' => $data['configuration_recurrence'] ?? [],
+                'creer_par' => $data['creer_par'] ?? $user->id,
+                'modifier_par' => $data['modifier_par'] ?? $user->id,
             ];
 
             $serie = ReunionSerie::create($serieData);

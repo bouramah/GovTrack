@@ -71,7 +71,7 @@ class TypeReunion extends Model
     {
         return $this->belongsToMany(User::class, 'type_reunion_gestionnaires', 'type_reunion_id', 'user_id')
                     ->withPivot('permissions', 'actif', 'date_creation', 'date_modification')
-                    ->withTimestamps();
+                    ->withTimestamps('date_creation', 'date_modification');
     }
 
     /**
@@ -81,7 +81,7 @@ class TypeReunion extends Model
     {
         return $this->belongsToMany(User::class, 'type_reunion_membres_permanents', 'type_reunion_id', 'user_id')
                     ->withPivot('role_defaut', 'actif', 'notifications_par_defaut', 'date_creation', 'date_modification')
-                    ->withTimestamps();
+                    ->withTimestamps('date_creation', 'date_modification');
     }
 
     /**
@@ -122,6 +122,22 @@ class TypeReunion extends Model
     public function notificationConfigs(): HasMany
     {
         return $this->hasMany(ReunionNotificationConfig::class, 'type_reunion_id');
+    }
+
+    /**
+     * Relation avec l'utilisateur qui a créé le type de réunion
+     */
+    public function createur()
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relation avec l'utilisateur qui a modifié le type de réunion
+     */
+    public function modificateur()
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**

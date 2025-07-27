@@ -21,7 +21,7 @@ class ReunionSerieController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->getSeries($request, $user);
 
         if ($result['success']) {
@@ -34,9 +34,9 @@ class ReunionSerieController extends Controller
     /**
      * Récupérer une série spécifique
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->getSerie($id, $user);
 
         if ($result['success']) {
@@ -52,27 +52,22 @@ class ReunionSerieController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nom' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'periodicite' => 'required|in:QUOTIDIENNE,HEBDOMADAIRE,MENSUELLE,TRIMESTRIELLE,SEMESTRIELLE,ANNUELLE',
-            'date_debut' => 'required|date|after_or_equal:today',
-            'date_fin' => 'nullable|date|after:date_debut',
-            'heure_debut' => 'nullable|date_format:H:i:s',
-            'heure_fin' => 'nullable|date_format:H:i:s|after:heure_debut',
+            'nom' => 'required|string|max:100',
+            'description' => 'required|string',
+            'type_reunion_id' => 'required|integer|exists:type_reunions,id',
+            'periodicite' => 'required|in:HEBDOMADAIRE,BIHEBDOMADAIRE,MENSUELLE',
             'jour_semaine' => 'nullable|integer|between:1,7',
             'jour_mois' => 'nullable|integer|between:1,31',
-            'configuration_recurrence' => 'nullable|array',
+            'heure_debut' => 'required|date_format:H:i:s',
+            'duree_minutes' => 'required|integer|min:15|max:480',
+            'lieu_defaut' => 'required|string|max:200',
             'actif' => 'nullable|boolean',
-            'generer_reunions' => 'nullable|boolean',
-            'type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'lieu' => 'nullable|string|max:255',
-            'type_lieu' => 'nullable|in:PHYSIQUE,VIRTUEL,HYBRIDE',
-            'participants' => 'nullable|array',
-            'participants.*.user_id' => 'required_with:participants|integer|exists:users,id',
-            'participants.*.role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'participants.*.type' => 'nullable|in:INTERNE,EXTERNE',
-            'participants.*.statut_presence' => 'nullable|in:INVITE,CONFIRME,DECLINE',
-            'participants.*.notifications_actives' => 'nullable|array',
+            'date_debut' => 'required|date|after_or_equal:today',
+            'date_fin' => 'nullable|date|after:date_debut',
+            'suspendue' => 'nullable|boolean',
+            'configuration_recurrence' => 'required|array',
+            'creer_par' => 'nullable|exists:users,id',
+            'modifier_par' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +78,7 @@ class ReunionSerieController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->createSerie($request->all(), $user);
 
         if ($result['success']) {
@@ -130,7 +125,7 @@ class ReunionSerieController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->updateSerie($id, $request->all(), $user);
 
         if ($result['success']) {
@@ -143,9 +138,9 @@ class ReunionSerieController extends Controller
     /**
      * Supprimer une série de réunions
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->deleteSerie($id, $user);
 
         if ($result['success']) {
@@ -180,7 +175,7 @@ class ReunionSerieController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $serie = $this->reunionSerieService->getSerie($id, $user);
 
         if (!$serie['success']) {
@@ -221,7 +216,7 @@ class ReunionSerieController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $serie = $this->reunionSerieService->getSerie($id, $user);
 
         if (!$serie['success']) {
@@ -240,9 +235,9 @@ class ReunionSerieController extends Controller
     /**
      * Récupérer les statistiques des séries
      */
-    public function stats()
+    public function stats(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionSerieService->getStats($user);
 
         if ($result['success']) {
@@ -255,9 +250,9 @@ class ReunionSerieController extends Controller
     /**
      * Activer/Désactiver une série
      */
-    public function toggleActive(int $id)
+    public function toggleActive(Request $request, int $id)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $serie = $this->reunionSerieService->getSerie($id, $user);
 
         if (!$serie['success']) {

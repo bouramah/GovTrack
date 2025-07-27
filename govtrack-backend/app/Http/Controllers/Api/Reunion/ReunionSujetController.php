@@ -72,17 +72,19 @@ class ReunionSujetController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'reunion_ordre_jour_id' => 'required|exists:reunion_ordre_jours,id',
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'priorite' => 'nullable|in:haute,normale,basse',
-                'categorie' => 'nullable|string|max:100',
-                'duree_estimee' => 'nullable|integer|min:1',
-                'statut' => 'nullable|in:en_attente,en_cours,termine,annule',
-                'responsable_id' => 'nullable|exists:users,id',
-                'date_limite' => 'nullable|date',
-                'tags' => 'nullable|array',
-                'documents_requis' => 'nullable|array',
-                'notes_internes' => 'nullable|string',
+                'difficulte_globale' => 'nullable|string',
+                'recommandation' => 'nullable|string',
+                'statut' => 'nullable|in:RESOLU,EN_COURS_DE_RESOLUTION,BLOQUE,AVIS,APPROVE,REJETE,EN_ATTENTE',
+                'commentaire' => 'nullable|string',
+                // pieces_jointes gérées séparément via PieceJointeSujetController
+                'projet_id' => 'nullable|exists:projets,id',
+                'entite_id' => 'nullable|exists:entites,id',
+                'niveau_detail' => 'nullable|in:SIMPLE,DETAILLE',
+                'objectifs_actifs' => 'nullable|boolean',
+                'difficultes_actives' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -105,6 +107,74 @@ class ReunionSujetController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création du sujet',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Créer plusieurs sujets en lot avec pièces jointes
+     */
+    public function createMultipleSujets(Request $request, int $reunionId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'sujets' => 'required|array|min:1',
+                'sujets.*.reunion_ordre_jour_id' => 'required|exists:reunion_ordre_jours,id',
+                'sujets.*.titre' => 'required|string|max:255',
+                'sujets.*.description' => 'nullable|string',
+                'sujets.*.difficulte_globale' => 'nullable|string',
+                'sujets.*.recommandation' => 'nullable|string',
+                'sujets.*.statut' => 'nullable|in:RESOLU,EN_COURS_DE_RESOLUTION,BLOQUE,AVIS,APPROVE,REJETE,EN_ATTENTE',
+                'sujets.*.commentaire' => 'nullable|string',
+                'sujets.*.projet_id' => 'nullable|exists:projets,id',
+                'sujets.*.entite_id' => 'nullable|exists:entites,id',
+                'sujets.*.niveau_detail' => 'nullable|in:SIMPLE,DETAILLE',
+                'sujets.*.objectifs_actifs' => 'nullable|boolean',
+                'sujets.*.difficultes_actives' => 'nullable|boolean',
+            ]);
+
+            // Validation des fichiers
+            $files = $request->allFiles();
+            foreach ($files as $key => $fileArray) {
+                if (is_array($fileArray)) {
+                    foreach ($fileArray as $file) {
+                        if ($file && !$file->isValid()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Fichier invalide détecté',
+                                'error' => 'Un ou plusieurs fichiers sont corrompus'
+                            ], 422);
+                        }
+                    }
+                }
+            }
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $result = $this->sujetService->createMultipleSujets(
+                $request->input('sujets'),
+                $files,
+                $reunionId,
+                $request->user()->id
+            );
+
+            if ($result['success']) {
+                return response()->json($result, 201);
+            } else {
+                return response()->json($result, 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création multiple des sujets',
                 'error' => $e->getMessage()
             ], 500);
         }

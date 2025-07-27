@@ -19,9 +19,9 @@ class ReunionPVController extends Controller
     /**
      * Récupérer les PV d'une réunion
      */
-    public function index(int $reunionId)
+    public function index(Request $request, int $reunionId)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->getPVs($reunionId, $user);
 
         if ($result['success']) {
@@ -34,9 +34,9 @@ class ReunionPVController extends Controller
     /**
      * Récupérer un PV spécifique
      */
-    public function show(int $reunionId, int $pvId)
+    public function show(Request $request, int $reunionId, int $pvId)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->getPV($reunionId, $pvId, $user);
 
         if ($result['success']) {
@@ -84,7 +84,7 @@ class ReunionPVController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->createPV($reunionId, $request->all(), $user);
 
         if ($result['success']) {
@@ -130,7 +130,7 @@ class ReunionPVController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->updatePV($reunionId, $pvId, $request->all(), $user);
 
         if ($result['success']) {
@@ -143,9 +143,9 @@ class ReunionPVController extends Controller
     /**
      * Supprimer un PV
      */
-    public function destroy(int $reunionId, int $pvId)
+    public function destroy(Request $request, int $reunionId, int $pvId)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->deletePV($reunionId, $pvId, $user);
 
         if ($result['success']) {
@@ -161,7 +161,7 @@ class ReunionPVController extends Controller
     public function validate(Request $request, int $reunionId, int $pvId)
     {
         $validator = Validator::make($request->all(), [
-            'commentaires' => 'nullable|string|max:1000',
+            'commentaire_validation' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -172,7 +172,7 @@ class ReunionPVController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->validerPV($reunionId, $pvId, $request->all(), $user);
 
         if ($result['success']) {
@@ -188,7 +188,7 @@ class ReunionPVController extends Controller
     public function reject(Request $request, int $reunionId, int $pvId)
     {
         $validator = Validator::make($request->all(), [
-            'commentaires' => 'required|string|max:1000',
+            'commentaire_validation' => 'required|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -199,7 +199,7 @@ class ReunionPVController extends Controller
             ], 422);
         }
 
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->rejeterPV($reunionId, $pvId, $request->all(), $user);
 
         if ($result['success']) {
@@ -212,9 +212,9 @@ class ReunionPVController extends Controller
     /**
      * Récupérer les statistiques des PV
      */
-    public function stats(int $reunionId)
+    public function stats(Request $request, int $reunionId)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $result = $this->reunionPVService->getPVStats($reunionId, $user);
 
         if ($result['success']) {
@@ -227,13 +227,13 @@ class ReunionPVController extends Controller
     /**
      * Soumettre un PV pour validation
      */
-    public function submitForValidation(int $reunionId, int $pvId)
+    public function submitForValidation(Request $request, int $reunionId, int $pvId)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         // Mettre à jour le statut du PV
         $data = [
-            'statut_validation' => 'EN_ATTENTE'
+            'statut' => 'EN_ATTENTE'
         ];
 
         $result = $this->reunionPVService->updatePV($reunionId, $pvId, $data, $user);
@@ -252,9 +252,9 @@ class ReunionPVController extends Controller
     /**
      * Récupérer le dernier PV validé d'une réunion
      */
-    public function getLastValidated(int $reunionId)
+    public function getLastValidated(Request $request, int $reunionId)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         // Récupérer tous les PV de la réunion
         $pvs = $this->reunionPVService->getPVs($reunionId, $user);

@@ -277,12 +277,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::prefix('types-reunions')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'index'])->middleware('permission:view_reunion_types');
         Route::get('actifs', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'active'])->middleware('permission:view_reunion_types');
+        Route::get('stats', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'stats'])->middleware('permission:view_reunion_types');
         Route::get('{id}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'show'])->middleware('permission:view_reunion_types');
         Route::post('/', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'store'])->middleware('permission:create_reunion_types');
         Route::put('{id}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'update'])->middleware('permission:update_reunion_types');
         Route::delete('{id}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'destroy'])->middleware('permission:delete_reunion_types');
         Route::post('{id}/toggle-active', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'toggleActive'])->middleware('permission:update_reunion_types');
-        Route::get('{id}/stats', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'stats'])->middleware('permission:view_reunion_types');
+        Route::get('{id}/stats', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'statsById'])->middleware('permission:view_reunion_types');
         Route::get('{id}/reunions', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'reunions'])->middleware('permission:view_reunions');
 
         // Gestion des gestionnaires
@@ -447,6 +448,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::prefix('ordre-jour')->group(function () {
         Route::get('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'getOrdreJour'])->middleware('permission:view_reunion_ordre_jour');
         Route::post('{reunionId}/points', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'addPoint'])->middleware('permission:create_reunion_ordre_jour');
+        Route::post('{reunionId}/points/multiple', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'addMultiplePoints'])->middleware('permission:create_reunion_ordre_jour');
         Route::put('points/{pointId}', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'updatePoint'])->middleware('permission:update_reunion_ordre_jour');
         Route::delete('points/{pointId}', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'deletePoint'])->middleware('permission:delete_reunion_ordre_jour');
         Route::post('{reunionId}/reorder', [\App\Http\Controllers\Api\Reunion\ReunionOrdreJourController::class, 'reorderPoints'])->middleware('permission:update_reunion_ordre_jour');
@@ -488,11 +490,37 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'getSujets'])->middleware('permission:view_reunion_sujets');
         Route::get('sujet/{sujetId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'getSujet'])->middleware('permission:view_reunion_sujets');
         Route::post('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'createSujet'])->middleware('permission:create_reunion_sujets');
+        Route::post('{reunionId}/multiple', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'createMultipleSujets'])->middleware('permission:create_reunion_sujets');
         Route::put('{sujetId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'updateSujet'])->middleware('permission:update_reunion_sujets');
         Route::delete('{sujetId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'deleteSujet'])->middleware('permission:delete_reunion_sujets');
         Route::post('{sujetId}/statut', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'changeStatut'])->middleware('permission:update_reunion_sujets');
         Route::post('{reunionId}/reorder', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'reorderSujets'])->middleware('permission:update_reunion_sujets');
         Route::get('{reunionId}/stats', [\App\Http\Controllers\Api\Reunion\ReunionSujetController::class, 'getStats'])->middleware('permission:view_reunion_sujets');
+    });
+
+    // =================================================================
+    // PHASE 4 : PIÈCES JOINTES DES SUJETS
+    // =================================================================
+    Route::prefix('pieces-jointes-sujets')->group(function () {
+        Route::get('{sujetId}', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'index'])->middleware('permission:view_reunion_sujets');
+        Route::post('{sujetId}', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'store'])->middleware('permission:create_reunion_sujets');
+        Route::get('{sujetId}/{id}', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'show'])->middleware('permission:view_reunion_sujets');
+        Route::put('{sujetId}/{id}', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'update'])->middleware('permission:update_reunion_sujets');
+        Route::delete('{sujetId}/{id}', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'destroy'])->middleware('permission:delete_reunion_sujets');
+        Route::get('{sujetId}/{id}/download', [\App\Http\Controllers\Api\Reunion\PieceJointeSujetController::class, 'download'])->middleware('permission:view_reunion_sujets');
+    });
+
+    // =================================================================
+    // PHASE 4 : AVIS SUR LES SUJETS
+    // =================================================================
+    Route::prefix('sujets/{sujetId}/avis')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'index'])->middleware('permission:view_reunion_sujets');
+        Route::post('/', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'store'])->middleware('permission:create_reunion_sujets');
+        Route::post('/multiple', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'storeMultiple'])->middleware('permission:create_reunion_sujets');
+        Route::get('/stats', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'stats'])->middleware('permission:view_reunion_sujets');
+        Route::get('/{avisId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'show'])->middleware('permission:view_reunion_sujets');
+        Route::put('/{avisId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'update'])->middleware('permission:update_reunion_sujets');
+        Route::delete('/{avisId}', [\App\Http\Controllers\Api\Reunion\ReunionSujetAvisController::class, 'destroy'])->middleware('permission:delete_reunion_sujets');
     });
 
     // =================================================================
@@ -502,6 +530,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'getObjectifs'])->middleware('permission:view_reunion_objectifs');
         Route::get('objectif/{objectifId}', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'getObjectif'])->middleware('permission:view_reunion_objectifs');
         Route::post('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'createObjectif'])->middleware('permission:create_reunion_objectifs');
+        Route::post('{reunionId}/multiple', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'createMultipleObjectifs'])->middleware('permission:create_reunion_objectifs');
         Route::put('{objectifId}', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'updateObjectif'])->middleware('permission:update_reunion_objectifs');
         Route::delete('{objectifId}', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'deleteObjectif'])->middleware('permission:delete_reunion_objectifs');
         Route::post('{objectifId}/statut', [\App\Http\Controllers\Api\Reunion\ReunionObjectifController::class, 'changeStatut'])->middleware('permission:update_reunion_objectifs');
@@ -517,6 +546,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'getDifficultes'])->middleware('permission:view_reunion_difficultes');
         Route::get('difficulte/{difficulteId}', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'getDifficulte'])->middleware('permission:view_reunion_difficultes');
         Route::post('{reunionId}', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'createDifficulte'])->middleware('permission:create_reunion_difficultes');
+        Route::post('{reunionId}/multiple', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'createMultipleDifficultes'])->middleware('permission:create_reunion_difficultes');
         Route::put('{difficulteId}', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'updateDifficulte'])->middleware('permission:update_reunion_difficultes');
         Route::delete('{difficulteId}', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'deleteDifficulte'])->middleware('permission:delete_reunion_difficultes');
         Route::post('{difficulteId}/statut', [\App\Http\Controllers\Api\Reunion\ReunionDifficulteController::class, 'changeStatut'])->middleware('permission:update_reunion_difficultes');

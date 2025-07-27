@@ -80,6 +80,8 @@ class ReunionParticipant extends Model
         'notifications_actives',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
@@ -108,6 +110,22 @@ class ReunionParticipant extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Relations avec l'utilisateur créateur
+     */
+    public function createur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec l'utilisateur modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**

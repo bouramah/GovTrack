@@ -18,11 +18,11 @@ class TypeReunionService
         try {
             $query = TypeReunion::with([
                 'gestionnaires',
-                'membres',
+                'membresPermanents',
                 'series',
-                'workflows',
+                'workflowConfigs',
                 'validateursPV',
-                'notifications',
+                'notificationConfigs',
                 'createur',
                 'modificateur'
             ]);
@@ -53,7 +53,7 @@ class TypeReunionService
                           ->orWhereHas('gestionnaires', function ($gq) use ($utilisateursEntite) {
                               $gq->whereIn('user_id', $utilisateursEntite);
                           })
-                          ->orWhereHas('membres', function ($mq) use ($utilisateursEntite) {
+                          ->orWhereHas('membresPermanents', function ($mq) use ($utilisateursEntite) {
                               $mq->whereIn('user_id', $utilisateursEntite);
                           });
                     });
@@ -65,7 +65,7 @@ class TypeReunionService
                           ->orWhereHas('gestionnaires', function ($gq) use ($user) {
                               $gq->where('user_id', $user->id);
                           })
-                          ->orWhereHas('membres', function ($mq) use ($user) {
+                          ->orWhereHas('membresPermanents', function ($mq) use ($user) {
                               $mq->where('user_id', $user->id);
                           });
                     });
@@ -79,7 +79,7 @@ class TypeReunionService
                       ->orWhereHas('gestionnaires', function ($gq) use ($user) {
                           $gq->where('user_id', $user->id);
                       })
-                      ->orWhereHas('membres', function ($mq) use ($user) {
+                      ->orWhereHas('membresPermanents', function ($mq) use ($user) {
                           $mq->where('user_id', $user->id);
                       });
                 });
@@ -114,8 +114,7 @@ class TypeReunionService
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('nom', 'LIKE', "%{$search}%")
-                      ->orWhere('description', 'LIKE', "%{$search}%")
-                      ->orWhere('categorie', 'LIKE', "%{$search}%");
+                      ->orWhere('description', 'LIKE', "%{$search}%");
                 });
             }
 
@@ -157,11 +156,11 @@ class TypeReunionService
         try {
             $typeReunion = TypeReunion::with([
                 'gestionnaires',
-                'membres',
+                'membresPermanents',
                 'series',
-                'workflows',
+                'workflowConfigs',
                 'validateursPV',
-                'notifications',
+                'notificationConfigs',
                 'createur',
                 'modificateur'
             ])->find($id);
@@ -218,39 +217,69 @@ class TypeReunionService
                 ];
             }
 
-            // Préparer les données
+            // Préparer les données selon la migration
             $typeReunionData = [
                 'nom' => $data['nom'],
                 'description' => $data['description'] ?? '',
-                'categorie' => $data['categorie'] ?? 'GENERAL',
-                'niveau_complexite' => $data['niveau_complexite'] ?? 'SIMPLE',
+                'couleur' => $data['couleur'] ?? '#1f2937',
+                'icone' => $data['icone'] ?? 'users',
                 'actif' => $data['actif'] ?? true,
-                'configuration' => $data['configuration'] ?? [],
-                'regles_metier' => $data['regles_metier'] ?? [],
-                'workflow_defaut' => $data['workflow_defaut'] ?? [],
-                'notifications_defaut' => $data['notifications_defaut'] ?? [],
-                'permissions_requises' => $data['permissions_requises'] ?? [],
-                'creer_par' => $user->id,
-                'modifier_par' => $user->id,
-                'date_creation' => now(),
-                'date_modification' => now(),
+                'ordre' => $data['ordre'] ?? 1,
+                'niveau_complexite' => $data['niveau_complexite'] ?? 'SIMPLE',
+                'fonctionnalites_actives' => $data['fonctionnalites_actives'] ?? [],
+                'configuration_notifications' => $data['configuration_notifications'] ?? [],
+                'creer_par' => $data['creer_par'] ?? $user->id,
+                'modifier_par' => $data['modifier_par'] ?? $user->id,
             ];
 
             $typeReunion = TypeReunion::create($typeReunionData);
 
             // Ajouter les gestionnaires si fournis
             if (isset($data['gestionnaires']) && is_array($data['gestionnaires'])) {
-                $typeReunion->gestionnaires()->attach($data['gestionnaires']);
+                $pivotData = [];
+                foreach ($data['gestionnaires'] as $gestionnaireId) {
+                    $pivotData[$gestionnaireId] = [
+                        'permissions' => json_encode(['manage_type_reunion']),
+                        'actif' => true,
+                        'date_creation' => now(),
+                        'date_modification' => now(),
+                        'creer_par' => $user->id,
+                        'modifier_par' => $user->id
+                    ];
+                }
+                $typeReunion->gestionnaires()->attach($pivotData);
             }
 
             // Ajouter les membres si fournis
             if (isset($data['membres']) && is_array($data['membres'])) {
-                $typeReunion->membres()->attach($data['membres']);
+                $pivotData = [];
+                foreach ($data['membres'] as $membreId) {
+                    $pivotData[$membreId] = [
+                        'role_defaut' => 'MEMBRE',
+                        'actif' => true,
+                        'notifications_par_defaut' => json_encode(['rappel_24h', 'rappel_1h']),
+                        'date_creation' => now(),
+                        'date_modification' => now(),
+                        'creer_par' => $user->id,
+                        'modifier_par' => $user->id
+                    ];
+                }
+                $typeReunion->membresPermanents()->attach($pivotData);
             }
 
             // Ajouter les validateurs PV si fournis
             if (isset($data['validateurs_pv']) && is_array($data['validateurs_pv'])) {
-                $typeReunion->validateursPV()->attach($data['validateurs_pv']);
+                foreach ($data['validateurs_pv'] as $validateurId) {
+                    \App\Models\TypeReunionValidateurPV::create([
+                        'type_reunion_id' => $typeReunion->id,
+                        'user_id' => $validateurId,
+                        'niveau_validation' => 'FINAL',
+                        'ordre_validation' => 1,
+                        'actif' => true,
+                        'creer_par' => $user->id,
+                        'modifier_par' => $user->id
+                    ]);
+                }
             }
 
             DB::commit();
@@ -258,7 +287,7 @@ class TypeReunionService
             // Charger les relations pour la réponse
             $typeReunion->load([
                 'gestionnaires',
-                'membres',
+                'membresPermanents',
                 'validateursPV',
                 'createur'
             ]);
@@ -337,7 +366,19 @@ class TypeReunionService
 
             // Mettre à jour les membres si fournis
             if (isset($data['membres'])) {
-                $typeReunion->membres()->sync($data['membres']);
+                $pivotData = [];
+                foreach ($data['membres'] as $membreId) {
+                    $pivotData[$membreId] = [
+                        'role_defaut' => 'MEMBRE',
+                        'actif' => true,
+                        'notifications_par_defaut' => json_encode(['rappel_24h', 'rappel_1h']),
+                        'date_creation' => now(),
+                        'date_modification' => now(),
+                        'creer_par' => $user->id,
+                        'modifier_par' => $user->id
+                    ];
+                }
+                $typeReunion->membresPermanents()->sync($pivotData);
             }
 
             // Mettre à jour les validateurs PV si fournis
@@ -350,7 +391,7 @@ class TypeReunionService
             // Charger les relations pour la réponse
             $typeReunion->load([
                 'gestionnaires',
-                'membres',
+                'membresPermanents',
                 'validateursPV',
                 'modificateur'
             ]);
@@ -412,10 +453,10 @@ class TypeReunionService
 
             // Supprimer les relations
             $typeReunion->gestionnaires()->detach();
-            $typeReunion->membres()->detach();
-            $typeReunion->validateursPV()->detach();
-            $typeReunion->workflows()->delete();
-            $typeReunion->notifications()->delete();
+            $typeReunion->membresPermanents()->detach();
+            $typeReunion->validateursPV()->delete();
+            $typeReunion->workflowConfigs()->delete();
+            $typeReunion->notificationConfigs()->delete();
 
             // Supprimer le type
             $typeReunion->delete();
@@ -468,7 +509,7 @@ class TypeReunionService
                               ->orWhereHas('gestionnaires', function ($gq) use ($utilisateursEntite) {
                                   $gq->whereIn('user_id', $utilisateursEntite);
                               })
-                              ->orWhereHas('membres', function ($mq) use ($utilisateursEntite) {
+                              ->orWhereHas('membresPermanents', function ($mq) use ($utilisateursEntite) {
                                   $mq->whereIn('user_id', $utilisateursEntite);
                               });
                         });
@@ -479,7 +520,7 @@ class TypeReunionService
                               ->orWhereHas('gestionnaires', function ($gq) use ($user) {
                                   $gq->where('user_id', $user->id);
                               })
-                              ->orWhereHas('membres', function ($mq) use ($user) {
+                              ->orWhereHas('membresPermanents', function ($mq) use ($user) {
                                   $mq->where('user_id', $user->id);
                               });
                         });
@@ -491,7 +532,7 @@ class TypeReunionService
                           ->orWhereHas('gestionnaires', function ($gq) use ($user) {
                               $gq->where('user_id', $user->id);
                           })
-                          ->orWhereHas('membres', function ($mq) use ($user) {
+                          ->orWhereHas('membresPermanents', function ($mq) use ($user) {
                               $mq->where('user_id', $user->id);
                           });
                     });
@@ -570,7 +611,7 @@ class TypeReunionService
         }
 
         // L'utilisateur peut accéder aux types où il est membre
-        if ($typeReunion->membres()->where('user_id', $user->id)->exists()) {
+        if ($typeReunion->membresPermanents()->where('user_id', $user->id)->exists()) {
             return true;
         }
 

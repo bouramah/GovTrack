@@ -23,40 +23,45 @@ class ReunionSujetObjectif extends Model
     /**
      * Constantes pour les statuts
      */
-    public const STATUT_A_ATTEINDRE = 'A_ATTEINDRE';
     public const STATUT_EN_COURS = 'EN_COURS';
     public const STATUT_ATTEINT = 'ATTEINT';
-    public const STATUT_ANNULE = 'ANNULE';
+    public const STATUT_EN_RETARD = 'EN_RETARD';
 
     public const STATUTS = [
-        self::STATUT_A_ATTEINDRE => 'À atteindre',
         self::STATUT_EN_COURS => 'En cours',
         self::STATUT_ATTEINT => 'Atteint',
-        self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_EN_RETARD => 'En retard',
     ];
 
     /**
      * Les attributs qui peuvent être assignés en masse
      */
     protected $fillable = [
-        'sujet_id',
+        'reunion_sujet_id',
         'titre',
         'description',
-        'progression',
-        'date_limite',
+        'cible',
+        'taux_realisation',
+        'pourcentage_decaissement',
+        'date_objectif',
         'statut',
-        'commentaires',
+        'ordre',
+        'actif',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'progression' => 'integer',
-        'date_limite' => 'date',
-        'commentaires' => 'array',
+        'taux_realisation' => 'integer',
+        'pourcentage_decaissement' => 'decimal:2',
+        'date_objectif' => 'date',
+        'ordre' => 'integer',
+        'actif' => 'boolean',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -66,15 +71,23 @@ class ReunionSujetObjectif extends Model
      */
     public function sujet(): BelongsTo
     {
-        return $this->belongsTo(ReunionSujet::class, 'sujet_id');
+        return $this->belongsTo(ReunionSujet::class, 'reunion_sujet_id');
     }
 
     /**
-     * Relations avec les difficultés
+     * Relations avec l'utilisateur créateur
      */
-    public function difficultes(): HasMany
+    public function createur(): BelongsTo
     {
-        return $this->hasMany(ReunionObjectifDifficulte::class, 'objectif_id');
+        return $this->belongsTo(User::class, 'creer_par');
+    }
+
+    /**
+     * Relations avec l'utilisateur modificateur
+     */
+    public function modificateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'modifier_par');
     }
 
     /**
@@ -90,8 +103,8 @@ class ReunionSujetObjectif extends Model
      */
     public function scopeEnRetard($query)
     {
-        return $query->where('date_limite', '<', now()->toDateString())
-                     ->whereNotIn('statut', [self::STATUT_ATTEINT, self::STATUT_ANNULE]);
+        return $query->where('date_objectif', '<', now()->toDateString())
+                     ->whereNotIn('statut', [self::STATUT_ATTEINT]);
     }
 
     /**
@@ -107,16 +120,16 @@ class ReunionSujetObjectif extends Model
      */
     public function getEstEnRetardAttribute(): bool
     {
-        return $this->date_limite && $this->date_limite < now()->toDateString()
-               && !in_array($this->statut, [self::STATUT_ATTEINT, self::STATUT_ANNULE]);
+        return $this->date_objectif && $this->date_objectif < now()->toDateString()
+               && !in_array($this->statut, [self::STATUT_ATTEINT]);
     }
 
     /**
-     * Obtenir le pourcentage de progression formaté
+     * Obtenir le taux de réalisation formaté
      */
-    public function getProgressionFormateeAttribute(): string
+    public function getTauxRealisationFormateAttribute(): string
     {
-        return "{$this->progression}%";
+        return "{$this->taux_realisation}%";
     }
 
     /**
@@ -124,7 +137,7 @@ class ReunionSujetObjectif extends Model
      */
     public function getEstAtteintAttribute(): bool
     {
-        return $this->statut === self::STATUT_ATTEINT || $this->progression >= 100;
+        return $this->statut === self::STATUT_ATTEINT || $this->taux_realisation >= 100;
     }
 
     /**
@@ -133,10 +146,9 @@ class ReunionSujetObjectif extends Model
     public function getStatutCouleurAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_A_ATTEINDRE => 'gray',
             self::STATUT_EN_COURS => 'blue',
             self::STATUT_ATTEINT => 'green',
-            self::STATUT_ANNULE => 'red',
+            self::STATUT_EN_RETARD => 'red',
             default => 'gray',
         };
     }
@@ -147,10 +159,9 @@ class ReunionSujetObjectif extends Model
     public function getStatutIconeAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_A_ATTEINDRE => 'target',
             self::STATUT_EN_COURS => 'play',
             self::STATUT_ATTEINT => 'check-circle',
-            self::STATUT_ANNULE => 'x-circle',
+            self::STATUT_EN_RETARD => 'x-circle',
             default => 'help-circle',
         };
     }

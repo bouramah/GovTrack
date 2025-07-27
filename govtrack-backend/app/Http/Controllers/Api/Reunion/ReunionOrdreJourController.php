@@ -50,12 +50,11 @@ class ReunionOrdreJourController extends Controller
             $validator = Validator::make($request->all(), [
                 'titre' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'type' => 'nullable|string|in:DISCUSSION,PRESENTATION,DECISION,INFORMATION',
+                'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
                 'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
                 'responsable_id' => 'nullable|integer|exists:users,id',
                 'ordre' => 'nullable|integer|min:1',
-                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE,COMPLET',
-                'commentaires' => 'nullable|array',
+                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
             ]);
 
             if ($validator->fails()) {
@@ -79,6 +78,49 @@ class ReunionOrdreJourController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'ajout du point à l\'ordre du jour',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Ajouter plusieurs points à l'ordre du jour
+     */
+    public function addMultiplePoints(Request $request, int $reunionId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'points' => 'required|array|min:1',
+                'points.*.titre' => 'required|string|max:255',
+                'points.*.description' => 'nullable|string|max:1000',
+                'points.*.type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
+                'points.*.duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+                'points.*.responsable_id' => 'nullable|integer|exists:users,id',
+                'points.*.ordre' => 'nullable|integer|min:1',
+                'points.*.niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Données invalides',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = $request->user();
+            $result = $this->ordreJourService->addMultiplePointsOrdreJour($reunionId, $request->input('points'), $user);
+
+            if ($result['success']) {
+                return response()->json($result, 201);
+            } else {
+                return response()->json($result, 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'ajout multiple des points à l\'ordre du jour',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -248,4 +290,4 @@ class ReunionOrdreJourController extends Controller
             ], 500);
         }
     }
-} 
+}
