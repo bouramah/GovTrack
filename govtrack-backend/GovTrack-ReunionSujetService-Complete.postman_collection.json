@@ -1,0 +1,525 @@
+{
+	"info": {
+		"_postman_id": "reunion-sujet-service-complete",
+		"name": "GovTrack - ReunionSujetService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du ReunionSujetService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentification",
+			"item": [
+				{
+					"name": "Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.token) {",
+									"        pm.environment.set('auth_token', response.data.token);",
+									"        console.log('✅ Token dauthentification récupéré');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📋 Récupérer les Sujets",
+			"item": [
+				{
+					"name": "GET - Récupérer tous les sujets d'une réunion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{reunion_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{reunion_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.length > 0) {",
+									"        pm.environment.set('sujet_test_id', response.data[0].id);",
+									"        console.log('✅ Sujet trouvé:', response.data[0].id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "GET - Récupérer un sujet spécifique",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/sujet/{{sujet_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "sujet", "{{sujet_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "➕ Créer des Sujets",
+			"item": [
+				{
+					"name": "POST - Créer un sujet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reunion_ordre_jour_id\": 1,\n    \"titre\": \"Sujet Test - Projet Simandou\",\n    \"description\": \"Point de discussion sur l'avancement du projet Simandou\",\n    \"difficulte_globale\": \"MOYENNE\",\n    \"recommandation\": \"Accélérer les travaux de terrassement\",\n    \"statut\": \"EN_ATTENTE\",\n    \"commentaire\": \"Sujet prioritaire pour le CODIR\",\n    \"projet_id\": 1,\n    \"entite_id\": 1,\n    \"niveau_detail\": \"DETAILLE\",\n    \"objectifs_actifs\": true,\n    \"difficultes_actives\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{reunion_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{reunion_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.id) {",
+									"        pm.environment.set('sujet_test_id', response.data.id);",
+									"        console.log('✅ Sujet créé:', response.data.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "POST - Créer plusieurs sujets",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sujets\": [\n        {\n            \"reunion_ordre_jour_id\": 1,\n            \"titre\": \"Sujet Multiple 1 - Budget Q4\",\n            \"description\": \"Révision du budget du 4ème trimestre\",\n            \"difficulte_globale\": \"FAIBLE\",\n            \"recommandation\": \"Approuver le budget proposé\",\n            \"statut\": \"EN_ATTENTE\",\n            \"projet_id\": 1,\n            \"entite_id\": 1,\n            \"niveau_detail\": \"SIMPLE\",\n            \"objectifs_actifs\": false,\n            \"difficultes_actives\": false\n        },\n        {\n            \"reunion_ordre_jour_id\": 1,\n            \"titre\": \"Sujet Multiple 2 - Ressources Humaines\",\n            \"description\": \"Recrutement de nouveaux collaborateurs\",\n            \"difficulte_globale\": \"ELEVEE\",\n            \"recommandation\": \"Lancer les appels d'offres\",\n            \"statut\": \"EN_ATTENTE\",\n            \"projet_id\": 1,\n            \"entite_id\": 1,\n            \"niveau_detail\": \"DETAILLE\",\n            \"objectifs_actifs\": true,\n            \"difficultes_actives\": true\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{reunion_test_id}}/multiple",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{reunion_test_id}}", "multiple"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.length > 0) {",
+									"        console.log('✅ Sujets multiples créés:', response.data.length);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "✏️ Modifier des Sujets",
+			"item": [
+				{
+					"name": "PUT - Modifier un sujet",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titre\": \"Sujet Test - Projet Simandou (Modifié)\",\n    \"description\": \"Point de discussion sur l'avancement du projet Simandou - Mise à jour\",\n    \"difficulte_globale\": \"ELEVEE\",\n    \"recommandation\": \"Accélérer les travaux et augmenter les effectifs\",\n    \"statut\": \"EN_COURS_DE_RESOLUTION\",\n    \"commentaire\": \"Sujet prioritaire - Action immédiate requise\",\n    \"niveau_detail\": \"DETAILLE\",\n    \"objectifs_actifs\": true,\n    \"difficultes_actives\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{sujet_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success) {",
+									"        console.log('✅ Sujet modifié');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🔄 Réorganiser les Sujets",
+			"item": [
+				{
+					"name": "POST - Réorganiser l'ordre des sujets (Non applicable)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ordre_sujets\": [\n        {\n            \"id\": \"{{sujet_test_id}}\",\n            \"ordre\": 3\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{reunion_test_id}}/reorder",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{reunion_test_id}}", "reorder"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success) {",
+									"        console.log('✅ Réorganisation des sujets (ordre géré par ordre du jour)');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📊 Changer le Statut",
+			"item": [
+				{
+					"name": "POST - Changer le statut d'un sujet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statut\": \"EN_COURS_DE_RESOLUTION\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{sujet_test_id}}", "statut"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success) {",
+									"        console.log('✅ Statut du sujet modifié');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📈 Statistiques",
+			"item": [
+				{
+					"name": "GET - Statistiques des sujets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{reunion_test_id}}/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{reunion_test_id}}", "stats"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data) {",
+									"        console.log('✅ Statistiques récupérées:', response.data);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🗑️ Supprimer des Sujets",
+			"item": [
+				{
+					"name": "DELETE - Supprimer un sujet",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "sujets", "{{sujet_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success) {",
+									"        console.log('✅ Sujet supprimé');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		},
+		{
+			"key": "auth_token",
+			"value": ""
+		},
+		{
+			"key": "reunion_test_id",
+			"value": "1"
+		},
+		{
+			"key": "sujet_test_id",
+			"value": ""
+		}
+	]
+}

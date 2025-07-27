@@ -52,25 +52,22 @@ class ReunionNotification extends Model
      */
     protected $fillable = [
         'reunion_id',
-        'type_notification',
-        'destinataire_id',
+        'type',
+        'envoye_a',
+        'envoye_le',
         'statut',
-        'date_envoi',
-        'date_lecture',
-        'contenu',
+        'contenu_email',
+        'configuration_type',
         'date_creation',
-        'date_modification',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'date_envoi' => 'datetime',
-        'date_lecture' => 'datetime',
-        'contenu' => 'array',
+        'envoye_le' => 'datetime',
+        'configuration_type' => 'array',
         'date_creation' => 'datetime',
-        'date_modification' => 'datetime',
     ];
 
     /**
@@ -86,7 +83,7 @@ class ReunionNotification extends Model
      */
     public function destinataire(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'destinataire_id');
+        return $this->belongsTo(User::class, 'envoye_a');
     }
 
     /**
@@ -94,7 +91,7 @@ class ReunionNotification extends Model
      */
     public function scopeByType($query, $type)
     {
-        return $query->where('type_notification', $type);
+        return $query->where('type', $type);
     }
 
     /**

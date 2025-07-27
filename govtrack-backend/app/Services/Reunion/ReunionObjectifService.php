@@ -13,13 +13,10 @@ class ReunionObjectifService
     /**
      * Créer un nouvel objectif de réunion
      */
-    public function createObjectif(array $data, int $reunionId, int $userId): ReunionSujetObjectif
+    public function createObjectif(array $data, int $userId): ReunionSujetObjectif
     {
         try {
             DB::beginTransaction();
-
-            // Vérifier que la réunion existe
-            $reunion = Reunion::findOrFail($reunionId);
 
             $objectif = ReunionSujetObjectif::create([
                 'reunion_sujet_id' => $data['reunion_sujet_id'],
@@ -38,7 +35,6 @@ class ReunionObjectifService
 
             Log::info('Objectif de réunion créé', [
                 'objectif_id' => $objectif->id,
-                'reunion_id' => $reunionId,
                 'titre' => $objectif->titre,
                 'user_id' => $userId
             ]);
@@ -49,7 +45,6 @@ class ReunionObjectifService
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Erreur lors de la création de l\'objectif', [
-                'reunion_id' => $reunionId,
                 'error' => $e->getMessage(),
                 'user_id' => $userId
             ]);
@@ -60,14 +55,11 @@ class ReunionObjectifService
     /**
      * Créer plusieurs objectifs de réunion en lot
      */
-    public function createMultipleObjectifs(array $objectifsList, int $reunionId, int $userId): array
+    public function createMultipleObjectifs(array $objectifsList, int $userId): array
     {
         DB::beginTransaction();
 
         try {
-            // Vérifier que la réunion existe
-            $reunion = Reunion::findOrFail($reunionId);
-
             $objectifsCrees = [];
             $erreurs = [];
 
@@ -92,7 +84,6 @@ class ReunionObjectifService
 
                     Log::info('Objectif de réunion créé en lot', [
                         'objectif_id' => $objectif->id,
-                        'reunion_id' => $reunionId,
                         'titre' => $objectif->titre,
                         'user_id' => $userId
                     ]);
@@ -125,7 +116,6 @@ class ReunionObjectifService
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Erreur lors de la création multiple des objectifs', [
-                'reunion_id' => $reunionId,
                 'objectifs_list' => $objectifsList,
                 'user_id' => $userId,
                 'error' => $e->getMessage()
@@ -164,7 +154,6 @@ class ReunionObjectifService
 
             Log::info('Objectif de réunion mis à jour', [
                 'objectif_id' => $objectif->id,
-                'reunion_id' => $objectif->reunion_id,
                 'user_id' => $userId
             ]);
 
@@ -191,7 +180,7 @@ class ReunionObjectifService
             DB::beginTransaction();
 
             $objectif = ReunionSujetObjectif::findOrFail($objectifId);
-            $sujetId = $objectif->sujet_id;
+            $sujetId = $objectif->reunion_sujet_id;
 
             $objectif->delete();
 
@@ -221,7 +210,7 @@ class ReunionObjectifService
     public function getObjectifs(int $sujetId, array $filters = []): array
     {
         try {
-            $query = ReunionSujetObjectif::where('sujet_id', $sujetId)
+            $query = ReunionSujetObjectif::where('reunion_sujet_id', $sujetId)
                 ->with(['sujet']);
 
             // Filtres
@@ -240,7 +229,7 @@ class ReunionObjectifService
                 });
             }
 
-            $objectifs = $query->orderBy('ordre')->orderBy('created_at')->get();
+            $objectifs = $query->orderBy('ordre')->orderBy('date_creation')->get();
 
             return [
                 'objectifs' => $objectifs,
@@ -251,8 +240,7 @@ class ReunionObjectifService
         } catch (Exception $e) {
             Log::error('Erreur lors de la récupération des objectifs', [
                 'sujet_id' => $sujetId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -268,8 +256,7 @@ class ReunionObjectifService
         } catch (Exception $e) {
             Log::error('Erreur lors de la récupération de l\'objectif', [
                 'objectif_id' => $objectifId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -322,13 +309,13 @@ class ReunionObjectifService
             DB::beginTransaction();
 
             $objectif = ReunionSujetObjectif::findOrFail($objectifId);
-            $ancienneProgression = $objectif->progression;
+            $ancienneProgression = $objectif->taux_realisation;
 
             // Valider la progression (0-100)
             $progression = max(0, min(100, $progression));
 
             $objectif->update([
-                'progression' => $progression,
+                'taux_realisation' => $progression,
                 'modifier_par' => $userId,
             ]);
 
@@ -360,14 +347,14 @@ class ReunionObjectifService
     public function getStats(int $sujetId): array
     {
         try {
-            $stats = ReunionSujetObjectif::where('sujet_id', $sujetId)
+            $stats = ReunionSujetObjectif::where('reunion_sujet_id', $sujetId)
                 ->selectRaw('
                     COUNT(*) as total_objectifs,
                     COUNT(CASE WHEN statut = "EN_COURS" THEN 1 END) as en_cours,
                     COUNT(CASE WHEN statut = "ATTEINT" THEN 1 END) as atteint,
                     COUNT(CASE WHEN statut = "EN_RETARD" THEN 1 END) as en_retard,
                     COUNT(CASE WHEN actif = 1 THEN 1 END) as actifs,
-                    AVG(progression) as progression_moyenne
+                    AVG(taux_realisation) as progression_moyenne
                 ')
                 ->first();
 
@@ -385,8 +372,7 @@ class ReunionObjectifService
         } catch (Exception $e) {
             Log::error('Erreur lors du calcul des statistiques des objectifs', [
                 'sujet_id' => $sujetId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -398,7 +384,7 @@ class ReunionObjectifService
     public function evaluerRealisation(int $sujetId): array
     {
         try {
-            $objectifs = ReunionSujetObjectif::where('sujet_id', $sujetId)->get();
+            $objectifs = ReunionSujetObjectif::where('reunion_sujet_id', $sujetId)->get();
 
             $evaluation = [
                 'total_objectifs' => $objectifs->count(),
@@ -415,11 +401,11 @@ class ReunionObjectifService
                     ($evaluation['objectifs_realises'] / $evaluation['total_objectifs']) * 100,
                     2
                 );
-                $evaluation['progression_moyenne'] = round($objectifs->avg('progression'), 2);
+                $evaluation['progression_moyenne'] = round($objectifs->avg('taux_realisation'), 2);
 
-                // Objectifs en retard (progression < 50% et date_objectif dépassée)
+                // Objectifs en retard (taux_realisation < 50% et date_objectif dépassée)
                 $evaluation['objectifs_en_retard_date'] = $objectifs
-                    ->where('progression', '<', 50)
+                    ->where('taux_realisation', '<', 50)
                     ->where('date_objectif', '<', now())
                     ->count();
             }
@@ -429,8 +415,7 @@ class ReunionObjectifService
         } catch (Exception $e) {
             Log::error('Erreur lors de l\'évaluation des objectifs', [
                 'sujet_id' => $sujetId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }

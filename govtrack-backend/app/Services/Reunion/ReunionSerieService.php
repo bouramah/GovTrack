@@ -429,10 +429,10 @@ class ReunionSerieService
             DB::beginTransaction();
 
             $reunionsGenerees = [];
-            $dateDebut = Carbon::parse($serie->date_debut);
-            $dateFin = $serie->date_fin ? Carbon::parse($serie->date_fin) : $dateDebut->copy()->addMonths(6);
+            $dateDebut = Carbon::parse($serie->date_debut_serie);
+            $dateFin = $serie->date_fin_serie ? Carbon::parse($serie->date_fin_serie) : $dateDebut->copy()->addMonths(6);
             $heureDebut = $serie->heure_debut;
-            $heureFin = $serie->heure_fin;
+            $heureFin = $serie->heure_fin; // Utilise l'accesseur getHeureFinAttribute()
 
             // Calculer les dates des réunions selon la périodicité
             $datesReunions = $this->calculerDatesReunions($serie, $dateDebut, $dateFin);
@@ -448,13 +448,16 @@ class ReunionSerieService
                     $reunionData = [
                         'titre' => $serie->nom,
                         'description' => $serie->description,
-                        'type_reunion_id' => $data['type_reunion_id'] ?? 1,
-                        'date_debut' => $dateReunion->format('Y-m-d') . ' ' . $heureDebut,
+                        'type_reunion_id' => $data['type_reunion_id'] ?? $serie->type_reunion_id,
+                        'niveau_complexite_actuel' => $serie->typeReunion->niveau_complexite ?? 'INTERMEDIAIRE',
+                        'date_debut' => $dateReunion->format('Y-m-d') . ' ' . $heureDebut->format('H:i:s'),
                         'date_fin' => $dateReunion->format('Y-m-d') . ' ' . $heureFin,
-                        'lieu' => $data['lieu'] ?? null,
+                        'lieu' => $data['lieu'] ?? $serie->lieu_defaut,
                         'type_lieu' => $data['type_lieu'] ?? 'PHYSIQUE',
                         'periodicite' => 'PONCTUELLE',
                         'serie_id' => $serie->id,
+                        'fonctionnalites_actives' => $serie->typeReunion->fonctionnalites_actives ?? [],
+                        'ordre_du_jour_type' => 'EXPLICITE',
                         'statut' => 'PLANIFIEE',
                         'creer_par' => $serie->creer_par,
                         'modifier_par' => $serie->modifier_par,

@@ -55,7 +55,7 @@ class ReunionActionController extends Controller
                 'responsable_id' => 'required|integer|exists:users,id',
                 'date_limite' => 'nullable|date|after:today',
                 'priorite' => 'nullable|string|in:FAIBLE,NORMALE,ELEVEE,CRITIQUE',
-                'commentaires' => 'nullable|array',
+                'commentaire' => 'nullable|string|max:1000',
             ]);
 
             if ($validator->fails()) {
@@ -104,10 +104,10 @@ class ReunionActionController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'responsable_id' => 'nullable|integer|exists:users,id',
                 'date_limite' => 'nullable|date',
-                'statut' => 'nullable|string|in:EN_ATTENTE,EN_COURS,TERMINEE,ANNULEE',
+                'statut' => 'nullable|string|in:A_FAIRE,EN_COURS,TERMINEE',
                 'priorite' => 'nullable|string|in:FAIBLE,NORMALE,ELEVEE,CRITIQUE',
                 'progression' => 'nullable|integer|min:0|max:100',
-                'commentaires' => 'nullable|array',
+                'commentaire' => 'nullable|string|max:1000',
             ]);
 
             if ($validator->fails()) {
@@ -167,7 +167,7 @@ class ReunionActionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'statut' => 'required|string|in:EN_ATTENTE,EN_COURS,TERMINEE,ANNULEE',
+                'statut' => 'required|string|in:A_FAIRE,EN_COURS,TERMINEE',
             ]);
 
             if ($validator->fails()) {
@@ -292,4 +292,4 @@ class ReunionActionController extends Controller
             ], 500);
         }
     }
-} 
+}

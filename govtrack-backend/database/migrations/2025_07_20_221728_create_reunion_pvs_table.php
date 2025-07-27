@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('version')->default(1);
             $table->unsignedBigInteger('valide_par_id')->nullable();
             $table->timestamp('valide_le')->nullable();
-            $table->enum('statut', ['BROUILLON', 'VALIDE', 'PUBLIE']);
+            $table->enum('statut', ['BROUILLON', 'EN_ATTENTE', 'VALIDE', 'REJETE', 'PUBLIE']);
             $table->text('commentaire_validation')->nullable();
             $table->boolean('notifications_envoyees')->default(false);
             $table->timestamp('date_creation')->useCurrent();

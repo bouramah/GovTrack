@@ -1,0 +1,638 @@
+{
+	"info": {
+		"_postman_id": "reunion-serie-service-complete",
+		"name": "GovTrack - ReunionSerieService - Tests Complets",
+		"description": "Collection complète pour tester tous les endpoints de ReunionSerieService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Configuration Initiale",
+			"item": [
+				{
+					"name": "Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.token).to.exist;",
+									"    pm.environment.set(\"admin_token\", jsonData.data.token);",
+									"    pm.environment.set(\"admin_user_id\", jsonData.data.user.id);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.token).to.exist;",
+									"    pm.environment.set(\"user_token\", jsonData.data.token);",
+									"    pm.environment.set(\"user_id\", jsonData.data.user.id);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "ReunionSerieService - Tests Complets",
+			"item": [
+				{
+					"name": "Liste des séries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions?actif=true&periodicite=HEBDOMADAIRE&sort_by=nom&sort_order=asc&per_page=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions"],
+							"query": [
+								{
+									"key": "actif",
+									"value": "true"
+								},
+								{
+									"key": "periodicite",
+									"value": "HEBDOMADAIRE"
+								},
+								{
+									"key": "sort_by",
+									"value": "nom"
+								},
+								{
+									"key": "sort_order",
+									"value": "asc"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.exist;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Créer une série",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"CODIR Hebdomadaire\",\n    \"description\": \"Réunions hebdomadaires du comité de direction\",\n    \"type_reunion_id\": {{type_reunion_codir_id}},\n    \"periodicite\": \"HEBDOMADAIRE\",\n    \"jour_semaine\": 1,\n    \"heure_debut\": \"09:00:00\",\n    \"duree_minutes\": 120,\n    \"lieu_defaut\": \"Salle de réunion principale\",\n    \"actif\": true,\n    \"date_debut\": \"2025-01-06\",\n    \"date_fin\": \"2025-12-29\",\n    \"suspendue\": false,\n    \"configuration_recurrence\": {\n        \"intervalle\": 1,\n        \"exclusions\": [],\n        \"notifications\": {\n            \"rappel_24h\": true,\n            \"rappel_1h\": true\n        }\n    },\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.id).to.exist;",
+									"    pm.environment.set(\"serie_test_id\", jsonData.data.id);",
+									"    console.log(\"Série créée avec ID:\", jsonData.data.id);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Détails d'une série",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.id).to.equal(parseInt(pm.environment.get(\"serie_test_id\")));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Mettre à jour une série",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"CODIR Hebdomadaire - Modifié\",\n    \"description\": \"Réunions hebdomadaires du comité de direction - Mise à jour\",\n    \"duree_minutes\": 90,\n    \"lieu_defaut\": \"Salle de réunion principale - Modifiée\",\n    \"configuration_recurrence\": {\n        \"intervalle\": 1,\n        \"exclusions\": [\"2025-01-20\"],\n        \"notifications\": {\n            \"rappel_24h\": true,\n            \"rappel_1h\": true,\n            \"rappel_30min\": true\n        }\n    },\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.nom).to.include(\"Modifié\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Générer des réunions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date_debut\": \"2025-01-06\",\n    \"date_fin\": \"2025-01-27\",\n    \"forcer_regeneration\": false,\n    \"notifications\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}/generer-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}", "generer-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.reunions_generes).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Régénérer des réunions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date_debut\": \"2025-01-06\",\n    \"date_fin\": \"2025-01-27\",\n    \"supprimer_existantes\": true,\n    \"notifications\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}/regenerer-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}", "regenerer-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.reunions_regeneres).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Activer/Désactiver une série",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"actif\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}/toggle-active",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}", "toggle-active"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.actif).to.be.false;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Statistiques des séries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "stats"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.total_series).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Tests de Permissions",
+			"item": [
+				{
+					"name": "Accès non autorisé - Liste",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Création non autorisée",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Série Test\",\n    \"description\": \"Test\",\n    \"type_reunion_id\": 1,\n    \"periodicite\": \"HEBDOMADAIRE\",\n    \"jour_semaine\": 1,\n    \"heure_debut\": \"09:00:00\",\n    \"duree_minutes\": 60,\n    \"lieu_defaut\": \"Test\",\n    \"date_debut\": \"2025-01-06\",\n    \"date_fin\": \"2025-12-29\",\n    \"configuration_recurrence\": {}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Tests de Validation",
+			"item": [
+				{
+					"name": "Données invalides - Création",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"\",\n    \"description\": \"\",\n    \"type_reunion_id\": 999,\n    \"periodicite\": \"INVALIDE\",\n    \"jour_semaine\": 8,\n    \"heure_debut\": \"25:00:00\",\n    \"duree_minutes\": 5,\n    \"lieu_defaut\": \"\",\n    \"date_debut_serie\": \"2024-01-01\",\n    \"date_fin_serie\": \"2024-01-01\",\n    \"configuration_recurrence\": \"invalid\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 422\", function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test(\"Response has validation errors\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData.errors).to.exist;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Série inexistante",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/999999",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "999999"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Nettoyage",
+			"item": [
+				{
+					"name": "Supprimer la série de test",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/series-reunions/{{serie_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "series-reunions", "{{serie_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    console.log(\"Série supprimée avec succès\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000"
+		}
+	]
+}

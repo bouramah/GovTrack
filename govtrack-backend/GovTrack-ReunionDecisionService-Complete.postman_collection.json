@@ -1,0 +1,795 @@
+{
+	"info": {
+		"_postman_id": "reunion-decision-service-complete",
+		"name": "GovTrack - ReunionDecisionService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du ReunionDecisionService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Lister les décisions d'une réunion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.length > 0) {",
+							"    pm.collectionVariables.set('decision_test_id', pm.response.json().data[0].id);",
+							"    console.log('Decision test ID set to:', pm.response.json().data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Créer une nouvelle décision",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reunion_sujet_id\": 2,\n    \"texte_decision\": \"Approuver le budget Q4 pour le projet Infrastructure Numérique\",\n    \"type\": \"DEFINITIVE\",\n    \"responsables_ids\": [1, 2],\n    \"date_limite\": \"2025-12-31\",\n    \"priorite\": \"ELEVEE\",\n    \"commentaire\": \"Décision importante pour la continuité du projet\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"pm.test('Decision has required fields', function () {",
+							"    const response = pm.response.json();",
+							"    const decision = response.data;",
+							"    pm.expect(decision).to.have.property('id');",
+							"    pm.expect(decision).to.have.property('texte_decision');",
+							"    pm.expect(decision).to.have.property('type');",
+							"    pm.expect(decision).to.have.property('statut');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.id) {",
+							"    pm.collectionVariables.set('decision_created_id', pm.response.json().data.id);",
+							"    console.log('Decision created ID set to:', pm.response.json().data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Mettre à jour une décision",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"texte_decision\": \"Approuver le budget Q4 pour le projet Infrastructure Numérique - Mise à jour\",\n    \"type\": \"DEFINITIVE\",\n    \"responsables_ids\": [1, 2, 3],\n    \"date_limite\": \"2025-11-30\",\n    \"statut\": \"EN_COURS\",\n    \"priorite\": \"CRITIQUE\",\n    \"commentaire\": \"Décision mise à jour avec nouvelle échéance\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{decision_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{decision_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Decision was updated', function () {",
+							"    const response = pm.response.json();",
+							"    const decision = response.data;",
+							"    pm.expect(decision.statut).to.equal('EN_COURS');",
+							"    pm.expect(decision.priorite).to.equal('CRITIQUE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Changer le statut d'une décision",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"statut\": \"TERMINEE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{decision_created_id}}/statut",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{decision_created_id}}",
+						"statut"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Status was changed to TERMINEE', function () {",
+							"    const response = pm.response.json();",
+							"    const decision = response.data;",
+							"    pm.expect(decision.statut).to.equal('TERMINEE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Obtenir les statistiques des décisions",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/stats?reunion_id={{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"stats"
+					],
+					"query": [
+						{
+							"key": "reunion_id",
+							"value": "{{reunion_test_id}}"
+						}
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has stats data', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.data).to.have.property('total_decisions');",
+							"    pm.expect(response.data).to.have.property('decisions_definitives');",
+							"    pm.expect(response.data).to.have.property('decisions_provisoires');",
+							"    pm.expect(response.data).to.have.property('decisions_en_attente');",
+							"    pm.expect(response.data).to.have.property('decisions_en_cours');",
+							"    pm.expect(response.data).to.have.property('decisions_terminees');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Obtenir les décisions en retard",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/en-retard",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"en-retard"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"console.log('Decisions en retard:', pm.response.json().data.length);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Créer une décision provisoire",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reunion_sujet_id\": 4,\n    \"texte_decision\": \"Décision provisoire sur le budget Q4\",\n    \"type\": \"PROVISOIRE\",\n    \"responsables_ids\": [1],\n    \"date_limite\": \"2025-10-15\",\n    \"priorite\": \"NORMALE\",\n    \"commentaire\": \"Décision provisoire en attente de validation\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Decision type is PROVISOIRE', function () {",
+							"    const response = pm.response.json();",
+							"    const decision = response.data;",
+							"    pm.expect(decision.type).to.equal('PROVISOIRE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Créer une décision sans sujet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"texte_decision\": \"Décision générale sur l'organisation des réunions\",\n    \"type\": \"DEFINITIVE\",\n    \"responsables_ids\": [1, 2],\n    \"date_limite\": \"2025-12-31\",\n    \"priorite\": \"FAIBLE\",\n    \"commentaire\": \"Décision générale sans sujet spécifique\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Decision has no subject', function () {",
+							"    const response = pm.response.json();",
+							"    const decision = response.data;",
+							"    pm.expect(decision.reunion_sujet_id).to.be.null;",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Test de validation - Champs manquants",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"DEFINITIVE\",\n    \"priorite\": \"NORMALE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain texte_decision', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('texte_decision');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Test de validation - Type invalide",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"texte_decision\": \"Test de validation\",\n    \"type\": \"INVALIDE\",\n    \"responsables_ids\": [1],\n    \"date_limite\": \"2025-12-31\",\n    \"priorite\": \"NORMALE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain type', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('type');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Supprimer une décision",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/decisions/{{decision_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"decisions",
+						"{{decision_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"console.log('Decision deleted successfully');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "reunion_test_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "decision_test_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "decision_created_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

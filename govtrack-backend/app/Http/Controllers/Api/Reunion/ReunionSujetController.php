@@ -23,7 +23,7 @@ class ReunionSujetController extends Controller
     public function getSujets(Request $request, int $reunionId): JsonResponse
     {
         try {
-            $filters = $request->only(['statut', 'priorite', 'categorie', 'responsable_id', 'search']);
+            $filters = $request->only(['statut', 'projet_id', 'entite_id', 'niveau_detail', 'search']);
 
             $result = $this->sujetService->getSujets($reunionId, $filters);
 
@@ -189,15 +189,15 @@ class ReunionSujetController extends Controller
             $validator = Validator::make($request->all(), [
                 'titre' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
-                'priorite' => 'nullable|in:haute,normale,basse',
-                'categorie' => 'nullable|string|max:100',
-                'duree_estimee' => 'nullable|integer|min:1',
-                'statut' => 'nullable|in:en_attente,en_cours,termine,annule',
-                'responsable_id' => 'nullable|exists:users,id',
-                'date_limite' => 'nullable|date',
-                'tags' => 'nullable|array',
-                'documents_requis' => 'nullable|array',
-                'notes_internes' => 'nullable|string',
+                'difficulte_globale' => 'nullable|string',
+                'recommandation' => 'nullable|string',
+                'statut' => 'nullable|in:RESOLU,EN_COURS_DE_RESOLUTION,BLOQUE,AVIS,APPROUVE,REJETE,EN_ATTENTE',
+                'commentaire' => 'nullable|string',
+                'projet_id' => 'nullable|exists:projets,id',
+                'entite_id' => 'nullable|exists:entites,id',
+                'niveau_detail' => 'nullable|in:SIMPLE,DETAILLE',
+                'objectifs_actifs' => 'nullable|boolean',
+                'difficultes_actives' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -254,7 +254,7 @@ class ReunionSujetController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'statut' => 'required|in:en_attente,en_cours,termine,annule',
+                'statut' => 'required|in:EN_ATTENTE,EN_COURS_DE_RESOLUTION,RESOLU,BLOQUE,AVIS,APPROUVE,REJETE',
             ]);
 
             if ($validator->fails()) {
@@ -265,7 +265,7 @@ class ReunionSujetController extends Controller
                 ], 422);
             }
 
-            $sujet = $this->sujetService->changeStatut($sujetId, $request->statut);
+            $sujet = $this->sujetService->changeStatut($sujetId, $request->statut, $request->user()->id);
 
             return response()->json([
                 'success' => true,
@@ -290,7 +290,8 @@ class ReunionSujetController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'ordre_sujets' => 'required|array',
-                'ordre_sujets.*' => 'integer|exists:reunion_sujets,id',
+                'ordre_sujets.*.id' => 'required|integer|exists:reunion_sujets,id',
+                'ordre_sujets.*.ordre' => 'required|integer|min:1',
             ]);
 
             if ($validator->fails()) {

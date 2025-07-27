@@ -1,0 +1,958 @@
+{
+	"info": {
+		"_postman_id": "reunion-pv-service-complete",
+		"name": "GovTrack - ReunionPVService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du ReunionPVService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Lister les PVs d'une réunion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.length > 0) {",
+							"    pm.collectionVariables.set('pv_test_id', pm.response.json().data[0].id);",
+							"    console.log('PV test ID set to:', pm.response.json().data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Créer un nouveau PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"contenu\": \"Procès-verbal de la réunion du {{reunion_test_id}}\\n\\n**Ordre du jour :**\\n- Point 1 : Présentation du projet\\n- Point 2 : Discussion des objectifs\\n- Point 3 : Planification des actions\\n\\n**Décisions prises :**\\n- Approbation du budget initial\\n- Validation du planning de développement\\n- Désignation des responsables\\n\\n**Actions à suivre :**\\n- Finaliser le cahier des charges\\n- Organiser la prochaine réunion\\n- Envoyer les invitations aux participants\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"pm.test('PV has required fields', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv).to.have.property('id');",
+							"    pm.expect(pv).to.have.property('contenu');",
+							"    pm.expect(pv).to.have.property('statut');",
+							"    pm.expect(pv).to.have.property('reunion_id');",
+							"    pm.expect(pv.statut).to.equal('BROUILLON');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.id) {",
+							"    pm.collectionVariables.set('pv_created_id', pm.response.json().data.id);",
+							"    console.log('PV created ID set to:', pm.response.json().data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Récupérer un PV spécifique",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"pm.test('PV has correct ID', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.id).to.equal({{pv_created_id}});",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Mettre à jour un PV",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"contenu\": \"Procès-verbal de la réunion du {{reunion_test_id}} - VERSION MISE À JOUR\\n\\n**Ordre du jour :**\\n- Point 1 : Présentation du projet\\n- Point 2 : Discussion des objectifs\\n- Point 3 : Planification des actions\\n- Point 4 : Nouvelles exigences ajoutées\\n\\n**Décisions prises :**\\n- Approbation du budget initial\\n- Validation du planning de développement\\n- Désignation des responsables\\n- Ajout de nouvelles fonctionnalités\\n\\n**Actions à suivre :**\\n- Finaliser le cahier des charges\\n- Organiser la prochaine réunion\\n- Envoyer les invitations aux participants\\n- Préparer la démonstration\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('PV was updated', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.contenu).to.include('VERSION MISE À JOUR');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Soumettre un PV pour validation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_created_id}}/soumettre",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_created_id}}",
+						"soumettre"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('PV status changed to EN_ATTENTE', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.statut).to.equal('EN_ATTENTE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Valider un PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"commentaire_validation\": \"PV validé avec succès. Le contenu est complet et conforme aux exigences.\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_created_id}}/valider",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_created_id}}",
+						"valider"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('PV status changed to VALIDE', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.statut).to.equal('VALIDE');",
+							"    pm.expect(pv).to.have.property('valide_par_id');",
+							"    pm.expect(pv).to.have.property('valide_le');",
+							"    pm.expect(pv).to.have.property('commentaire_validation');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Créer un second PV pour tester le rejet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"contenu\": \"Second PV pour test de rejet\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.id) {",
+							"    pm.collectionVariables.set('pv_reject_id', pm.response.json().data.id);",
+							"    console.log('PV reject ID set to:', pm.response.json().data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Rejeter un PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"commentaire_validation\": \"PV rejeté : Le contenu est incomplet et nécessite des corrections importantes.\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_reject_id}}/rejeter",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_reject_id}}",
+						"rejeter"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('PV status changed to REJETE', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.statut).to.equal('REJETE');",
+							"    pm.expect(pv).to.have.property('valide_par_id');",
+							"    pm.expect(pv).to.have.property('valide_le');",
+							"    pm.expect(pv).to.have.property('commentaire_validation');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Obtenir les statistiques des PVs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/stats",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"stats"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has stats data', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.data).to.have.property('total');",
+							"    pm.expect(response.data).to.have.property('brouillons');",
+							"    pm.expect(response.data).to.have.property('en_attente');",
+							"    pm.expect(response.data).to.have.property('valides');",
+							"    pm.expect(response.data).to.have.property('rejetes');",
+							"    pm.expect(response.data).to.have.property('derniere_version');",
+							"    pm.expect(response.data).to.have.property('pv_valide');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Récupérer le dernier PV validé",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/dernier-valide",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"dernier-valide"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"pm.test('PV is validated', function () {",
+							"    const response = pm.response.json();",
+							"    const pv = response.data;",
+							"    pm.expect(pv.statut).to.equal('VALIDE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Test de validation - Contenu manquant",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain contenu', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('contenu');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Test de validation - Rejet sans commentaire",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_reject_id}}/rejeter",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_reject_id}}",
+						"rejeter"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain commentaire_validation', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('commentaire_validation');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Supprimer un PV",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/pv/{{pv_reject_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"pv",
+						"{{pv_reject_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"console.log('PV deleted successfully');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "reunion_test_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "pv_test_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pv_created_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pv_reject_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

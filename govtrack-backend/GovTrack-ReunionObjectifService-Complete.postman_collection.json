@@ -1,0 +1,545 @@
+{
+	"info": {
+		"_postman_id": "reunion-objectif-service-complete",
+		"name": "GovTrack - ReunionObjectifService Complete",
+		"description": "Collection complète pour tester tous les endpoints de ReunionObjectifService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer tous les objectifs d'un sujet",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/{{sujet_test_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "{{sujet_test_id}}"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});",
+							"",
+							"if (pm.response.json().success && pm.response.json().data.length > 0) {",
+							"    pm.collectionVariables.set(\"objectif_test_id\", pm.response.json().data[0].id);",
+							"    console.log(\"Objectif test ID défini:\", pm.response.json().data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Récupérer un objectif spécifique",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/objectif/{{objectif_test_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "objectif", "{{objectif_test_id}}"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Créer un objectif",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reunion_sujet_id\": {{sujet_test_id}},\n    \"titre\": \"Objectif Test - Amélioration des performances\",\n    \"description\": \"Augmenter les performances du système de 20%\",\n    \"cible\": \"20% d'amélioration\",\n    \"taux_realisation\": 0,\n    \"pourcentage_decaissement\": 0,\n    \"date_objectif\": \"2025-08-15\",\n    \"statut\": \"EN_COURS\",\n    \"ordre\": 1,\n    \"actif\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});",
+							"",
+							"if (pm.response.json().success && pm.response.json().data) {",
+							"    pm.collectionVariables.set(\"objectif_created_id\", pm.response.json().data.id);",
+							"    console.log(\"Objectif créé avec ID:\", pm.response.json().data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Créer plusieurs objectifs en lot",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"objectifs\": [\n        {\n            \"reunion_sujet_id\": {{sujet_test_id}},\n            \"titre\": \"Objectif 1 - Formation équipe\",\n            \"description\": \"Former l'équipe sur les nouvelles technologies\",\n            \"cible\": \"100% de l'équipe formée\",\n            \"taux_realisation\": 0,\n            \"pourcentage_decaissement\": 0,\n            \"date_objectif\": \"2025-08-20\",\n            \"statut\": \"EN_COURS\",\n            \"ordre\": 1,\n            \"actif\": true\n        },\n        {\n            \"reunion_sujet_id\": {{sujet_test_id}},\n            \"titre\": \"Objectif 2 - Documentation\",\n            \"description\": \"Compléter la documentation technique\",\n            \"cible\": \"Documentation 100% complète\",\n            \"taux_realisation\": 0,\n            \"pourcentage_decaissement\": 0,\n            \"date_objectif\": \"2025-08-25\",\n            \"statut\": \"EN_COURS\",\n            \"ordre\": 2,\n            \"actif\": true\n        }\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/multiple",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "multiple"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});",
+							"",
+							"pm.test(\"Data is an array\", function () {",
+							"    pm.expect(pm.response.json().data).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Mettre à jour un objectif",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"titre\": \"Objectif Test - Amélioration des performances (Modifié)\",\n    \"description\": \"Augmenter les performances du système de 25% - Mise à jour\",\n    \"cible\": \"25% d'amélioration\",\n    \"taux_realisation\": 15,\n    \"pourcentage_decaissement\": 30,\n    \"date_objectif\": \"2025-08-20\",\n    \"statut\": \"EN_COURS\",\n    \"ordre\": 1,\n    \"actif\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/{{objectif_test_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "{{objectif_test_id}}"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Supprimer un objectif",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/{{objectif_created_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "{{objectif_created_id}}"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Récupérer les statistiques des objectifs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/{{sujet_test_id}}/stats",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "{{sujet_test_id}}", "stats"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('data');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Tester avec filtres",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/{{sujet_test_id}}?statut=EN_COURS&actif=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "{{sujet_test_id}}"],
+					"query": [
+						{
+							"key": "statut",
+							"value": "EN_COURS"
+						},
+						{
+							"key": "actif",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Test d'erreur - Objectif inexistant",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs/objectif/99999",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs", "objectif", "99999"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is false\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.false;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Test d'erreur - Validation invalide",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"titre\": \"\",\n    \"statut\": \"INVALID_STATUS\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/objectifs",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "objectifs"]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test(\"Response has success property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is false\", function () {",
+							"    pm.expect(pm.response.json().success).to.be.false;",
+							"});",
+							"",
+							"pm.test(\"Response has errors property\", function () {",
+							"    pm.expect(pm.response.json()).to.have.property('errors');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "sujet_test_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "objectif_test_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "objectif_created_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

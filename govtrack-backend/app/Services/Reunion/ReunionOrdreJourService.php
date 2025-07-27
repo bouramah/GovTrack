@@ -35,8 +35,7 @@ class ReunionOrdreJourService
 
             $ordreJour = ReunionOrdreJour::with([
                 'reunion',
-                'responsable',
-                'sujets'
+                'responsable'
             ])
             ->where('reunion_id', $reunionId)
             ->orderBy('ordre')
@@ -362,11 +361,21 @@ class ReunionOrdreJourService
                 ];
             }
 
-            foreach ($newOrder as $index => $pointId) {
-                ReunionOrdreJour::where('id', $pointId)
-                    ->where('reunion_id', $reunionId)
-                    ->update(['ordre' => $index + 1]);
+            // Traiter le format de payload (array d'objets avec id et ordre)
+            foreach ($newOrder as $item) {
+                $pointId = is_array($item) ? $item['id'] : $item;
+                $newOrdre = is_array($item) ? $item['ordre'] : null;
+
+                if ($newOrdre !== null) {
+                    // Mettre à jour avec l'ordre spécifié
+                    ReunionOrdreJour::where('id', $pointId)
+                        ->where('reunion_id', $reunionId)
+                        ->update(['ordre' => $newOrdre]);
+                }
             }
+
+            // Réorganiser automatiquement pour éviter les conflits
+            $this->reorganiserOrdre($reunionId);
 
             DB::commit();
 
@@ -498,6 +507,13 @@ class ReunionOrdreJourService
             ->orderBy('ordre')
             ->get();
 
+        // Utiliser des valeurs temporaires pour éviter les conflits de contrainte unique
+        foreach ($points as $index => $point) {
+            // Utiliser une valeur temporaire négative pour éviter les conflits
+            $point->update(['ordre' => -($index + 1)]);
+        }
+
+        // Maintenant mettre à jour avec les vraies valeurs
         foreach ($points as $index => $point) {
             $point->update(['ordre' => $index + 1]);
         }

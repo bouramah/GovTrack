@@ -23,12 +23,16 @@ class ReunionPV extends Model
      * Constantes pour les statuts
      */
     public const STATUT_BROUILLON = 'BROUILLON';
+    public const STATUT_EN_ATTENTE = 'EN_ATTENTE';
     public const STATUT_VALIDE = 'VALIDE';
+    public const STATUT_REJETE = 'REJETE';
     public const STATUT_PUBLIE = 'PUBLIE';
 
     public const STATUTS = [
         self::STATUT_BROUILLON => 'Brouillon',
+        self::STATUT_EN_ATTENTE => 'En attente',
         self::STATUT_VALIDE => 'Validé',
+        self::STATUT_REJETE => 'Rejeté',
         self::STATUT_PUBLIE => 'Publié',
     ];
 
@@ -97,11 +101,27 @@ class ReunionPV extends Model
     }
 
     /**
+     * Scope pour les PV en attente
+     */
+    public function scopeEnAttente($query)
+    {
+        return $query->where('statut', self::STATUT_EN_ATTENTE);
+    }
+
+    /**
      * Scope pour les PV validés
      */
     public function scopeValides($query)
     {
         return $query->where('statut', self::STATUT_VALIDE);
+    }
+
+    /**
+     * Scope pour les PV rejetés
+     */
+    public function scopeRejetes($query)
+    {
+        return $query->where('statut', self::STATUT_REJETE);
     }
 
     /**
@@ -177,7 +197,7 @@ class ReunionPV extends Model
      */
     public function getPeutEtreValideAttribute(): bool
     {
-        return $this->statut === self::STATUT_BROUILLON;
+        return in_array($this->statut, [self::STATUT_BROUILLON, self::STATUT_EN_ATTENTE]);
     }
 
     /**
@@ -195,7 +215,9 @@ class ReunionPV extends Model
     {
         return match($this->statut) {
             self::STATUT_BROUILLON => 'gray',
+            self::STATUT_EN_ATTENTE => 'yellow',
             self::STATUT_VALIDE => 'blue',
+            self::STATUT_REJETE => 'red',
             self::STATUT_PUBLIE => 'green',
             default => 'gray',
         };
@@ -208,7 +230,9 @@ class ReunionPV extends Model
     {
         return match($this->statut) {
             self::STATUT_BROUILLON => 'file-text',
+            self::STATUT_EN_ATTENTE => 'clock',
             self::STATUT_VALIDE => 'check-circle',
+            self::STATUT_REJETE => 'x-circle',
             self::STATUT_PUBLIE => 'globe',
             default => 'file',
         };

@@ -99,10 +99,10 @@ class ReunionNotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'titre' => 'required|string|max:255',
             'message' => 'required|string|max:1000',
-            'type' => 'required|in:INVITATION,RAPPEL,ANNULATION,MODIFICATION,PV_DISPONIBLE,CUSTOM',
+            'type' => 'required|in:CONFIRMATION_PRESENCE,RAPPEL_24H,RAPPEL_1H,RAPPEL_15MIN,PV_DISPONIBLE,RAPPEL_ACTIONS',
             'destinataires' => 'required|array|min:1',
             'destinataires.*.user_id' => 'required|integer|exists:users,id',
-            'destinataires.*.type' => 'nullable|in:INVITATION,RAPPEL,ANNULATION,MODIFICATION,PV_DISPONIBLE,CUSTOM',
+            'destinataires.*.type' => 'nullable|in:CONFIRMATION_PRESENCE,RAPPEL_24H,RAPPEL_1H,RAPPEL_15MIN,PV_DISPONIBLE,RAPPEL_ACTIONS',
             'envoyer_email' => 'nullable|boolean',
         ]);
 
@@ -145,7 +145,7 @@ class ReunionNotificationController extends Controller
     public function sendAutomaticNotifications(Request $request, int $reunionId)
     {
         $validator = Validator::make($request->all(), [
-            'type' => 'required|in:INVITATION,RAPPEL,ANNULATION,MODIFICATION,PV_DISPONIBLE',
+            'type' => 'required|in:CONFIRMATION_PRESENCE,RAPPEL_24H,RAPPEL_1H,RAPPEL_15MIN,PV_DISPONIBLE,RAPPEL_ACTIONS',
         ]);
 
         if ($validator->fails()) {
@@ -202,8 +202,8 @@ class ReunionNotificationController extends Controller
     {
         $user = auth()->user();
 
-        $count = \App\Models\ReunionNotification::where('destinataire_id', $user->id)
-            ->where('lu', false)
+        $count = \App\Models\ReunionNotification::where('envoye_a', $user->id)
+            ->where('statut', 'ENVOYE')
             ->count();
 
         return response()->json([
@@ -220,8 +220,8 @@ class ReunionNotificationController extends Controller
     {
         $user = auth()->user();
 
-        $count = \App\Models\ReunionNotification::where('destinataire_id', $user->id)
-            ->where('lu', true)
+        $count = \App\Models\ReunionNotification::where('envoye_a', $user->id)
+            ->where('statut', 'LU')
             ->delete();
 
         return response()->json([
@@ -238,7 +238,7 @@ class ReunionNotificationController extends Controller
     {
         $user = auth()->user();
 
-        $count = \App\Models\ReunionNotification::where('destinataire_id', $user->id)
+        $count = \App\Models\ReunionNotification::where('envoye_a', $user->id)
             ->delete();
 
         return response()->json([

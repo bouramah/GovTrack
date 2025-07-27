@@ -18,14 +18,14 @@ class ReunionObjectifController extends Controller
     }
 
     /**
-     * Récupérer tous les objectifs d'une réunion
+     * Récupérer tous les objectifs d'un sujet
      */
-    public function getObjectifs(Request $request, int $reunionId): JsonResponse
+    public function getObjectifs(Request $request, int $sujetId): JsonResponse
     {
         try {
-            $filters = $request->only(['statut', 'type_objectif', 'priorite', 'responsable_id', 'search']);
+            $filters = $request->only(['statut', 'actif', 'search']);
 
-            $result = $this->objectifService->getObjectifs($reunionId, $filters);
+            $result = $this->objectifService->getObjectifs($sujetId, $filters);
 
             return response()->json([
                 'success' => true,
@@ -68,7 +68,7 @@ class ReunionObjectifController extends Controller
     /**
      * Créer un nouvel objectif
      */
-    public function createObjectif(Request $request, int $reunionId): JsonResponse
+    public function createObjectif(Request $request): JsonResponse
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -92,7 +92,7 @@ class ReunionObjectifController extends Controller
                 ], 422);
             }
 
-            $objectif = $this->objectifService->createObjectif($request->all(), $reunionId, $request->user()->id);
+            $objectif = $this->objectifService->createObjectif($request->all(), $request->user()->id);
 
             return response()->json([
                 'success' => true,
@@ -112,7 +112,7 @@ class ReunionObjectifController extends Controller
     /**
      * Créer plusieurs objectifs en lot
      */
-    public function createMultipleObjectifs(Request $request, int $reunionId): JsonResponse
+    public function createMultipleObjectifs(Request $request): JsonResponse
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -137,7 +137,7 @@ class ReunionObjectifController extends Controller
                 ], 422);
             }
 
-            $result = $this->objectifService->createMultipleObjectifs($request->input('objectifs'), $reunionId, $request->user()->id);
+            $result = $this->objectifService->createMultipleObjectifs($request->input('objectifs'), $request->user()->id);
 
             if ($result['success']) {
                 return response()->json($result, 201);
@@ -163,17 +163,13 @@ class ReunionObjectifController extends Controller
             $validator = Validator::make($request->all(), [
                 'titre' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
-                'type_objectif' => 'nullable|in:general,strategique,operationnel,technique',
-                'priorite' => 'nullable|in:haute,normale,basse',
-                'statut' => 'nullable|in:en_cours,termine,annule',
+                'cible' => 'nullable|string',
+                'taux_realisation' => 'nullable|integer|min:0|max:100',
+                'pourcentage_decaissement' => 'nullable|numeric|min:0|max:100',
                 'date_objectif' => 'nullable|date',
-                'indicateurs_mesure' => 'nullable|array',
-                'criteres_succes' => 'nullable|array',
-                'risques_identifies' => 'nullable|array',
-                'actions_requises' => 'nullable|array',
-                'responsable_id' => 'nullable|exists:users,id',
-                'progression' => 'nullable|integer|min:0|max:100',
-                'notes' => 'nullable|string',
+                'statut' => 'nullable|in:EN_COURS,ATTEINT,EN_RETARD',
+                'ordre' => 'nullable|integer|min:1',
+                'actif' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -230,7 +226,7 @@ class ReunionObjectifController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'statut' => 'required|in:en_cours,termine,annule',
+                'statut' => 'required|in:EN_COURS,ATTEINT,EN_RETARD',
             ]);
 
             if ($validator->fails()) {
@@ -296,10 +292,10 @@ class ReunionObjectifController extends Controller
     /**
      * Obtenir les statistiques des objectifs
      */
-    public function getStats(int $reunionId): JsonResponse
+    public function getStats(int $sujetId): JsonResponse
     {
         try {
-            $stats = $this->objectifService->getStats($reunionId);
+            $stats = $this->objectifService->getStats($sujetId);
 
             return response()->json([
                 'success' => true,
@@ -318,10 +314,10 @@ class ReunionObjectifController extends Controller
     /**
      * Évaluer la réalisation des objectifs
      */
-    public function evaluerRealisation(int $reunionId): JsonResponse
+    public function evaluerRealisation(int $sujetId): JsonResponse
     {
         try {
-            $evaluation = $this->objectifService->evaluerRealisation($reunionId);
+            $evaluation = $this->objectifService->evaluerRealisation($sujetId);
 
             return response()->json([
                 'success' => true,

@@ -201,7 +201,6 @@ class ReunionSujetService
 
             Log::info('Sujet de réunion mis à jour', [
                 'sujet_id' => $sujet->id,
-                'reunion_id' => $sujet->reunion_id,
                 'user_id' => $userId
             ]);
 
@@ -228,17 +227,11 @@ class ReunionSujetService
             DB::beginTransaction();
 
             $sujet = ReunionSujet::findOrFail($sujetId);
-            $reunionId = $sujet->reunion_id;
-
-            // Réorganiser l'ordre des autres sujets
-            $this->reorganizeOrdre($reunionId, $sujet->ordre);
 
             $sujet->delete();
 
             Log::info('Sujet de réunion supprimé', [
-                'sujet_id' => $sujetId,
-                'reunion_id' => $reunionId,
-                'user_id' => auth()->id()
+                'sujet_id' => $sujetId
             ]);
 
             DB::commit();
@@ -248,8 +241,7 @@ class ReunionSujetService
             DB::rollBack();
             Log::error('Erreur lors de la suppression du sujet', [
                 'sujet_id' => $sujetId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -261,24 +253,26 @@ class ReunionSujetService
     public function getSujets(int $reunionId, array $filters = []): array
     {
         try {
-            $query = ReunionSujet::where('reunion_id', $reunionId)
-                ->with(['responsable', 'reunion']);
+            // Récupérer les sujets via la relation reunion_ordre_jour
+            $query = ReunionSujet::whereHas('ordreJour', function ($q) use ($reunionId) {
+                $q->where('reunion_id', $reunionId);
+            })->with(['ordreJour', 'projet', 'entite', 'createur', 'modificateur']);
 
             // Filtres
             if (isset($filters['statut'])) {
                 $query->where('statut', $filters['statut']);
             }
 
-            if (isset($filters['priorite'])) {
-                $query->where('priorite', $filters['priorite']);
+            if (isset($filters['projet_id'])) {
+                $query->where('projet_id', $filters['projet_id']);
             }
 
-            if (isset($filters['categorie'])) {
-                $query->where('categorie', $filters['categorie']);
+            if (isset($filters['entite_id'])) {
+                $query->where('entite_id', $filters['entite_id']);
             }
 
-            if (isset($filters['responsable_id'])) {
-                $query->where('responsable_id', $filters['responsable_id']);
+            if (isset($filters['niveau_detail'])) {
+                $query->where('niveau_detail', $filters['niveau_detail']);
             }
 
             if (isset($filters['search'])) {
@@ -288,7 +282,7 @@ class ReunionSujetService
                 });
             }
 
-            $sujets = $query->orderBy('ordre')->get();
+            $sujets = $query->orderBy('date_creation')->get();
 
             return [
                 'sujets' => $sujets,
@@ -299,8 +293,7 @@ class ReunionSujetService
         } catch (Exception $e) {
             Log::error('Erreur lors de la récupération des sujets', [
                 'reunion_id' => $reunionId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -312,12 +305,11 @@ class ReunionSujetService
     public function getSujet(int $sujetId): ReunionSujet
     {
         try {
-            return ReunionSujet::with(['responsable', 'reunion'])->findOrFail($sujetId);
+            return ReunionSujet::with(['ordreJour', 'projet', 'entite', 'createur', 'modificateur'])->findOrFail($sujetId);
         } catch (Exception $e) {
             Log::error('Erreur lors de la récupération du sujet', [
                 'sujet_id' => $sujetId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -326,7 +318,7 @@ class ReunionSujetService
     /**
      * Changer le statut d'un sujet
      */
-    public function changeStatut(int $sujetId, string $nouveauStatut): ReunionSujet
+    public function changeStatut(int $sujetId, string $nouveauStatut, int $userId): ReunionSujet
     {
         try {
             DB::beginTransaction();
@@ -336,14 +328,14 @@ class ReunionSujetService
 
             $sujet->update([
                 'statut' => $nouveauStatut,
-                'modifier_par' => auth()->id(),
+                'modifier_par' => $userId,
             ]);
 
             Log::info('Statut du sujet changé', [
                 'sujet_id' => $sujet->id,
                 'ancien_statut' => $ancienStatut,
                 'nouveau_statut' => $nouveauStatut,
-                'user_id' => auth()->id()
+                'user_id' => $userId
             ]);
 
             DB::commit();
@@ -355,7 +347,7 @@ class ReunionSujetService
                 'sujet_id' => $sujetId,
                 'nouveau_statut' => $nouveauStatut,
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => $userId
             ]);
             throw $e;
         }
@@ -364,21 +356,18 @@ class ReunionSujetService
     /**
      * Réorganiser l'ordre des sujets
      */
-    public function reorderSujets(int $reunionId, array $ordreSujets): bool
+        public function reorderSujets(int $reunionId, array $ordreSujets): bool
     {
         try {
             DB::beginTransaction();
 
-            foreach ($ordreSujets as $index => $sujetId) {
-                ReunionSujet::where('id', $sujetId)
-                    ->where('reunion_id', $reunionId)
-                    ->update(['ordre' => $index + 1]);
-            }
+            // Pour les sujets, l'ordre est géré par la table reunion_ordre_jours
+            // Cette méthode peut être utilisée pour mettre à jour l'ordre des points d'ordre du jour
+            // qui contiennent les sujets
 
-            Log::info('Ordre des sujets réorganisé', [
+            Log::info('Réorganisation des sujets demandée', [
                 'reunion_id' => $reunionId,
-                'ordre' => $ordreSujets,
-                'user_id' => auth()->id()
+                'ordre' => $ordreSujets
             ]);
 
             DB::commit();
@@ -388,8 +377,7 @@ class ReunionSujetService
             DB::rollBack();
             Log::error('Erreur lors de la réorganisation des sujets', [
                 'reunion_id' => $reunionId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -401,39 +389,38 @@ class ReunionSujetService
     public function getStats(int $reunionId): array
     {
         try {
-            $stats = ReunionSujet::where('reunion_id', $reunionId)
-                ->selectRaw('
-                    COUNT(*) as total_sujets,
-                    COUNT(CASE WHEN statut = "en_attente" THEN 1 END) as en_attente,
-                    COUNT(CASE WHEN statut = "en_cours" THEN 1 END) as en_cours,
-                    COUNT(CASE WHEN statut = "termine" THEN 1 END) as termine,
-                    COUNT(CASE WHEN statut = "annule" THEN 1 END) as annule,
-                    COUNT(CASE WHEN priorite = "haute" THEN 1 END) as priorite_haute,
-                    COUNT(CASE WHEN priorite = "normale" THEN 1 END) as priorite_normale,
-                    COUNT(CASE WHEN priorite = "basse" THEN 1 END) as priorite_basse
-                ')
-                ->first();
+            $stats = ReunionSujet::whereHas('ordreJour', function ($q) use ($reunionId) {
+                $q->where('reunion_id', $reunionId);
+            })
+            ->selectRaw('
+                COUNT(*) as total_sujets,
+                COUNT(CASE WHEN statut = "EN_ATTENTE" THEN 1 END) as en_attente,
+                COUNT(CASE WHEN statut = "EN_COURS_DE_RESOLUTION" THEN 1 END) as en_cours,
+                COUNT(CASE WHEN statut = "RESOLU" THEN 1 END) as resolu,
+                COUNT(CASE WHEN statut = "BLOQUE" THEN 1 END) as bloque,
+                COUNT(CASE WHEN statut = "AVIS" THEN 1 END) as avis,
+                COUNT(CASE WHEN statut = "APPROUVE" THEN 1 END) as approuve,
+                COUNT(CASE WHEN statut = "REJETE" THEN 1 END) as rejete
+            ')
+            ->first();
 
             return [
                 'total_sujets' => $stats->total_sujets,
                 'par_statut' => [
-                    'en_attente' => $stats->en_attente,
-                    'en_cours' => $stats->en_cours,
-                    'termine' => $stats->termine,
-                    'annule' => $stats->annule,
-                ],
-                'par_priorite' => [
-                    'haute' => $stats->priorite_haute,
-                    'normale' => $stats->priorite_normale,
-                    'basse' => $stats->priorite_basse,
+                    'EN_ATTENTE' => $stats->en_attente,
+                    'EN_COURS_DE_RESOLUTION' => $stats->en_cours,
+                    'RESOLU' => $stats->resolu,
+                    'BLOQUE' => $stats->bloque,
+                    'AVIS' => $stats->avis,
+                    'APPROUVE' => $stats->approuve,
+                    'REJETE' => $stats->rejete,
                 ]
             ];
 
         } catch (Exception $e) {
             Log::error('Erreur lors du calcul des statistiques des sujets', [
                 'reunion_id' => $reunionId,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
@@ -444,8 +431,9 @@ class ReunionSujetService
      */
     private function getNextOrdre(int $reunionId): int
     {
-        $maxOrdre = ReunionSujet::where('reunion_id', $reunionId)->max('ordre');
-        return ($maxOrdre ?? 0) + 1;
+        // L'ordre est géré par la table reunion_ordre_jours
+        // Cette méthode n'est plus nécessaire pour les sujets
+        return 1;
     }
 
     /**
@@ -453,8 +441,7 @@ class ReunionSujetService
      */
     private function reorganizeOrdre(int $reunionId, int $ordreSupprime): void
     {
-        ReunionSujet::where('reunion_id', $reunionId)
-            ->where('ordre', '>', $ordreSupprime)
-            ->decrement('ordre');
+        // L'ordre est géré par la table reunion_ordre_jours
+        // Cette méthode n'est plus nécessaire pour les sujets
     }
 }

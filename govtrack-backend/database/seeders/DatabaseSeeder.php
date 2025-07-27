@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ProjectPermissionsSeeder::class,
             ProjetPermissionsSeeder::class,
             TachePermissionsSeeder::class,
+            ReunionPermissionsSeeder::class,
         ]);
     }
 }

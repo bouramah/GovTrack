@@ -169,14 +169,12 @@ class ReunionPVService
                 'redige_par_id' => $user->id,
                 'redige_le' => now(),
                 'modifie_le' => now(),
-                'version' => 1,
+                'version' => $nouvelleVersion,
                 'valide_par_id' => null,
                 'valide_le' => null,
                 'statut' => 'BROUILLON',
                 'commentaire_validation' => null,
                 'notifications_envoyees' => false,
-                'creer_par' => $user->id,
-                'modifier_par' => $user->id,
             ];
 
             $pv = ReunionPV::create($pvData);
@@ -249,7 +247,7 @@ class ReunionPVService
             }
 
             // Vérifier que le PV peut être modifié
-            if ($pv->statut_validation === 'VALIDE') {
+            if ($pv->statut === 'VALIDE') {
                 return [
                     'success' => false,
                     'message' => 'Impossible de modifier un PV validé'
@@ -258,15 +256,8 @@ class ReunionPVService
 
             // Préparer les données de mise à jour
             $updateData = array_filter([
-                'titre' => $data['titre'] ?? null,
                 'contenu' => $data['contenu'] ?? null,
-                'resume' => $data['resume'] ?? null,
-                'decisions_prises' => $data['decisions_prises'] ?? null,
-                'actions_a_suivre' => $data['actions_a_suivre'] ?? null,
-                'participants_presents' => $data['participants_presents'] ?? null,
-                'participants_absents' => $data['participants_absents'] ?? null,
-                'modifier_par' => $user->id,
-                'date_modification' => now(),
+                'modifie_le' => now(),
             ], function ($value) {
                 return $value !== null;
             });
@@ -342,7 +333,7 @@ class ReunionPVService
             }
 
             // Vérifier que le PV peut être supprimé
-            if ($pv->statut_validation === 'VALIDE') {
+            if ($pv->statut === 'VALIDE') {
                 return [
                     'success' => false,
                     'message' => 'Impossible de supprimer un PV validé'
@@ -431,8 +422,7 @@ class ReunionPVService
                 'valide_par_id' => $user->id,
                 'valide_le' => now(),
                 'commentaire_validation' => $data['commentaire_validation'] ?? null,
-                'modifier_par' => $user->id,
-                'date_modification' => now(),
+                'modifie_le' => now(),
             ]);
 
             // Mettre à jour la réunion pour indiquer qu'elle a un PV validé
@@ -524,8 +514,7 @@ class ReunionPVService
                 'valide_par_id' => $user->id,
                 'valide_le' => now(),
                 'commentaire_validation' => $data['commentaire_validation'] ?? null,
-                'modifier_par' => $user->id,
-                'date_modification' => now(),
+                'modifie_le' => now(),
             ]);
 
             DB::commit();
@@ -587,12 +576,12 @@ class ReunionPVService
 
             $stats = [
                 'total' => $pvs->count(),
-                'brouillons' => $pvs->where('statut_validation', 'BROUILLON')->count(),
-                'en_attente' => $pvs->where('statut_validation', 'EN_ATTENTE')->count(),
-                'valides' => $pvs->where('statut_validation', 'VALIDE')->count(),
-                'rejetes' => $pvs->where('statut_validation', 'REJETE')->count(),
+                'brouillons' => $pvs->where('statut', 'BROUILLON')->count(),
+                'en_attente' => $pvs->where('statut', 'EN_ATTENTE')->count(),
+                'valides' => $pvs->where('statut', 'VALIDE')->count(),
+                'rejetes' => $pvs->where('statut', 'REJETE')->count(),
                 'derniere_version' => $pvs->max('version') ?? 0,
-                'pv_valide' => $pvs->where('statut_validation', 'VALIDE')->first() ? true : false,
+                'pv_valide' => $pvs->where('statut', 'VALIDE')->first() ? true : false,
             ];
 
             return [

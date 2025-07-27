@@ -52,28 +52,7 @@ class ReunionPVController extends Controller
     public function store(Request $request, int $reunionId)
     {
         $validator = Validator::make($request->all(), [
-            'titre' => 'nullable|string|max:255',
             'contenu' => 'required|string',
-            'resume' => 'nullable|string',
-            'decisions_prises' => 'nullable|array',
-            'decisions_prises.*.titre' => 'required_with:decisions_prises|string|max:255',
-            'decisions_prises.*.description' => 'nullable|string',
-            'decisions_prises.*.responsable' => 'nullable|string|max:255',
-            'decisions_prises.*.echeance' => 'nullable|date',
-            'actions_a_suivre' => 'nullable|array',
-            'actions_a_suivre.*.titre' => 'required_with:actions_a_suivre|string|max:255',
-            'actions_a_suivre.*.description' => 'nullable|string',
-            'actions_a_suivre.*.responsable' => 'nullable|string|max:255',
-            'actions_a_suivre.*.echeance' => 'nullable|date',
-            'actions_a_suivre.*.statut' => 'nullable|in:EN_COURS,TERMINEE,ANNULEE',
-            'participants_presents' => 'nullable|array',
-            'participants_presents.*.user_id' => 'required_with:participants_presents|integer|exists:users,id',
-            'participants_presents.*.role' => 'nullable|string|max:100',
-            'participants_absents' => 'nullable|array',
-            'participants_absents.*.user_id' => 'required_with:participants_absents|integer|exists:users,id',
-            'participants_absents.*.motif' => 'nullable|string|max:255',
-            'statut_validation' => 'nullable|in:BROUILLON,EN_ATTENTE,VALIDE,REJETE',
-            'validateur_id' => 'nullable|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -100,26 +79,7 @@ class ReunionPVController extends Controller
     public function update(Request $request, int $reunionId, int $pvId)
     {
         $validator = Validator::make($request->all(), [
-            'titre' => 'nullable|string|max:255',
             'contenu' => 'nullable|string',
-            'resume' => 'nullable|string',
-            'decisions_prises' => 'nullable|array',
-            'decisions_prises.*.titre' => 'required_with:decisions_prises|string|max:255',
-            'decisions_prises.*.description' => 'nullable|string',
-            'decisions_prises.*.responsable' => 'nullable|string|max:255',
-            'decisions_prises.*.echeance' => 'nullable|date',
-            'actions_a_suivre' => 'nullable|array',
-            'actions_a_suivre.*.titre' => 'required_with:actions_a_suivre|string|max:255',
-            'actions_a_suivre.*.description' => 'nullable|string',
-            'actions_a_suivre.*.responsable' => 'nullable|string|max:255',
-            'actions_a_suivre.*.echeance' => 'nullable|date',
-            'actions_a_suivre.*.statut' => 'nullable|in:EN_COURS,TERMINEE,ANNULEE',
-            'participants_presents' => 'nullable|array',
-            'participants_presents.*.user_id' => 'required_with:participants_presents|integer|exists:users,id',
-            'participants_presents.*.role' => 'nullable|string|max:100',
-            'participants_absents' => 'nullable|array',
-            'participants_absents.*.user_id' => 'required_with:participants_absents|integer|exists:users,id',
-            'participants_absents.*.motif' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -264,7 +224,7 @@ class ReunionPVController extends Controller
         }
 
         // Trouver le dernier PV validé
-        $pvValide = collect($pvs['data'])->firstWhere('statut_validation', 'VALIDE');
+        $pvValide = collect($pvs['data'])->firstWhere('statut', 'VALIDE');
 
         if (!$pvValide) {
             return response()->json([

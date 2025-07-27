@@ -1,0 +1,938 @@
+{
+	"info": {
+		"_postman_id": "reunion-action-service-complete",
+		"name": "GovTrack - ReunionActionService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du ReunionActionService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Lister les actions d'une réunion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{reunion_test_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.length > 0) {",
+							"    pm.collectionVariables.set('action_test_id', pm.response.json().data[0].id);",
+							"    console.log('Action test ID set to:', pm.response.json().data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Créer une action liée à une réunion",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reunion_id\": {{reunion_test_id}},\n    \"titre\": \"Finaliser le rapport de la réunion\",\n    \"description\": \"Rédiger et finaliser le rapport détaillé de la réunion\",\n    \"responsable_id\": 1,\n    \"date_limite\": \"2025-12-15\",\n    \"priorite\": \"ELEVEE\",\n    \"commentaire\": \"Action importante pour la continuité du projet\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"pm.test('Action has required fields', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action).to.have.property('id');",
+							"    pm.expect(action).to.have.property('titre');",
+							"    pm.expect(action).to.have.property('statut');",
+							"    pm.expect(action).to.have.property('reunion_id');",
+							"});",
+							"",
+							"if (pm.response.json().data && pm.response.json().data.id) {",
+							"    pm.collectionVariables.set('action_created_id', pm.response.json().data.id);",
+							"    console.log('Action created ID set to:', pm.response.json().data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Créer une action liée à une décision",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"decision_id\": {{decision_test_id}},\n    \"titre\": \"Implémenter la décision approuvée\",\n    \"description\": \"Mettre en œuvre les actions décidées lors de la réunion\",\n    \"responsable_id\": 2,\n    \"date_limite\": \"2025-11-30\",\n    \"priorite\": \"CRITIQUE\",\n    \"commentaire\": \"Action critique pour respecter les délais\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Action has decision_id', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action).to.have.property('decision_id');",
+							"    pm.expect(action.decision_id).to.equal({{decision_test_id}});",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Mettre à jour une action",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"titre\": \"Finaliser le rapport de la réunion - Mise à jour\",\n    \"description\": \"Rédiger et finaliser le rapport détaillé de la réunion avec nouvelles exigences\",\n    \"responsable_id\": 1,\n    \"date_limite\": \"2025-12-10\",\n    \"statut\": \"EN_COURS\",\n    \"priorite\": \"CRITIQUE\",\n    \"progression\": 25,\n    \"commentaire\": \"Action mise à jour avec nouvelle échéance\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{action_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{action_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Action was updated', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action.statut).to.equal('EN_COURS');",
+							"    pm.expect(action.priorite).to.equal('CRITIQUE');",
+							"    pm.expect(action.progression).to.equal(25);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Changer le statut d'une action",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"statut\": \"TERMINEE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{action_created_id}}/statut",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{action_created_id}}",
+						"statut"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Status was changed to TERMINEE', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action.statut).to.equal('TERMINEE');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Mettre à jour la progression d'une action",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"progression\": 75\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{action_created_id}}/progression",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{action_created_id}}",
+						"progression"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Progression was updated', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action.progression).to.equal(75);",
+							"    pm.expect(action.statut).to.equal('EN_COURS');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Obtenir les statistiques des actions",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/stats?reunion_id={{reunion_test_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"stats"
+					],
+					"query": [
+						{
+							"key": "reunion_id",
+							"value": "{{reunion_test_id}}"
+						}
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has stats data', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"    pm.expect(response.data).to.have.property('total_actions');",
+							"    pm.expect(response.data).to.have.property('actions_en_attente');",
+							"    pm.expect(response.data).to.have.property('actions_en_cours');",
+							"    pm.expect(response.data).to.have.property('actions_terminees');",
+							"    pm.expect(response.data).to.have.property('actions_en_retard');",
+							"    pm.expect(response.data).to.have.property('progression_moyenne');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Obtenir les actions en retard",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/en-retard",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"en-retard"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Response has data property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('data');",
+							"});",
+							"",
+							"console.log('Actions en retard:', pm.response.json().data.length);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Créer une action avec progression initiale",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"reunion_id\": {{reunion_test_id}},\n    \"titre\": \"Action avec progression\",\n    \"description\": \"Action avec progression initiale de 50%\",\n    \"responsable_id\": 1,\n    \"date_limite\": \"2025-12-20\",\n    \"priorite\": \"NORMALE\",\n    \"progression\": 50,\n    \"commentaire\": \"Action déjà bien avancée\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test('Action has progression', function () {",
+							"    const response = pm.response.json();",
+							"    const action = response.data;",
+							"    pm.expect(action.progression).to.equal(50);",
+							"    pm.expect(action.statut).to.equal('EN_COURS');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Test de validation - Champs manquants",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\": \"Description sans titre\",\n    \"priorite\": \"NORMALE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain titre', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('titre');",
+							"});",
+							"",
+							"pm.test('Errors contain responsable_id', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('responsable_id');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Test de validation - Aucune relation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"titre\": \"Action sans relation\",\n    \"description\": \"Action sans réunion ni décision\",\n    \"responsable_id\": 1,\n    \"date_limite\": \"2025-12-31\",\n    \"priorite\": \"NORMALE\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain reunion_id', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('reunion_id');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Test de validation - Progression invalide",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"progression\": 150\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{action_created_id}}/progression",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{action_created_id}}",
+						"progression"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 422', function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test('Response has errors property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});",
+							"",
+							"pm.test('Errors contain progression', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.errors).to.have.property('progression');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Supprimer une action",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/actions/{{action_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"actions",
+						"{{action_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Response has success property', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test('Success is true', function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"console.log('Action deleted successfully');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "reunion_test_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "decision_test_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "action_test_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "action_created_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

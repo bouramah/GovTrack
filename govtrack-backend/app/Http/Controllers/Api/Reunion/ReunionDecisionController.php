@@ -92,13 +92,13 @@ class ReunionDecisionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'sujet_id' => 'nullable|integer|exists:reunion_sujets,id',
+                'reunion_sujet_id' => 'nullable|integer|exists:reunion_sujets,id',
                 'texte_decision' => 'nullable|string|max:2000',
-                'type_decision' => 'nullable|string|in:DEFINITIVE,PROVISOIRE',
-                'responsables' => 'nullable|array',
-                'responsables.*' => 'integer|exists:users,id',
+                'type' => 'nullable|string|in:DEFINITIVE,PROVISOIRE',
+                'responsables_ids' => 'nullable|array',
+                'responsables_ids.*' => 'integer|exists:users,id',
                 'date_limite' => 'nullable|date',
-                'statut_execution' => 'nullable|string|in:EN_ATTENTE,EN_COURS,TERMINEE,ANNULEE',
+                'statut' => 'nullable|string|in:EN_ATTENTE,EN_COURS,TERMINEE',
                 'priorite' => 'nullable|string|in:FAIBLE,NORMALE,ELEVEE,CRITIQUE',
                 'commentaire' => 'nullable|string|max:1000',
             ]);
@@ -160,7 +160,7 @@ class ReunionDecisionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'statut' => 'required|string|in:EN_ATTENTE,EN_COURS,TERMINEE,ANNULEE',
+                'statut' => 'required|string|in:EN_ATTENTE,EN_COURS,TERMINEE',
             ]);
 
             if ($validator->fails()) {

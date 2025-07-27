@@ -266,7 +266,7 @@ class ReunionDecisionService
             }
 
             $decision->update([
-                'statut_execution' => $statut,
+                'statut' => $statut,
                 'modifier_par' => $user->id,
                 'date_modification' => now(),
             ]);
@@ -301,12 +301,14 @@ class ReunionDecisionService
         try {
             $decisions = ReunionDecision::with([
                 'reunion',
-                'responsables'
+                'sujet',
+                'createur',
+                'modificateur'
             ])
             ->where('date_limite', '<', now())
-            ->where('statut_execution', '!=', 'TERMINEE')
+            ->where('statut', '!=', 'TERMINEE')
             ->where(function ($query) use ($user) {
-                $query->where('responsables', 'like', '%' . $user->id . '%')
+                $query->where('responsables_ids', 'like', '%' . $user->id . '%')
                       ->orWhere('creer_par', $user->id);
             })
             ->orderBy('date_limite')
@@ -346,7 +348,7 @@ class ReunionDecisionService
 
             if ($user) {
                 $query->where(function ($q) use ($user) {
-                    $q->where('responsables', 'like', '%' . $user->id . '%')
+                    $q->where('responsables_ids', 'like', '%' . $user->id . '%')
                       ->orWhere('creer_par', $user->id);
                 });
             }
@@ -355,13 +357,13 @@ class ReunionDecisionService
 
             $stats = [
                 'total_decisions' => $decisions->count(),
-                'decisions_definitives' => $decisions->where('type_decision', 'DEFINITIVE')->count(),
-                'decisions_provisoires' => $decisions->where('type_decision', 'PROVISOIRE')->count(),
-                'decisions_en_attente' => $decisions->where('statut_execution', 'EN_ATTENTE')->count(),
-                'decisions_en_cours' => $decisions->where('statut_execution', 'EN_COURS')->count(),
-                'decisions_terminees' => $decisions->where('statut_execution', 'TERMINEE')->count(),
+                'decisions_definitives' => $decisions->where('type', 'DEFINITIVE')->count(),
+                'decisions_provisoires' => $decisions->where('type', 'PROVISOIRE')->count(),
+                'decisions_en_attente' => $decisions->where('statut', 'EN_ATTENTE')->count(),
+                'decisions_en_cours' => $decisions->where('statut', 'EN_COURS')->count(),
+                'decisions_terminees' => $decisions->where('statut', 'TERMINEE')->count(),
                 'decisions_en_retard' => $decisions->where('date_limite', '<', now())
-                    ->where('statut_execution', '!=', 'TERMINEE')->count(),
+                    ->where('statut', '!=', 'TERMINEE')->count(),
                 'decisions_critiques' => $decisions->where('priorite', 'CRITIQUE')->count(),
                 'decisions_elevees' => $decisions->where('priorite', 'ELEVEE')->count(),
             ];

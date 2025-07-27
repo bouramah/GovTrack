@@ -135,12 +135,12 @@ class ReunionOrdreJourController extends Controller
             $validator = Validator::make($request->all(), [
                 'titre' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'type' => 'nullable|string|in:DISCUSSION,PRESENTATION,DECISION,INFORMATION',
+                'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
                 'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
                 'responsable_id' => 'nullable|integer|exists:users,id',
                 'ordre' => 'nullable|integer|min:1',
                 'statut' => 'nullable|string|in:PLANIFIE,EN_COURS,TERMINE,REPORTE',
-                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE,COMPLET',
+                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
                 'commentaires' => 'nullable|array',
             ]);
 
@@ -202,7 +202,8 @@ class ReunionOrdreJourController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'new_order' => 'required|array|min:1',
-                'new_order.*' => 'required|integer|exists:reunion_ordre_jours,id',
+                'new_order.*.id' => 'required|integer|exists:reunion_ordre_jours,id',
+                'new_order.*.ordre' => 'required|integer|min:1',
             ]);
 
             if ($validator->fails()) {

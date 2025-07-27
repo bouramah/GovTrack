@@ -37,8 +37,7 @@ return new class extends Migration
             $table->foreign('creer_par')->references('id')->on('users');
             $table->foreign('modifier_par')->references('id')->on('users');
 
-            // Unique constraint
-            $table->unique(['objectif_id', 'entite_id']);
+            // Note: Pas de contrainte unique car plusieurs difficultés peuvent exister pour un même objectif/entité
         });
     }
 

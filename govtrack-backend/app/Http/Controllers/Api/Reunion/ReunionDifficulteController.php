@@ -23,7 +23,7 @@ class ReunionDifficulteController extends Controller
     public function getDifficultes(Request $request, int $reunionId): JsonResponse
     {
         try {
-            $filters = $request->only(['statut', 'type_difficulte', 'niveau_gravite', 'impact_estime', 'responsable_id', 'search']);
+            $filters = $request->only(['statut', 'niveau_difficulte', 'search']);
 
             $result = $this->difficulteService->getDifficultes($reunionId, $filters);
 
@@ -155,18 +155,11 @@ class ReunionDifficulteController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'titre' => 'nullable|string|max:255',
-                'description' => 'nullable|string',
-                'type_difficulte' => 'nullable|in:technique,organisationnel,ressource,communication,autre',
-                'niveau_gravite' => 'nullable|in:critique,elevee,moyenne,faible',
-                'statut' => 'nullable|in:ouverte,en_cours,resolue,escaladee',
-                'impact_estime' => 'nullable|in:eleve,modere,faible',
-                'solutions_proposees' => 'nullable|array',
-                'actions_mitigation' => 'nullable|array',
-                'responsable_id' => 'nullable|exists:users,id',
-                'date_limite_resolution' => 'nullable|date',
-                'progression_resolution' => 'nullable|integer|min:0|max:100',
-                'notes' => 'nullable|string',
+                'description_difficulte' => 'nullable|string',
+                'niveau_difficulte' => 'nullable|in:FAIBLE,MOYEN,ELEVE,CRITIQUE',
+                'impact' => 'nullable|string',
+                'solution_proposee' => 'nullable|string',
+                'statut' => 'nullable|in:IDENTIFIEE,EN_COURS_RESOLUTION,RESOLUE',
             ]);
 
             if ($validator->fails()) {
@@ -223,7 +216,7 @@ class ReunionDifficulteController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'statut' => 'required|in:ouverte,en_cours,resolue,escaladee',
+                'statut' => 'required|in:IDENTIFIEE,EN_COURS_RESOLUTION,RESOLUE',
             ]);
 
             if ($validator->fails()) {
@@ -294,9 +287,6 @@ class ReunionDifficulteController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'description' => 'required|string',
-                'efficacite_estimee' => 'nullable|in:elevee,moyenne,faible',
-                'cout_estime' => 'nullable|numeric|min:0',
-                'delai_implementation' => 'nullable|integer|min:1',
             ]);
 
             if ($validator->fails()) {

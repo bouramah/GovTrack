@@ -157,3 +157,4 @@ En cas de problème :
 2. Contrôler les logs dans `storage/logs/laravel.log`
 3. Vérifier les permissions en base de données
 4. S'assurer que les données de test sont correctement créées 
+	

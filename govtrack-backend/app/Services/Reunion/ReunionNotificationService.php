@@ -38,11 +38,10 @@ class ReunionNotificationService
 
             $notifications = ReunionNotification::with([
                 'reunion.typeReunion',
-                'destinataire',
-                'expediteur'
+                'destinataire'
             ])
             ->where('reunion_id', $reunionId)
-            ->orderBy('date_envoi', 'desc')
+            ->orderBy('envoye_le', 'desc')
             ->get();
 
             return [
@@ -73,10 +72,9 @@ class ReunionNotificationService
     {
         try {
             $query = ReunionNotification::with([
-                'reunion.typeReunion',
-                'expediteur'
+                'reunion.typeReunion'
             ])
-            ->where('destinataire_id', $user->id);
+            ->where('envoye_a', $user->id);
 
             // Filtres
             if ($request->filled('type')) {
@@ -87,20 +85,16 @@ class ReunionNotificationService
                 $query->where('statut', $request->statut);
             }
 
-            if ($request->filled('lu')) {
-                $query->where('lu', $request->boolean('lu'));
-            }
-
             if ($request->filled('date_debut')) {
-                $query->where('date_envoi', '>=', $request->date_debut);
+                $query->where('envoye_le', '>=', $request->date_debut);
             }
 
             if ($request->filled('date_fin')) {
-                $query->where('date_envoi', '<=', $request->date_fin);
+                $query->where('envoye_le', '<=', $request->date_fin);
             }
 
             // Tri
-            $sortBy = $request->get('sort_by', 'date_envoi');
+            $sortBy = $request->get('sort_by', 'envoye_le');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
@@ -144,7 +138,7 @@ class ReunionNotificationService
             }
 
             // Vérifier que l'utilisateur est le destinataire
-            if ($notification->destinataire_id !== $user->id) {
+            if ($notification->envoye_a !== $user->id) {
                 return [
                     'success' => false,
                     'message' => 'Vous n\'avez pas les permissions pour cette action'
@@ -152,10 +146,7 @@ class ReunionNotificationService
             }
 
             $notification->update([
-                'lu' => true,
-                'date_lecture' => now(),
-                'modifier_par' => $user->id,
-                'date_modification' => now(),
+                'statut' => 'LU',
             ]);
 
             return [
@@ -185,13 +176,10 @@ class ReunionNotificationService
     public function markAllAsRead(User $user): array
     {
         try {
-            $count = ReunionNotification::where('destinataire_id', $user->id)
-                ->where('lu', false)
+            $count = ReunionNotification::where('envoye_a', $user->id)
+                ->where('statut', 'ENVOYE')
                 ->update([
-                    'lu' => true,
-                    'date_lecture' => now(),
-                    'modifier_par' => $user->id,
-                    'date_modification' => now(),
+                    'statut' => 'LU',
                 ]);
 
             return [
@@ -230,7 +218,7 @@ class ReunionNotificationService
             }
 
             // Vérifier que l'utilisateur est le destinataire
-            if ($notification->destinataire_id !== $user->id) {
+            if ($notification->envoye_a !== $user->id) {
                 return [
                     'success' => false,
                     'message' => 'Vous n\'avez pas les permissions pour cette action'
@@ -295,19 +283,17 @@ class ReunionNotificationService
                     // Créer la notification
                     $notification = ReunionNotification::create([
                         'reunion_id' => $reunionId,
-                        'destinataire_id' => $destinataireId,
-                        'expediteur_id' => $user->id,
                         'type' => $typeNotification,
-                        'titre' => $data['titre'],
-                        'message' => $data['message'],
-                        'statut' => 'ENVOYEE',
-                        'lu' => false,
-                        'date_envoi' => now(),
-                        'date_lecture' => null,
-                        'creer_par' => $user->id,
-                        'modifier_par' => $user->id,
+                        'envoye_a' => $destinataireId,
+                        'envoye_le' => now(),
+                        'statut' => 'ENVOYE',
+                        'contenu_email' => $data['message'],
+                        'configuration_type' => [
+                            'titre' => $data['titre'],
+                            'priorite' => $data['priorite'] ?? 'NORMALE',
+                            'canaux' => $data['canaux'] ?? ['EMAIL']
+                        ],
                         'date_creation' => now(),
-                        'date_modification' => now(),
                     ]);
 
                     // Envoyer par email si demandé
@@ -373,7 +359,7 @@ class ReunionNotificationService
                 try {
                     // Vérifier si une notification similaire a déjà été envoyée
                     $notificationExistante = ReunionNotification::where('reunion_id', $reunion->id)
-                        ->where('destinataire_id', $participant->user_id)
+                        ->where('envoye_a', $participant->user_id)
                         ->where('type', $typeNotification)
                         ->exists();
 
@@ -387,19 +373,16 @@ class ReunionNotificationService
                     // Créer la notification
                     $notification = ReunionNotification::create([
                         'reunion_id' => $reunion->id,
-                        'destinataire_id' => $participant->user_id,
-                        'expediteur_id' => $reunion->creer_par,
                         'type' => $typeNotification,
-                        'titre' => $contenu['titre'],
-                        'message' => $contenu['message'],
-                        'statut' => 'ENVOYEE',
-                        'lu' => false,
-                        'date_envoi' => now(),
-                        'date_lecture' => null,
-                        'creer_par' => $reunion->creer_par,
-                        'modifier_par' => $reunion->creer_par,
+                        'envoye_a' => $participant->user_id,
+                        'envoye_le' => now(),
+                        'statut' => 'ENVOYE',
+                        'contenu_email' => $contenu['message'],
+                        'configuration_type' => [
+                            'titre' => $contenu['titre'],
+                            'type_notification' => $typeNotification
+                        ],
                         'date_creation' => now(),
-                        'date_modification' => now(),
                     ]);
 
                     // Envoyer par email
@@ -448,20 +431,22 @@ class ReunionNotificationService
     public function getNotificationStats(User $user): array
     {
         try {
-            $query = ReunionNotification::where('destinataire_id', $user->id);
+            $query = ReunionNotification::where('envoye_a', $user->id);
 
             $stats = [
                 'total' => $query->count(),
-                'non_lues' => $query->where('lu', false)->count(),
-                'lues' => $query->where('lu', true)->count(),
-                'invitations' => $query->where('type', 'INVITATION')->count(),
-                'rappel' => $query->where('type', 'RAPPEL')->count(),
-                'annulation' => $query->where('type', 'ANNULATION')->count(),
-                'modification' => $query->where('type', 'MODIFICATION')->count(),
+                'envoyees' => $query->where('statut', 'ENVOYE')->count(),
+                'lues' => $query->where('statut', 'LU')->count(),
+                'erreurs' => $query->where('statut', 'ERREUR')->count(),
+                'confirmation_presence' => $query->where('type', 'CONFIRMATION_PRESENCE')->count(),
+                'rappel_24h' => $query->where('type', 'RAPPEL_24H')->count(),
+                'rappel_1h' => $query->where('type', 'RAPPEL_1H')->count(),
+                'rappel_15min' => $query->where('type', 'RAPPEL_15MIN')->count(),
                 'pv_disponible' => $query->where('type', 'PV_DISPONIBLE')->count(),
-                'aujourd_hui' => $query->whereDate('date_envoi', today())->count(),
-                'cette_semaine' => $query->whereBetween('date_envoi', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-                'ce_mois' => $query->whereMonth('date_envoi', now()->month)->count(),
+                'rappel_actions' => $query->where('type', 'RAPPEL_ACTIONS')->count(),
+                'aujourd_hui' => $query->whereDate('envoye_le', today())->count(),
+                'cette_semaine' => $query->whereBetween('envoye_le', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+                'ce_mois' => $query->whereMonth('envoye_le', now()->month)->count(),
             ];
 
             return [
@@ -547,35 +532,40 @@ class ReunionNotificationService
         $heureReunion = $dateReunion->format('H:i');
 
         switch ($type) {
-            case 'INVITATION':
+            case 'CONFIRMATION_PRESENCE':
                 return [
-                    'titre' => 'Invitation à la réunion : ' . $reunion->titre,
-                    'message' => "Vous êtes invité(e) à participer à la réunion '{$reunion->titre}' le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
+                    'titre' => 'Confirmation de présence : ' . $reunion->titre,
+                    'message' => "Veuillez confirmer votre présence à la réunion '{$reunion->titre}' le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
                 ];
 
-            case 'RAPPEL':
-                $joursAvant = $dateReunion->diffInDays(now());
+            case 'RAPPEL_24H':
                 return [
-                    'titre' => 'Rappel : Réunion ' . $reunion->titre,
-                    'message' => "Rappel : La réunion '{$reunion->titre}' aura lieu dans {$joursAvant} jour(s), le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
+                    'titre' => 'Rappel 24h : Réunion ' . $reunion->titre,
+                    'message' => "Rappel : La réunion '{$reunion->titre}' aura lieu demain le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
                 ];
 
-            case 'ANNULATION':
+            case 'RAPPEL_1H':
                 return [
-                    'titre' => 'Annulation : Réunion ' . $reunion->titre,
-                    'message' => "La réunion '{$reunion->titre}' prévue le {$dateReunion->format('d/m/Y')} à {$heureReunion} a été annulée."
+                    'titre' => 'Rappel 1h : Réunion ' . $reunion->titre,
+                    'message' => "Rappel : La réunion '{$reunion->titre}' aura lieu dans 1 heure, le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
                 ];
 
-            case 'MODIFICATION':
+            case 'RAPPEL_15MIN':
                 return [
-                    'titre' => 'Modification : Réunion ' . $reunion->titre,
-                    'message' => "La réunion '{$reunion->titre}' a été modifiée. Nouvelle date : {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
+                    'titre' => 'Rappel 15min : Réunion ' . $reunion->titre,
+                    'message' => "Rappel : La réunion '{$reunion->titre}' aura lieu dans 15 minutes, le {$dateReunion->format('d/m/Y')} à {$heureReunion}. Lieu : {$reunion->lieu}"
                 ];
 
             case 'PV_DISPONIBLE':
                 return [
                     'titre' => 'PV disponible : Réunion ' . $reunion->titre,
                     'message' => "Le procès-verbal de la réunion '{$reunion->titre}' du {$dateReunion->format('d/m/Y')} est maintenant disponible."
+                ];
+
+            case 'RAPPEL_ACTIONS':
+                return [
+                    'titre' => 'Rappel actions : Réunion ' . $reunion->titre,
+                    'message' => "Rappel : Vous avez des actions à effectuer suite à la réunion '{$reunion->titre}' du {$dateReunion->format('d/m/Y')}."
                 ];
 
             default:
@@ -606,24 +596,28 @@ class ReunionNotificationService
 
             // Envoyer l'email selon le type de notification
             switch ($notification->type) {
-                case 'INVITATION':
-                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionInvitation($reunion, $destinataire));
+                case 'CONFIRMATION_PRESENCE':
+                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionConfirmationPresence($reunion, $destinataire));
                     break;
 
-                case 'RAPPEL':
-                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionRappel($reunion, $destinataire));
+                case 'RAPPEL_24H':
+                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionRappel24H($reunion, $destinataire));
                     break;
 
-                case 'ANNULATION':
-                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionAnnulation($reunion, $destinataire));
+                case 'RAPPEL_1H':
+                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionRappel1H($reunion, $destinataire));
                     break;
 
-                case 'MODIFICATION':
-                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionModification($reunion, $destinataire));
+                case 'RAPPEL_15MIN':
+                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionRappel15Min($reunion, $destinataire));
                     break;
 
                 case 'PV_DISPONIBLE':
                     Mail::to($destinataire->email)->send(new \App\Mail\ReunionPVDisponible($reunion, $destinataire));
+                    break;
+
+                case 'RAPPEL_ACTIONS':
+                    Mail::to($destinataire->email)->send(new \App\Mail\ReunionRappelActions($reunion, $destinataire));
                     break;
 
                 default:

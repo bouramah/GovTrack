@@ -39,14 +39,12 @@ class ReunionAction extends Model
      */
     public const STATUT_A_FAIRE = 'A_FAIRE';
     public const STATUT_EN_COURS = 'EN_COURS';
-    public const STATUT_TERMINE = 'TERMINE';
-    public const STATUT_ANNULE = 'ANNULE';
+    public const STATUT_TERMINEE = 'TERMINEE';
 
     public const STATUTS = [
         self::STATUT_A_FAIRE => 'À faire',
         self::STATUT_EN_COURS => 'En cours',
-        self::STATUT_TERMINE => 'Terminé',
-        self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_TERMINEE => 'Terminée',
     ];
 
     /**
@@ -143,7 +141,7 @@ class ReunionAction extends Model
     public function scopeEnRetard($query)
     {
         return $query->where('date_limite', '<', now()->toDateString())
-                     ->whereNotIn('statut', [self::STATUT_TERMINE, self::STATUT_ANNULE]);
+                     ->whereNotIn('statut', [self::STATUT_TERMINEE]);
     }
 
     /**
@@ -168,7 +166,7 @@ class ReunionAction extends Model
     public function getEstEnRetardAttribute(): bool
     {
         return $this->date_limite && $this->date_limite < now()->toDateString()
-               && !in_array($this->statut, [self::STATUT_TERMINE, self::STATUT_ANNULE]);
+               && !in_array($this->statut, [self::STATUT_TERMINEE]);
     }
 
     /**
@@ -212,6 +210,6 @@ class ReunionAction extends Model
      */
     public function getEstTermineeAttribute(): bool
     {
-        return $this->statut === self::STATUT_TERMINE || $this->progression >= 100;
+        return $this->statut === self::STATUT_TERMINEE || $this->progression >= 100;
     }
 }
