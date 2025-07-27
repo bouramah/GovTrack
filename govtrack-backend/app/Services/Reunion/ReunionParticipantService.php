@@ -39,7 +39,7 @@ class ReunionParticipantService
             ])
             ->where('reunion_id', $reunionId)
             ->orderBy('role')
-            ->orderBy('nom_affichage')
+            ->orderBy('user_id')
             ->get();
 
             return [
@@ -115,11 +115,7 @@ class ReunionParticipantService
                 'role' => $data['role'] ?? 'PARTICIPANT',
                 'type' => $data['type'] ?? 'PERMANENT',
                 'statut_presence' => $data['statut_presence'] ?? 'EN_ATTENTE',
-                'nom_affichage' => $data['nom_affichage'] ?? $participantUser->nom_complet,
-                'email_contact' => $data['email_contact'] ?? $participantUser->email,
-                'telephone' => $data['telephone'] ?? $participantUser->telephone,
                 'notifications_actives' => $data['notifications_actives'] ?? [],
-                'commentaires' => $data['commentaires'] ?? '',
                 'date_creation' => now(),
                 'date_modification' => now(),
                 'creer_par' => $user->id,
@@ -194,11 +190,7 @@ class ReunionParticipantService
                 'role' => $data['role'] ?? null,
                 'type' => $data['type'] ?? null,
                 'statut_presence' => $data['statut_presence'] ?? null,
-                'nom_affichage' => $data['nom_affichage'] ?? null,
-                'email_contact' => $data['email_contact'] ?? null,
-                'telephone' => $data['telephone'] ?? null,
                 'notifications_actives' => $data['notifications_actives'] ?? null,
-                'commentaires' => $data['commentaires'] ?? null,
                 'date_modification' => now(),
             ], function ($value) {
                 return $value !== null;
@@ -338,7 +330,7 @@ class ReunionParticipantService
             }
 
             // Vérifier la validité du statut
-            $statutsValides = ['INVITE', 'CONFIRME', 'PRESENT', 'ABSENT', 'EXCUSE'];
+            $statutsValides = ['CONFIRME', 'ABSENT', 'EN_ATTENTE'];
             if (!in_array($statut, $statutsValides)) {
                 return [
                     'success' => false,
@@ -427,11 +419,7 @@ class ReunionParticipantService
                         'role' => $participantData['role'] ?? 'PARTICIPANT',
                         'type' => $participantData['type'] ?? 'PERMANENT',
                         'statut_presence' => $participantData['statut_presence'] ?? 'EN_ATTENTE',
-                        'nom_affichage' => $participantData['nom_affichage'] ?? $participantUser->nom_complet,
-                        'email_contact' => $participantData['email_contact'] ?? $participantUser->email,
-                        'telephone' => $participantData['telephone'] ?? $participantUser->telephone,
                         'notifications_actives' => $participantData['notifications_actives'] ?? [],
-                        'commentaires' => $participantData['commentaires'] ?? '',
                         'date_creation' => now(),
                         'date_modification' => now(),
                         'creer_par' => $user->id,

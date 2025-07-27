@@ -79,9 +79,9 @@ class ReunionController extends Controller
             'statut' => 'nullable|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE',
             'participants' => 'nullable|array',
             'participants.*.user_id' => 'required_with:participants|exists:users,id',
-            'participants.*.role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'participants.*.type' => 'nullable|in:INTERNE,EXTERNE',
-            'participants.*.statut_presence' => 'nullable|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
+            'participants.*.role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
+            'participants.*.type' => 'nullable|in:PERMANENT,INVITE',
+            'participants.*.statut_presence' => 'nullable|in:CONFIRME,ABSENT,EN_ATTENTE',
             'participants.*.notifications_actives' => 'nullable|array',
             'ordre_jour' => 'nullable|array',
             'ordre_jour.*.titre' => 'required_with:ordre_jour|string|max:255',
@@ -136,9 +136,9 @@ class ReunionController extends Controller
             'statut' => 'nullable|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE',
             'participants' => 'nullable|array',
             'participants.*.user_id' => 'required_with:participants|exists:users,id',
-            'participants.*.role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'participants.*.type' => 'nullable|in:INTERNE,EXTERNE',
-            'participants.*.statut_presence' => 'nullable|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
+            'participants.*.role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
+            'participants.*.type' => 'nullable|in:PERMANENT,INVITE',
+            'participants.*.statut_presence' => 'nullable|in:CONFIRME,ABSENT,EN_ATTENTE',
             'participants.*.notifications_actives' => 'nullable|array',
         ]);
 
@@ -253,14 +253,10 @@ class ReunionController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
-            'role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'type' => 'nullable|in:INTERNE,EXTERNE',
-            'statut_presence' => 'nullable|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
-            'nom_affichage' => 'nullable|string|max:255',
-            'email_contact' => 'nullable|email|max:255',
-            'telephone' => 'nullable|string|max:20',
+            'role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
+            'type' => 'nullable|in:PERMANENT,INVITE',
+            'statut_presence' => 'nullable|in:CONFIRME,ABSENT,EN_ATTENTE',
             'notifications_actives' => 'nullable|array',
-            'commentaires' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -289,14 +285,10 @@ class ReunionController extends Controller
 
         // Validation des données
         $validator = Validator::make($request->all(), [
-            'role' => 'nullable|in:ORGANISATEUR,PARTICIPANT,OBSERVATEUR',
-            'type' => 'nullable|in:INTERNE,EXTERNE',
-            'statut_presence' => 'nullable|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
-            'nom_affichage' => 'nullable|string|max:255',
-            'email_contact' => 'nullable|email|max:255',
-            'telephone' => 'nullable|string|max:20',
+            'role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
+            'type' => 'nullable|in:PERMANENT,INVITE',
+            'statut_presence' => 'nullable|in:CONFIRME,ABSENT,EN_ATTENTE',
             'notifications_actives' => 'nullable|array',
-            'commentaires' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -340,7 +332,7 @@ class ReunionController extends Controller
 
         // Validation des données
         $validator = Validator::make($request->all(), [
-            'statut' => 'required|in:INVITE,CONFIRME,PRESENT,ABSENT,EXCUSE',
+            'statut' => 'required|in:CONFIRME,ABSENT,EN_ATTENTE',
         ]);
 
         if ($validator->fails()) {

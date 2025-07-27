@@ -1,0 +1,879 @@
+{
+	"info": {
+		"_postman_id": "reunion-service-complete",
+		"name": "GovTrack - ReunionService - Tests Complets",
+		"description": "Collection complète pour tester tous les endpoints du ReunionService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Configuration Initiale",
+			"item": [
+				{
+					"name": "Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.token) {",
+									"        pm.environment.set('admin_token', response.data.token);",
+									"        pm.environment.set('admin_user_id', response.data.user.id);",
+									"        console.log('✅ Admin connecté, token sauvegardé');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@govtrack.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.token) {",
+									"        pm.environment.set('user_token', response.data.token);",
+									"        pm.environment.set('user_id', response.data.user.id);",
+									"        console.log('✅ User connecté, token sauvegardé');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "ReunionService - Tests Complets",
+			"item": [
+				{
+					"name": "1. Liste des réunions (avec filtres)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions?search=CODIR&statut=PLANIFIEE&type_reunion_id=1&date_debut=2024-01-01&date_fin=2024-12-31&sort_by=date_debut&sort_order=asc&per_page=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions"],
+							"query": [
+								{
+									"key": "search",
+									"value": "CODIR"
+								},
+								{
+									"key": "statut",
+									"value": "PLANIFIEE"
+								},
+								{
+									"key": "type_reunion_id",
+									"value": "1"
+								},
+								{
+									"key": "date_debut",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "date_fin",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "sort_by",
+									"value": "date_debut"
+								},
+								{
+									"key": "sort_order",
+									"value": "asc"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Liste des réunions récupérée avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2. Statistiques globales",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "stats"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Statistiques récupérées avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3. Créer une réunion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titre\": \"Réunion CODIR Test\",\n    \"description\": \"Réunion de test pour validation\",\n    \"type_reunion_id\": 1,\n    \"niveau_complexite_actuel\": \"COMPLEXE\",\n    \"date_debut\": \"2024-12-20T09:00:00\",\n    \"date_fin\": \"2024-12-20T11:00:00\",\n    \"lieu\": \"Salle de réunion A\",\n    \"type_lieu\": \"PHYSIQUE\",\n    \"periodicite\": \"PONCTUELLE\",\n    \"suspendue\": false,\n    \"fonctionnalites_actives\": {\n        \"objectifs_multiples\": true,\n        \"difficultes_par_entite\": true,\n        \"workflow_validation\": true\n    },\n    \"quorum_minimum\": 5,\n    \"ordre_du_jour_type\": \"EXPLICITE\",\n    \"statut\": \"PLANIFIEE\",\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('reunion_test_id', response.data.id);",
+									"    console.log('✅ Réunion créée avec succès, ID:', response.data.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4. Récupérer une réunion par ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Réunion récupérée avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "5. Modifier une réunion",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titre\": \"Réunion CODIR Test - Modifiée\",\n    \"description\": \"Réunion de test modifiée\",\n    \"lieu\": \"Salle de réunion B\",\n    \"quorum_minimum\": 6,\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Réunion modifiée avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "6. Changer le statut d'une réunion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nouveau_statut\": \"EN_COURS\",\n    \"commentaire\": \"Réunion démarrée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/changer-statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "changer-statut"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Statut de réunion changé avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "7. Liste des participants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Liste des participants récupérée avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "8. Ajouter un participant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": {{user_id}},\n    \"role\": \"PARTICIPANT\",\n    \"type\": \"INTERNE\",\n    \"statut_presence\": \"INVITE\",\n    \"notifications_actives\": {\n        \"rappel_24h\": true,\n        \"rappel_1h\": true\n    },\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('participant_test_id', response.data.id);",
+									"    console.log('✅ Participant ajouté avec succès, ID:', response.data.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "9. Ajouter plusieurs participants",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"participants\": [\n        {\n            \"user_id\": {{admin_user_id}},\n            \"role\": \"ORGANISATEUR\",\n            \"type\": \"INTERNE\",\n            \"statut_presence\": \"CONFIRME\",\n            \"notifications_actives\": {\n                \"rappel_24h\": true,\n                \"rappel_1h\": true\n            }\n        },\n        {\n            \"user_id\": {{user_id}},\n            \"role\": \"OBSERVATEUR\",\n            \"type\": \"INTERNE\",\n            \"statut_presence\": \"INVITE\",\n            \"notifications_actives\": {\n                \"rappel_24h\": true\n            }\n        }\n    ],\n    \"creer_par\": {{admin_user_id}},\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/multiple",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants", "multiple"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Participants multiples ajoutés avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "10. Modifier un participant",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"PARTICIPANT\",\n    \"statut_presence\": \"CONFIRME\",\n    \"notifications_actives\": {\n        \"rappel_24h\": true,\n        \"rappel_1h\": true,\n        \"confirmation_presence\": true\n    },\n    \"modifier_par\": {{admin_user_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants", "{{participant_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Participant modifié avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "11. Mettre à jour le statut de présence",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statut_presence\": \"PRESENT\",\n    \"commentaire\": \"Présent à la réunion\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_test_id}}/presence",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants", "{{participant_test_id}}", "presence"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Statut de présence mis à jour avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "12. Statistiques des participants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants", "stats"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Statistiques des participants récupérées avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "13. Supprimer un participant",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}", "participants", "{{participant_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Participant supprimé avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "14. Supprimer la réunion de test",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "{{reunion_test_id}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test('Response has success property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('success');",
+									"});",
+									"if (pm.response.json().success) {",
+									"    console.log('✅ Réunion de test supprimée avec succès');",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Tests de Permissions",
+			"item": [
+				{
+					"name": "Accès non autorisé - Liste réunions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 403', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"console.log('✅ Accès non autorisé correctement bloqué');"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Création non autorisée",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titre\": \"Réunion non autorisée\",\n    \"type_reunion_id\": 1,\n    \"date_debut\": \"2024-12-20T09:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 403', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"console.log('✅ Création non autorisée correctement bloquée');"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Tests de Validation",
+			"item": [
+				{
+					"name": "Données invalides - Création",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"titre\": \"\",\n    \"type_reunion_id\": 999,\n    \"date_debut\": \"2020-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"pm.test('Response has errors property', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response).to.have.property('errors');",
+									"});",
+									"console.log('✅ Validation des données correctement appliquée');"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Statut invalide",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nouveau_statut\": \"STATUT_INVALIDE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/1/changer-statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reunions", "1", "changer-statut"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 422', function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"console.log('✅ Validation du statut correctement appliquée');"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}

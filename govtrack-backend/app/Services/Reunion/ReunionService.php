@@ -181,7 +181,6 @@ class ReunionService
                 'participants.user',
                 'ordreJours.responsable',
                 'decisions.responsable',
-                'actions.responsable',
                 'pvs.redacteur',
                 'pvs.validateur',
                 'notifications.destinataire',
@@ -476,7 +475,6 @@ class ReunionService
             $reunion->participants()->delete();
             $reunion->ordreJours()->delete();
             $reunion->decisions()->delete();
-            $reunion->actions()->delete();
             $reunion->notifications()->delete();
             $reunion->workflowExecutions()->delete();
             $reunion->pvs()->delete();
