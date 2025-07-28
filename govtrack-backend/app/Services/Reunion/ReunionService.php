@@ -182,7 +182,7 @@ class ReunionService
                 'serie',
                 'participants.user',
                 'ordreJours.responsable',
-                'decisions.responsable',
+                'decisions',
                 'pvs.redacteur',
                 'pvs.validateur',
                 'notifications.destinataire',

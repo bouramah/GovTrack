@@ -1,0 +1,941 @@
+{
+	"info": {
+		"_postman_id": "reporter-reunion-collection",
+		"name": "GovTrack - Reporter Réunion",
+		"description": "Collection pour tester la fonctionnalité de report de réunion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentification",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.token) {",
+									"        pm.environment.set('auth_token', response.data.token);",
+									"        console.log('Token sauvegardé:', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@govtrack.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Préparation - Récupérer les réunions",
+			"item": [
+				{
+					"name": "Liste des réunions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data && response.data.reunions && response.data.reunions.length > 0) {",
+									"        // Sauvegarder la première réunion planifiée",
+									"        const reunionPlanifiee = response.data.reunions.find(r => r.statut === 'PLANIFIEE');",
+									"        if (reunionPlanifiee) {",
+									"            pm.environment.set('reunion_id', reunionPlanifiee.id);",
+									"            console.log('Réunion planifiée trouvée:', reunionPlanifiee.id);",
+									"        }",
+									"        ",
+									"        // Sauvegarder la première réunion en cours",
+									"        const reunionEnCours = response.data.reunions.find(r => r.statut === 'EN_COURS');",
+									"        if (reunionEnCours) {",
+									"            pm.environment.set('reunion_en_cours_id', reunionEnCours.id);",
+									"            console.log('Réunion en cours trouvée:', reunionEnCours.id);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions?statut=PLANIFIEE&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions"
+							],
+							"query": [
+								{
+									"key": "statut",
+									"value": "PLANIFIEE"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Détails d'une réunion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Tests de Report de Réunion",
+			"item": [
+				{
+					"name": "Reporter une réunion planifiée - Succès",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is successful', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"});",
+									"",
+									"pm.test('Réunion est reportée', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.reunion.statut).to.eql('REPORTEE');",
+									"});",
+									"",
+									"pm.test('Date reprogrammée est enregistrée', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.reunion.reprogrammee_le).to.not.be.null;",
+									"});",
+									"",
+									"pm.test('Nouvelle date de début est correcte', function () {",
+									"    const response = pm.response.json();",
+									"    const nouvelleDate = new Date(response.data.nouvelle_date_debut);",
+									"    pm.expect(nouvelleDate.getTime()).to.be.greaterThan(Date.now());",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\",\n  \"nouvelle_date_fin\": \"2025-08-15T16:00:00Z\",\n  \"raison_report\": \"Conflit d'horaire avec une autre réunion importante\",\n  \"notifier_participants\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter une réunion en cours - Succès",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Réunion en cours peut être reportée', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.true;",
+									"    pm.expect(response.data.reunion.statut).to.eql('REPORTEE');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-20T10:00:00Z\",\n  \"raison_report\": \"Urgence dans l'équipe\",\n  \"notifier_participants\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_en_cours_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_en_cours_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter avec date invalide - Erreur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Erreur de validation', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.success).to.be.false;",
+									"    pm.expect(response.errors).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-07-01T10:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter sans nouvelle date - Erreur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Erreur de validation pour nouvelle_date_debut', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.errors.nouvelle_date_debut).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"raison_report\": \"Test sans date\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter avec date de fin invalide - Erreur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Erreur de validation pour nouvelle_date_fin', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.errors.nouvelle_date_fin).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\",\n  \"nouvelle_date_fin\": \"2025-08-15T12:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Tests de Permissions",
+			"item": [
+				{
+					"name": "Reporter sans token - Erreur 401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter avec token invalide - Erreur 401",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401', function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_token_123",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Tests de Validation",
+			"item": [
+				{
+					"name": "Reporter une réunion inexistante - Erreur 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/99999/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"99999",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reporter avec raison trop longue - Erreur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Erreur de validation pour raison_report', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.errors.raison_report).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-15T14:00:00Z\",\n  \"raison_report\": \"Cette raison est beaucoup trop longue et dépasse largement la limite de 500 caractères autorisée par le système. Elle contient beaucoup de détails inutiles qui ne sont pas nécessaires pour expliquer le report de la réunion. En fait, cette raison pourrait être résumée en quelques mots simples sans perdre d'informations importantes.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Vérification Post-Report",
+			"item": [
+				{
+					"name": "Vérifier le statut après report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Réunion est bien reportée', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.reunion.statut).to.eql('REPORTEE');",
+									"});",
+									"",
+									"pm.test('Date reprogrammée est présente', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.reunion.reprogrammee_le).to.not.be.null;",
+									"});",
+									"",
+									"pm.test('Modificateur est enregistré', function () {",
+									"    const response = pm.response.json();",
+									"    pm.expect(response.data.reunion.modifier_par).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Liste des réunions reportées",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Réunions reportées trouvées', function () {",
+									"    const response = pm.response.json();",
+									"    if (response.data.reunions.length > 0) {",
+									"        const reunionReportee = response.data.reunions.find(r => r.statut === 'REPORTEE');",
+									"        pm.expect(reunionReportee).to.not.be.undefined;",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions?statut=REPORTEE",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions"
+							],
+							"query": [
+								{
+									"key": "statut",
+									"value": "REPORTEE"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Tests de Performance",
+			"item": [
+				{
+					"name": "Test de charge - Reporter plusieurs fois",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Response time is less than 2000ms', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test('Status code is 200 or 400', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nouvelle_date_debut\": \"2025-08-25T14:00:00Z\",\n  \"raison_report\": \"Test de performance\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reunions/{{reunion_id}}/reporter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reunions",
+								"{{reunion_id}}",
+								"reporter"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reunion_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reunion_en_cours_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
