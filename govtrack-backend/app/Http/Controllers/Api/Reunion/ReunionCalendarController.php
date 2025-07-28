@@ -27,9 +27,8 @@ class ReunionCalendarController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.user_id' => 'nullable|integer|exists:users,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {
@@ -69,9 +68,8 @@ class ReunionCalendarController extends Controller
         $validator = Validator::make($request->all(), [
             'date' => 'required|date',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.user_id' => 'nullable|integer|exists:users,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {
@@ -109,9 +107,8 @@ class ReunionCalendarController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.user_id' => 'nullable|integer|exists:users,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {
@@ -149,9 +146,8 @@ class ReunionCalendarController extends Controller
         $validator = Validator::make($request->all(), [
             'year_month' => 'required|date_format:Y-m',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.user_id' => 'nullable|integer|exists:users,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {
@@ -312,9 +308,8 @@ class ReunionCalendarController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.user_id' => 'nullable|integer|exists:users,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {
@@ -360,8 +355,7 @@ class ReunionCalendarController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee'
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE'
         ]);
 
         if ($validator->fails()) {

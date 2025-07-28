@@ -41,11 +41,11 @@ class ReunionWorkflowExecution extends Model
         'reunion_id',
         'workflow_config_id',
         'etape_actuelle',
-        'statut',
+        'statut_global',
         'date_debut',
         'date_fin',
-        'historique_execution',
-        'commentaires',
+        'historique_etapes',
+        'commentaire',
         'date_creation',
         'date_modification',
     ];
@@ -57,8 +57,8 @@ class ReunionWorkflowExecution extends Model
         'etape_actuelle' => 'integer',
         'date_debut' => 'datetime',
         'date_fin' => 'datetime',
-        'historique_execution' => 'array',
-        'commentaires' => 'array',
+        'historique_etapes' => 'array',
+        'commentaire' => 'string',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -84,7 +84,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function scopeByStatut($query, $statut)
     {
-        return $query->where('statut', $statut);
+        return $query->where('statut_global', $statut);
     }
 
     /**
@@ -92,7 +92,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function scopeEnCours($query)
     {
-        return $query->where('statut', self::STATUT_EN_COURS);
+        return $query->where('statut_global', self::STATUT_EN_COURS);
     }
 
     /**
@@ -100,7 +100,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function scopeTermines($query)
     {
-        return $query->where('statut', self::STATUT_TERMINE);
+        return $query->where('statut_global', self::STATUT_TERMINE);
     }
 
     /**
@@ -108,7 +108,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function scopeBloques($query)
     {
-        return $query->where('statut', self::STATUT_BLOQUE);
+        return $query->where('statut_global', self::STATUT_BLOQUE);
     }
 
     /**
@@ -116,7 +116,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getStatutLibelleAttribute(): string
     {
-        return self::STATUTS[$this->statut] ?? $this->statut;
+        return self::STATUTS[$this->statut_global] ?? $this->statut_global;
     }
 
     /**
@@ -124,7 +124,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getEstEnCoursAttribute(): bool
     {
-        return $this->statut === self::STATUT_EN_COURS;
+        return $this->statut_global === self::STATUT_EN_COURS;
     }
 
     /**
@@ -132,7 +132,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getEstTermineAttribute(): bool
     {
-        return $this->statut === self::STATUT_TERMINE;
+        return $this->statut_global === self::STATUT_TERMINE;
     }
 
     /**
@@ -140,7 +140,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getEstBloqueAttribute(): bool
     {
-        return $this->statut === self::STATUT_BLOQUE;
+        return $this->statut_global === self::STATUT_BLOQUE;
     }
 
     /**
@@ -148,7 +148,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getEstAnnuleAttribute(): bool
     {
-        return $this->statut === self::STATUT_ANNULE;
+        return $this->statut_global === self::STATUT_ANNULE;
     }
 
     /**
@@ -156,7 +156,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getStatutCouleurAttribute(): string
     {
-        return match($this->statut) {
+        return match($this->statut_global) {
             self::STATUT_EN_COURS => 'blue',
             self::STATUT_TERMINE => 'green',
             self::STATUT_BLOQUE => 'red',
@@ -170,7 +170,7 @@ class ReunionWorkflowExecution extends Model
      */
     public function getStatutIconeAttribute(): string
     {
-        return match($this->statut) {
+        return match($this->statut_global) {
             self::STATUT_EN_COURS => 'play',
             self::STATUT_TERMINE => 'check-circle',
             self::STATUT_BLOQUE => 'pause',

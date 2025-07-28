@@ -1,0 +1,529 @@
+{
+	"info": {
+		"_postman_id": "reunion-generee-service-complete",
+		"name": "GovTrack - ReunionGenereeService - Complete",
+		"description": "Collection complète pour tester le service ReunionGenereeService avec tous les endpoints disponibles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les réunions générées d'une série",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{serie_id}}?statut_generation=SUCCES&date_debut={{date_debut}}&date_fin={{date_fin}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{serie_id}}"
+					],
+					"query": [
+						{
+							"key": "statut_generation",
+							"value": "SUCCES"
+						},
+						{
+							"key": "date_debut",
+							"value": "{{date_debut}}"
+						},
+						{
+							"key": "date_fin",
+							"value": "{{date_fin}}"
+						}
+					]
+				},
+				"description": "Récupérer les réunions générées d'une série avec filtres optionnels"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Récupérer une réunion générée spécifique",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/reunion/{{reunion_generee_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"reunion",
+						"{{reunion_generee_id}}"
+					]
+				},
+				"description": "Récupérer les détails d'une réunion générée spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Créer un enregistrement de réunion générée",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"reunion_id\": {{reunion_id}},\n  \"statut_generation\": \"SUCCES\",\n  \"message_erreur\": null,\n  \"configuration_utilisee\": {\n    \"frequence\": \"HEBDOMADAIRE\",\n    \"jour_semaine\": \"LUNDI\",\n    \"heure_debut\": \"10:00\",\n    \"duree\": 120\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{serie_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{serie_id}}"
+					]
+				},
+				"description": "Créer un enregistrement de réunion générée pour une série"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Mettre à jour le statut d'une réunion générée",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"statut_generation\": \"ERREUR\",\n  \"message_erreur\": \"Erreur lors de la génération de la réunion\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{reunion_generee_id}}/statut",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{reunion_generee_id}}",
+						"statut"
+					]
+				},
+				"description": "Mettre à jour le statut d'une réunion générée"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Supprimer une réunion générée",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{reunion_generee_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{reunion_generee_id}}"
+					]
+				},
+				"description": "Supprimer un enregistrement de réunion générée"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Obtenir les statistiques des réunions générées",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/stats/{{serie_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"stats",
+						"{{serie_id}}"
+					]
+				},
+				"description": "Obtenir les statistiques des réunions générées pour une série spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir les statistiques globales",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/stats",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"stats"
+					]
+				},
+				"description": "Obtenir les statistiques globales de toutes les réunions générées"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Nettoyer les anciens enregistrements",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"jours_conservation\": 90\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/nettoyer",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"nettoyer"
+					]
+				},
+				"description": "Nettoyer les anciens enregistrements de réunions générées"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Test - Créer une réunion générée avec erreur",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"reunion_id\": {{reunion_id}},\n  \"statut_generation\": \"ERREUR\",\n  \"message_erreur\": \"Conflit d'horaire détecté\",\n  \"configuration_utilisee\": {\n    \"frequence\": \"HEBDOMADAIRE\",\n    \"jour_semaine\": \"LUNDI\",\n    \"heure_debut\": \"10:00\",\n    \"duree\": 120,\n    \"erreur\": \"Conflit avec réunion existante\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{serie_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{serie_id}}"
+					]
+				},
+				"description": "Tester la création d'une réunion générée avec statut d'erreur"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Test - Filtres avancés pour réunions générées",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions-generees/{{serie_id}}?statut_generation=ERREUR&date_debut={{date_debut}}&date_fin={{date_fin}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions-generees",
+						"{{serie_id}}"
+					],
+					"query": [
+						{
+							"key": "statut_generation",
+							"value": "ERREUR"
+						},
+						{
+							"key": "date_debut",
+							"value": "{{date_debut}}"
+						},
+						{
+							"key": "date_fin",
+							"value": "{{date_fin}}"
+						}
+					]
+				},
+				"description": "Tester la récupération de réunions générées avec filtres avancés"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir des variables dynamiques",
+					"if (pm.environment.get('auth_token') === '') {",
+					"    console.log('Token d\\'authentification manquant');",
+					"}",
+					"",
+					"// Définir des dates par défaut si non définies",
+					"if (!pm.environment.get('date_debut')) {",
+					"    const today = new Date();",
+					"    today.setDate(today.getDate() - 30);",
+					"    const dateDebut = today.toISOString().split('T')[0];",
+					"    pm.environment.set('date_debut', dateDebut);",
+					"}",
+					"",
+					"if (!pm.environment.get('date_fin')) {",
+					"    const today = new Date();",
+					"    const dateFin = today.toISOString().split('T')[0];",
+					"    pm.environment.set('date_fin', dateFin);",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automatiques pour chaque requête",
+					"pm.test('Status code is 200, 201 or 204', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has success property', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"pm.test('Response structure is valid', function () {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success) {",
+					"        pm.expect(jsonData).to.have.property('data');",
+					"    }",
+					"});",
+					"",
+					"// Tests spécifiques pour les réunions générées",
+					"if (pm.request.url.path.includes('reunions-generees') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('ReunionGeneree has required properties', function () {",
+					"            if (Array.isArray(jsonData.data)) {",
+					"                if (jsonData.data.length > 0) {",
+					"                    const reunionGeneree = jsonData.data[0];",
+					"                    pm.expect(reunionGeneree).to.have.property('id');",
+					"                    pm.expect(reunionGeneree).to.have.property('serie_id');",
+					"                    pm.expect(reunionGeneree).to.have.property('reunion_id');",
+					"                    pm.expect(reunionGeneree).to.have.property('statut_generation');",
+					"                }",
+					"            } else {",
+					"                pm.expect(jsonData.data).to.have.property('id');",
+					"                pm.expect(jsonData.data).to.have.property('serie_id');",
+					"                pm.expect(jsonData.data).to.have.property('reunion_id');",
+					"                pm.expect(jsonData.data).to.have.property('statut_generation');",
+					"            }",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Tests spécifiques pour les statistiques",
+					"if (pm.request.url.path.includes('stats') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('Stats have required properties', function () {",
+					"            pm.expect(jsonData.data).to.have.property('total_reunions_generees');",
+					"            pm.expect(jsonData.data).to.have.property('reunions_par_statut');",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Sauvegarder l'ID de la réunion générée créée",
+					"if (pm.request.method === 'POST' && pm.response.code === 201) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data && jsonData.data.id) {",
+					"        pm.environment.set('reunion_generee_id', jsonData.data.id);",
+					"        console.log('ID de réunion générée sauvegardé:', jsonData.data.id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "serie_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "reunion_generee_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "date_debut",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "date_fin",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

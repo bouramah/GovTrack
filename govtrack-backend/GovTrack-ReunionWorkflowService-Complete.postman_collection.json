@@ -1,0 +1,480 @@
+{
+	"info": {
+		"_postman_id": "reunion-workflow-service-complete",
+		"name": "GovTrack - ReunionWorkflowService - Complete",
+		"description": "Collection complète pour tester le service ReunionWorkflowService avec tous les endpoints disponibles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les workflows configurés",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/configs/{{type_reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"configs",
+						"{{type_reunion_id}}"
+					]
+				},
+				"description": "Récupérer les workflows configurés pour un type de réunion spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Créer un workflow de validation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"nom_workflow\": \"Validation Comité Exécutif\",\n  \"etapes\": [\n    {\n      \"nom\": \"Validation Directeur Général\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 1,\n      \"notifier_validateur\": true\n    },\n    {\n      \"nom\": \"Validation Président\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 2,\n      \"notifier_validateur\": true\n    }\n  ],\n  \"actif\": true,\n  \"obligatoire\": true,\n  \"configuration\": {\n    \"delai_max_etape\": 7,\n    \"notifications\": {\n      \"rappel_automatique\": true,\n      \"delai_rappel\": 3\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/configs",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"configs"
+					]
+				},
+				"description": "Créer un nouveau workflow de validation avec plusieurs étapes"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Démarrer un workflow pour une réunion",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"workflow_config_id\": {{workflow_config_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/start/{{reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"start",
+						"{{reunion_id}}"
+					]
+				},
+				"description": "Démarrer un workflow pour une réunion spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Valider une étape du workflow",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"etape\": 1,\n  \"commentaire\": \"Validation approuvée après révision du document\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/validate/{{execution_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"validate",
+						"{{execution_id}}"
+					]
+				},
+				"description": "Valider une étape spécifique du workflow en cours"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Rejeter une étape du workflow",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"etape\": 1,\n  \"raison\": \"Document incomplet, informations manquantes sur le budget\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/reject/{{execution_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"reject",
+						"{{execution_id}}"
+					]
+				},
+				"description": "Rejeter une étape du workflow avec une raison"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Obtenir les workflows en cours",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/en-cours",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"en-cours"
+					]
+				},
+				"description": "Récupérer tous les workflows en cours pour l'utilisateur connecté"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir les détails d'une exécution",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/execution/{{execution_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"execution",
+						"{{execution_id}}"
+					]
+				},
+				"description": "Récupérer les détails complets d'une exécution de workflow"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Annuler un workflow en cours",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"raison\": \"Réunion annulée par le directeur général\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/cancel/{{execution_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"cancel",
+						"{{execution_id}}"
+					]
+				},
+				"description": "Annuler un workflow en cours avec une raison"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Test - Workflow avec étapes multiples",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"nom_workflow\": \"Validation Projet Complexe\",\n  \"etapes\": [\n    {\n      \"nom\": \"Validation Technique\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 1,\n      \"notifier_validateur\": true\n    },\n    {\n      \"nom\": \"Validation Financière\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 2,\n      \"notifier_validateur\": true\n    },\n    {\n      \"nom\": \"Validation Juridique\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 3,\n      \"notifier_validateur\": true\n    },\n    {\n      \"nom\": \"Validation Finale DG\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 4,\n      \"notifier_validateur\": true\n    }\n  ],\n  \"actif\": true,\n  \"obligatoire\": true,\n  \"configuration\": {\n    \"delai_max_etape\": 5,\n    \"notifications\": {\n      \"rappel_automatique\": true,\n      \"delai_rappel\": 2,\n      \"escalade\": true\n    },\n    \"conditions\": {\n      \"validation_unanime\": false,\n      \"quorum_minimum\": 2\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/configs",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"configs"
+					]
+				},
+				"description": "Créer un workflow complexe avec 4 étapes de validation"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Test - Workflow avec configuration avancée",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"nom_workflow\": \"Validation Budget Annuel\",\n  \"etapes\": [\n    {\n      \"nom\": \"Validation Service Financier\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 1,\n      \"notifier_validateur\": true,\n      \"conditions\": {\n        \"montant_min\": 1000000,\n        \"documents_requis\": [\"budget_detaille\", \"justificatifs\"]\n      }\n    },\n    {\n      \"nom\": \"Validation Comité Budget\",\n      \"validateur_id\": {{user_id}},\n      \"ordre\": 2,\n      \"notifier_validateur\": true,\n      \"conditions\": {\n        \"quorum_minimum\": 3,\n        \"delai_decision\": 7\n      }\n    }\n  ],\n  \"actif\": true,\n  \"obligatoire\": true,\n  \"configuration\": {\n    \"delai_max_etape\": 10,\n    \"notifications\": {\n      \"rappel_automatique\": true,\n      \"delai_rappel\": 3,\n      \"escalade\": true,\n      \"niveaux_escalade\": [\"superviseur\", \"directeur\", \"dg\"]\n    },\n    \"conditions\": {\n      \"validation_unanime\": true,\n      \"documents_obligatoires\": [\"budget\", \"plan_action\", \"indicateurs\"]\n    },\n    \"integrations\": {\n      \"systeme_comptabilite\": true,\n      \"notifications_email\": true,\n      \"notifications_sms\": false\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/workflows/configs",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"workflows",
+						"configs"
+					]
+				},
+				"description": "Créer un workflow avec configuration avancée et conditions spécifiques"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir des variables dynamiques",
+					"if (pm.environment.get('auth_token') === '') {",
+					"    console.log('Token d\\'authentification manquant');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automatiques pour chaque requête",
+					"pm.test('Status code is 200 or 201', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});",
+					"",
+					"pm.test('Response has success property', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"// Sauvegarder les IDs pour les tests suivants",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.data && jsonData.data.id) {",
+					"        if (pm.request.url.path.includes('configs') && !pm.request.url.path.includes('{')) {",
+					"            pm.environment.set('workflow_config_id', jsonData.data.id);",
+					"        }",
+					"        if (pm.request.url.path.includes('start')) {",
+					"            pm.environment.set('execution_id', jsonData.data.id);",
+					"        }",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "workflow_config_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "execution_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

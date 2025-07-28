@@ -327,10 +327,16 @@ class ReunionWorkflowService
                 'workflowConfig.typeReunion'
             ])
             ->where('statut_global', 'EN_COURS')
-            ->whereHas('workflowConfig.etapes', function ($query) use ($user) {
-                $query->where('validateur_id', $user->id);
-            })
-            ->get();
+            ->get()
+            ->filter(function ($execution) use ($user) {
+                $etapes = $execution->workflowConfig->etapes ?? [];
+                foreach ($etapes as $etape) {
+                    if (($etape['validateur_id'] ?? null) == $user->id) {
+                        return true;
+                    }
+                }
+                return false;
+            });
 
             return [
                 'success' => true,
@@ -368,12 +374,102 @@ class ReunionWorkflowService
         }
     }
 
+        /**
+     * Obtenir les détails d'une exécution de workflow
+     */
+    public function getWorkflowExecution(int $executionId, User $user): array
+    {
+        try {
+            $execution = ReunionWorkflowExecution::with([
+                'reunion',
+                'workflowConfig.typeReunion'
+            ])->findOrFail($executionId);
+
+            return [
+                'success' => true,
+                'data' => $execution,
+                'message' => 'Exécution de workflow récupérée avec succès'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération de l\'exécution de workflow', [
+                'execution_id' => $executionId,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'exécution',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Annuler un workflow en cours
+     */
+    public function cancelWorkflow(int $executionId, string $raison, User $user): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $execution = ReunionWorkflowExecution::findOrFail($executionId);
+
+            // Vérifier que le workflow est en cours
+            if ($execution->statut_global !== 'EN_COURS') {
+                return [
+                    'success' => false,
+                    'message' => 'Seuls les workflows en cours peuvent être annulés'
+                ];
+            }
+
+            // Mettre à jour l'historique
+            $historique = $execution->historique_etapes ?? [];
+            $historique[] = [
+                'etape' => $execution->etape_actuelle,
+                'validateur' => $user->id,
+                'statut' => 'ANNULE',
+                'date' => now()->toDateTimeString(),
+                'commentaire' => $raison
+            ];
+
+            $execution->historique_etapes = $historique;
+            $execution->statut_global = 'ANNULE';
+            $execution->date_modification = now();
+            $execution->save();
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'data' => $execution,
+                'message' => 'Workflow annulé avec succès'
+            ];
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de l\'annulation du workflow', [
+                'execution_id' => $executionId,
+                'raison' => $raison,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de l\'annulation du workflow',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
     /**
      * Vérifier si l'utilisateur peut créer un workflow
      */
     private function canCreateWorkflow(User $user): bool
     {
-        return $user->hasPermission('create_reunion_workflow') || 
+        return $user->hasPermission('create_reunion_workflow') ||
                $user->hasRole('admin');
     }
-} 
+}

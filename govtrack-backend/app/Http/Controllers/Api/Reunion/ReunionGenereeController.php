@@ -75,6 +75,7 @@ class ReunionGenereeController extends Controller
                 'reunion_id' => 'required|exists:reunions,id',
                 'statut_generation' => 'nullable|in:SUCCES,ERREUR',
                 'message_erreur' => 'nullable|string',
+                'configuration_utilisee' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {
@@ -90,6 +91,7 @@ class ReunionGenereeController extends Controller
                 $request->reunion_id,
                 $request->statut_generation ?? 'SUCCES',
                 $request->message_erreur,
+                $request->configuration_utilisee ?? [],
                 $request->user()->id
             );
 

@@ -9,7 +9,9 @@ use App\Models\ReunionParticipant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Exception;
 
 class ReunionService
 {
@@ -777,15 +779,130 @@ class ReunionService
     }
 
     /**
+     * Reporter une réunion
+     */
+    public function reporterReunion(int $id, array $data, User $user): array
+    {
+        try {
+            DB::beginTransaction();
+
+            // Récupérer la réunion
+            $reunion = Reunion::findOrFail($id);
+
+            // Vérifier les permissions
+            if (!$this->canUpdateReunion($reunion, $user)) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas les permissions pour reporter cette réunion'
+                ];
+            }
+
+            // Vérifier que la réunion peut être reportée
+            if (!in_array($reunion->statut, ['PLANIFIEE', 'EN_COURS'])) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Seules les réunions planifiées ou en cours peuvent être reportées'
+                ];
+            }
+
+            // Validation des données
+            $validator = Validator::make($data, [
+                'nouvelle_date_debut' => 'required|date|after:now',
+                'nouvelle_date_fin' => 'nullable|date|after:nouvelle_date_debut',
+                'raison_report' => 'nullable|string|max:500',
+                'notifier_participants' => 'nullable|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $validator->errors()
+                ];
+            }
+
+            // Sauvegarder l'ancienne date pour l'historique
+            $ancienneDateDebut = $reunion->date_debut;
+            $ancienneDateFin = $reunion->date_fin;
+
+            // Mettre à jour la réunion
+            $reunion->update([
+                'date_debut' => $data['nouvelle_date_debut'],
+                'date_fin' => $data['nouvelle_date_fin'] ?? null,
+                'statut' => 'REPORTEE',
+                'reprogrammee_le' => now(),
+                'modifier_par' => $user->id,
+                'date_modification' => now(),
+            ]);
+
+            // Log de l'action
+            Log::info('Réunion reportée', [
+                'reunion_id' => $reunion->id,
+                'ancienne_date_debut' => $ancienneDateDebut,
+                'nouvelle_date_debut' => $data['nouvelle_date_debut'],
+                'raison_report' => $data['raison_report'] ?? null,
+                'user_id' => $user->id
+            ]);
+
+            // Notifier les participants si demandé
+            if ($data['notifier_participants'] ?? false) {
+                // TODO: Implémenter la notification des participants
+                Log::info('Notification des participants pour report de réunion', [
+                    'reunion_id' => $reunion->id,
+                    'participants_count' => $reunion->participants()->count()
+                ]);
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Réunion reportée avec succès',
+                'data' => [
+                    'reunion' => $reunion->load([
+                        'typeReunion',
+                        'serie',
+                        'participants.user',
+                        'createur',
+                        'modificateur'
+                    ]),
+                    'ancienne_date_debut' => $ancienneDateDebut,
+                    'ancienne_date_fin' => $ancienneDateFin,
+                    'nouvelle_date_debut' => $data['nouvelle_date_debut'],
+                    'nouvelle_date_fin' => $data['nouvelle_date_fin'] ?? null,
+                ]
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors du report de réunion', [
+                'reunion_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => $user->id
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors du report de la réunion',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Vérifier si la transition de statut est valide
      */
     private function isValidStatutTransition(string $ancienStatut, string $nouveauStatut): bool
     {
         $transitionsValides = [
-            'PLANIFIEE' => ['EN_COURS', 'ANNULEE'],
-            'EN_COURS' => ['TERMINEE', 'ANNULEE'],
+            'PLANIFIEE' => ['EN_COURS', 'ANNULEE', 'REPORTEE'],
+            'EN_COURS' => ['TERMINEE', 'ANNULEE', 'REPORTEE'],
             'TERMINEE' => [], // Pas de transition possible
             'ANNULEE' => ['PLANIFIEE'], // Réactivation possible
+            'REPORTEE' => ['PLANIFIEE', 'ANNULEE'], // Réactivation ou annulation possible
         ];
 
         return in_array($nouveauStatut, $transitionsValides[$ancienStatut] ?? []);

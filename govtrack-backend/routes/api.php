@@ -329,6 +329,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::put('{id}', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'update'])->middleware('permission:update_reunions');
         Route::delete('{id}', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'destroy'])->middleware('permission:delete_reunions');
         Route::post('{id}/changer-statut', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'changeStatut'])->middleware('permission:update_reunions');
+        Route::post('{id}/reporter', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'reporterReunion'])->middleware('permission:update_reunions');
 
         // Gestion des participants
         Route::get('{reunionId}/participants', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'participants'])->middleware('permission:view_reunions');
@@ -378,6 +379,39 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('{id}/toggle-active', [\App\Http\Controllers\Api\Reunion\ReunionSerieController::class, 'toggleActive'])->middleware('permission:update_reunion_series');
         Route::post('{id}/generer-reunions', [\App\Http\Controllers\Api\Reunion\ReunionSerieController::class, 'generateReunions'])->middleware('permission:update_reunion_series');
         Route::post('{id}/regenerer-reunions', [\App\Http\Controllers\Api\Reunion\ReunionSerieController::class, 'regenerateReunions'])->middleware('permission:update_reunion_series');
+    });
+
+    // =================================================================
+    // PHASE 2 : RÉUNIONS GÉNÉRÉES
+    // =================================================================
+    Route::prefix('reunions-generees')->group(function () {
+        // Routes spécifiques en premier pour éviter les conflits
+        Route::get('stats/{serieId?}', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'getStats'])->middleware('permission:view_reunion_series');
+        Route::get('reunion/{reunionGenereeId}', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'getReunionGeneree'])->middleware('permission:view_reunion_series');
+        Route::post('nettoyer', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'nettoyerAnciensEnregistrements'])->middleware('permission:delete_reunion_series');
+
+        // Routes avec paramètres après
+        Route::get('{serieId}', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'getReunionsGenerees'])->middleware('permission:view_reunion_series');
+        Route::post('{serieId}', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'createReunionGeneree'])->middleware('permission:create_reunion_series');
+        Route::put('{reunionGenereeId}/statut', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'updateStatut'])->middleware('permission:update_reunion_series');
+        Route::delete('{reunionGenereeId}', [\App\Http\Controllers\Api\Reunion\ReunionGenereeController::class, 'deleteReunionGeneree'])->middleware('permission:delete_reunion_series');
+    });
+
+    // =================================================================
+    // PHASE 2 : CONFIGURATIONS DE NOTIFICATIONS
+    // =================================================================
+    Route::prefix('notification-configs')->group(function () {
+        // Routes spécifiques en premier pour éviter les conflits
+        Route::get('stats/{typeReunionId?}', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'getStats'])->middleware('permission:view_reunion_notifications');
+        Route::post('copier', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'copierConfigs'])->middleware('permission:create_reunion_notifications');
+
+        // Routes avec paramètres après
+        Route::get('{typeReunionId}', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'getConfigs'])->middleware('permission:view_reunion_notifications');
+        Route::post('/', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'createConfig'])->middleware('permission:create_reunion_notifications');
+        Route::get('config/{configId}', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'getConfig'])->middleware('permission:view_reunion_notifications');
+        Route::put('{configId}', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'updateConfig'])->middleware('permission:update_reunion_notifications');
+        Route::delete('{configId}', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'deleteConfig'])->middleware('permission:delete_reunion_notifications');
+        Route::post('{configId}/toggle-actif', [\App\Http\Controllers\Api\Reunion\ReunionNotificationConfigController::class, 'toggleActif'])->middleware('permission:update_reunion_notifications');
     });
 
     // =================================================================

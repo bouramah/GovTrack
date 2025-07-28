@@ -174,11 +174,28 @@ class ReunionNotificationConfigController extends Controller
     public function toggleActif(Request $request, int $configId): JsonResponse
     {
         try {
+                        // Log du payload reçu
+            \Log::info('Payload reçu pour toggle-actif', [
+                'config_id' => $configId,
+                'payload' => $request->all(),
+                'actif_value' => $request->actif,
+                'actif_type' => gettype($request->actif),
+                'user_id' => auth()->id()
+            ]);
+
             $validator = Validator::make($request->all(), [
                 'actif' => 'required|boolean',
+            ], [
+                'actif.required' => 'Le champ actif est requis',
+                'actif.boolean' => 'Le champ actif doit être un booléen (true ou false, sans guillemets)'
             ]);
 
             if ($validator->fails()) {
+                \Log::warning('Validation échouée pour toggle-actif', [
+                    'config_id' => $configId,
+                    'errors' => $validator->errors()->toArray(),
+                    'payload' => $request->all()
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Données de validation invalides',
@@ -186,7 +203,25 @@ class ReunionNotificationConfigController extends Controller
                 ], 422);
             }
 
-            $config = $this->notificationConfigService->toggleActif($configId, $request->actif, $request->user()->id);
+            // Convertir explicitement en boolean
+            $actifValue = (bool) $request->actif;
+
+            \Log::info('Valeur actif après conversion', [
+                'original' => $request->actif,
+                'converted' => $actifValue,
+                'type' => gettype($actifValue),
+                'user_id' => auth()->id()
+            ]);
+
+            $config = $this->notificationConfigService->toggleActif($configId, $actifValue, auth()->id());
+
+            // Vérifier que la configuration a bien été mise à jour
+            if (!$config) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Configuration non trouvée ou erreur lors de la mise à jour'
+                ], 404);
+            }
 
             return response()->json([
                 'success' => true,

@@ -188,15 +188,26 @@ class ReunionNotificationConfigService
             $config = ReunionNotificationConfig::findOrFail($configId);
             $ancienStatut = $config->actif;
 
+            Log::info('Tentative de changement de statut', [
+                'config_id' => $configId,
+                'ancien_statut' => $ancienStatut,
+                'nouveau_statut_demande' => $actif,
+                'user_id' => $userId
+            ]);
+
             $config->update([
                 'actif' => $actif,
-                'updated_by' => $userId,
+                'modifier_par' => $userId,
+                'date_modification' => now(),
             ]);
+
+            // Recharger la configuration pour vérifier le changement
+            $config->refresh();
 
             Log::info('Statut de configuration de notification changé', [
                 'config_id' => $config->id,
                 'ancien_statut' => $ancienStatut,
-                'nouveau_statut' => $actif,
+                'nouveau_statut' => $config->actif,
                 'user_id' => $userId
             ]);
 
@@ -278,12 +289,10 @@ class ReunionNotificationConfigService
                     'actif' => $configSource->actif,
                     'delai_jours' => $configSource->delai_jours,
                     'template_email' => $configSource->template_email,
-                    'sujet_email' => $configSource->sujet_email,
-                    'contenu_email' => $configSource->contenu_email,
-                    'destinataires' => $configSource->destinataires,
-                    'conditions_envoi' => $configSource->conditions_envoi,
-                    'created_by' => $userId,
-                    'updated_by' => $userId,
+                    'destinataires_par_defaut' => $configSource->destinataires_par_defaut,
+                    'configuration_avancee' => $configSource->configuration_avancee,
+                    'creer_par' => $userId,
+                    'modifier_par' => $userId,
                 ]);
                 $nombreCopie++;
             }

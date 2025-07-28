@@ -24,7 +24,7 @@ class ReunionWorkflowController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $result = $this->workflowService->getWorkflowConfigs($typeReunionId, $user);
 
             if ($result['success']) {
@@ -107,8 +107,8 @@ class ReunionWorkflowController extends Controller
 
             $user = $request->user();
             $result = $this->workflowService->startWorkflow(
-                $reunionId, 
-                $request->workflow_config_id, 
+                $reunionId,
+                $request->workflow_config_id,
                 $user
             );
 
@@ -242,12 +242,7 @@ class ReunionWorkflowController extends Controller
     {
         try {
             $user = $request->user();
-            
-            // TODO: Implémenter la méthode dans le service
-            $result = [
-                'success' => false,
-                'message' => 'Méthode non implémentée'
-            ];
+            $result = $this->workflowService->getWorkflowExecution($executionId, $user);
 
             if ($result['success']) {
                 return response()->json($result, 200);
@@ -264,7 +259,7 @@ class ReunionWorkflowController extends Controller
         }
     }
 
-    /**
+        /**
      * Annuler un workflow en cours
      */
     public function cancelWorkflow(Request $request, int $executionId): JsonResponse
@@ -283,12 +278,7 @@ class ReunionWorkflowController extends Controller
             }
 
             $user = $request->user();
-            
-            // TODO: Implémenter la méthode dans le service
-            $result = [
-                'success' => false,
-                'message' => 'Méthode non implémentée'
-            ];
+            $result = $this->workflowService->cancelWorkflow($executionId, $request->raison, $user);
 
             if ($result['success']) {
                 return response()->json($result, 200);
@@ -304,4 +294,4 @@ class ReunionWorkflowController extends Controller
             ], 500);
         }
     }
-} 
+}

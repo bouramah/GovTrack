@@ -82,12 +82,14 @@ class Reunion extends Model
     public const STATUT_EN_COURS = 'EN_COURS';
     public const STATUT_TERMINEE = 'TERMINEE';
     public const STATUT_ANNULEE = 'ANNULEE';
+    public const STATUT_REPORTEE = 'REPORTEE';
 
     public const STATUTS = [
         self::STATUT_PLANIFIEE => 'Planifiée',
         self::STATUT_EN_COURS => 'En cours',
         self::STATUT_TERMINEE => 'Terminée',
         self::STATUT_ANNULEE => 'Annulée',
+        self::STATUT_REPORTEE => 'Reportée',
     ];
 
     /**
@@ -262,6 +264,14 @@ class Reunion extends Model
     public function scopeAnnulees($query)
     {
         return $query->where('statut', self::STATUT_ANNULEE);
+    }
+
+    /**
+     * Scope pour les réunions reportées
+     */
+    public function scopeReportees($query)
+    {
+        return $query->where('statut', self::STATUT_REPORTEE);
     }
 
     /**

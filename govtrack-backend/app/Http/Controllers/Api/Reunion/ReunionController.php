@@ -76,7 +76,7 @@ class ReunionController extends Controller
             'fonctionnalites_actives' => 'nullable|array',
             'quorum_minimum' => 'nullable|integer|min:1',
             'ordre_du_jour_type' => 'nullable|in:EXPLICITE,IMPLICITE',
-            'statut' => 'nullable|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE',
+            'statut' => 'nullable|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE',
             'participants' => 'nullable|array',
             'participants.*.user_id' => 'required_with:participants|exists:users,id',
             'participants.*.role' => 'nullable|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR,VALIDATEUR_PV',
@@ -183,7 +183,7 @@ class ReunionController extends Controller
 
         // Validation des données
         $validator = Validator::make($request->all(), [
-            'nouveau_statut' => 'required|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE',
+            'nouveau_statut' => 'required|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE,REPORTEE',
             'commentaire' => 'nullable|string|max:500',
         ]);
 
@@ -201,6 +201,22 @@ class ReunionController extends Controller
             $user,
             $request->commentaire
         );
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Reporter une réunion
+     */
+    public function reporterReunion(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $result = $this->reunionService->reporterReunion($id, $request->all(), $user);
 
         if ($result['success']) {
             return response()->json($result, 200);

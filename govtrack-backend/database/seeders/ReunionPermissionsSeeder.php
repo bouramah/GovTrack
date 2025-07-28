@@ -23,6 +23,9 @@ class ReunionPermissionsSeeder extends Seeder
         // =================================================================
         $notificationPermissions = [
             ['nom' => 'view_reunion_notifications', 'description' => 'Voir les notifications d\'une réunion'],
+            ['nom' => 'create_reunion_notifications', 'description' => 'Créer des configurations de notifications'],
+            ['nom' => 'update_reunion_notifications', 'description' => 'Modifier des configurations de notifications'],
+            ['nom' => 'delete_reunion_notifications', 'description' => 'Supprimer des configurations de notifications'],
             ['nom' => 'send_reunion_notifications', 'description' => 'Envoyer des notifications de réunion'],
             ['nom' => 'view_notifications', 'description' => 'Voir les notifications globales'],
         ];
@@ -47,6 +50,16 @@ class ReunionPermissionsSeeder extends Seeder
             ['nom' => 'create_reunion_series', 'description' => 'Créer une série de réunions'],
             ['nom' => 'edit_reunion_series', 'description' => 'Modifier une série de réunions'],
             ['nom' => 'delete_reunion_series', 'description' => 'Supprimer une série de réunions'],
+        ];
+
+        // =================================================================
+        // PERMISSIONS RÉUNIONS GÉNÉRÉES
+        // =================================================================
+        $generatedReunionPermissions = [
+            ['nom' => 'view_reunion_series', 'description' => 'Voir les réunions générées'],
+            ['nom' => 'create_reunion_series', 'description' => 'Créer des réunions générées'],
+            ['nom' => 'update_reunion_series', 'description' => 'Modifier des réunions générées'],
+            ['nom' => 'delete_reunion_series', 'description' => 'Supprimer des réunions générées'],
         ];
 
         // =================================================================
@@ -144,6 +157,9 @@ class ReunionPermissionsSeeder extends Seeder
         $workflowPermissions = [
             ['nom' => 'view_reunion_workflows', 'description' => 'Voir les workflows de réunion'],
             ['nom' => 'create_reunion_workflow', 'description' => 'Créer un workflow de réunion'],
+            ['nom' => 'start_reunion_workflow', 'description' => 'Démarrer un workflow de réunion'],
+            ['nom' => 'validate_reunion_workflow', 'description' => 'Valider une étape de workflow'],
+            ['nom' => 'cancel_reunion_workflow', 'description' => 'Annuler un workflow de réunion'],
             ['nom' => 'edit_reunion_workflow', 'description' => 'Modifier un workflow de réunion'],
             ['nom' => 'delete_reunion_workflow', 'description' => 'Supprimer un workflow de réunion'],
         ];
@@ -171,6 +187,7 @@ class ReunionPermissionsSeeder extends Seeder
             $notificationPermissions,
             $reunionPermissions,
             $seriesPermissions,
+            $generatedReunionPermissions,
             $typeReunionPermissions,
             $participantPermissions,
             $ordreJourPermissions,
@@ -240,6 +257,7 @@ class ReunionPermissionsSeeder extends Seeder
         $this->command->info("   🔔 Notifications : " . count($notificationPermissions));
         $this->command->info("   📅 Réunions : " . count($reunionPermissions));
         $this->command->info("   🔄 Séries : " . count($seriesPermissions));
+        $this->command->info("   🎯 Réunions Générées : " . count($generatedReunionPermissions));
         $this->command->info("   🏷️ Types : " . count($typeReunionPermissions));
         $this->command->info("   👥 Participants : " . count($participantPermissions));
         $this->command->info("   📋 Ordre du jour : " . count($ordreJourPermissions));

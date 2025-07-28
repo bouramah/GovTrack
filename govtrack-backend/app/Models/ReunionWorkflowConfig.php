@@ -26,10 +26,10 @@ class ReunionWorkflowConfig extends Model
     protected $fillable = [
         'type_reunion_id',
         'nom_workflow',
-        'description',
-        'etapes_workflow',
-        'conditions_avancement',
+        'etapes',
         'actif',
+        'obligatoire',
+        'configuration',
         'date_creation',
         'date_modification',
         'creer_par',
@@ -40,9 +40,10 @@ class ReunionWorkflowConfig extends Model
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'etapes_workflow' => 'array',
-        'conditions_avancement' => 'array',
+        'etapes' => 'array',
+        'configuration' => 'array',
         'actif' => 'boolean',
+        'obligatoire' => 'boolean',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -100,7 +101,7 @@ class ReunionWorkflowConfig extends Model
      */
     public function getNombreEtapesAttribute(): int
     {
-        return count($this->etapes_workflow ?? []);
+        return count($this->etapes ?? []);
     }
 
     /**
@@ -109,7 +110,7 @@ class ReunionWorkflowConfig extends Model
     public function getEtapesFormateesAttribute(): array
     {
         $etapes = [];
-        foreach ($this->etapes_workflow ?? [] as $index => $etape) {
+        foreach ($this->etapes ?? [] as $index => $etape) {
             $etapes[] = [
                 'ordre' => $index + 1,
                 'nom' => $etape['nom'] ?? "Étape " . ($index + 1),

@@ -1,0 +1,682 @@
+{
+	"info": {
+		"_postman_id": "reunion-calendar-service-complete",
+		"name": "GovTrack - ReunionCalendarService - Complete",
+		"description": "Collection complète pour tester le service ReunionCalendarService avec tous les endpoints disponibles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les événements calendrier",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/events?start_date={{start_date}}&end_date={{end_date}}&filters[type_reunion_id]={{type_reunion_id}}&filters[statut]=PLANIFIEE",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"events"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						},
+						{
+							"key": "filters[type_reunion_id]",
+							"value": "{{type_reunion_id}}"
+						},
+						{
+							"key": "filters[statut]",
+							"value": "PLANIFIEE"
+						}
+					]
+				},
+				"description": "Récupérer les événements calendrier pour une période donnée avec filtres"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Vue calendrier journalière",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/day?date={{date}}&filters[type_reunion_id]={{type_reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"day"
+					],
+					"query": [
+						{
+							"key": "date",
+							"value": "{{date}}"
+						},
+						{
+							"key": "filters[type_reunion_id]",
+							"value": "{{type_reunion_id}}"
+						}
+					]
+				},
+				"description": "Obtenir la vue calendrier pour une journée spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Vue calendrier hebdomadaire",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/week?start_date={{start_date}}&filters[statut]=EN_COURS",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"week"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "filters[statut]",
+							"value": "EN_COURS"
+						}
+					]
+				},
+				"description": "Obtenir la vue calendrier pour une semaine spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Vue calendrier mensuelle",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/month?year_month={{year_month}}&filters[type_reunion_id]={{type_reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"month"
+					],
+					"query": [
+						{
+							"key": "year_month",
+							"value": "{{year_month}}"
+						},
+						{
+							"key": "filters[type_reunion_id]",
+							"value": "{{type_reunion_id}}"
+						}
+					]
+				},
+				"description": "Obtenir la vue calendrier pour un mois spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Vérifier la disponibilité d'un utilisateur",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"user_id\": {{user_id}},\n  \"start_date\": \"{{start_date}}\",\n  \"end_date\": \"{{end_date}}\",\n  \"exclude_reunion_id\": null\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/availability/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"availability",
+						"check"
+					]
+				},
+				"description": "Vérifier la disponibilité d'un utilisateur pour une période donnée"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Trouver des créneaux disponibles",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"participant_ids\": [{{user_id}}],\n  \"start_date\": \"{{start_date}}\",\n  \"end_date\": \"{{end_date}}\",\n  \"duration\": 60\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/availability/slots",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"availability",
+						"slots"
+					]
+				},
+				"description": "Trouver des créneaux disponibles pour un groupe de participants"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir les statistiques calendrier",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/stats?start_date={{start_date}}&end_date={{end_date}}&user_id={{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"stats"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						},
+						{
+							"key": "user_id",
+							"value": "{{user_id}}"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques du calendrier pour une période donnée"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Exporter les événements au format iCal",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/export/ical?start_date={{start_date}}&end_date={{end_date}}&filters[type_reunion_id]={{type_reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"export",
+						"ical"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						},
+						{
+							"key": "filters[type_reunion_id]",
+							"value": "{{type_reunion_id}}"
+						}
+					]
+				},
+				"description": "Exporter les événements au format iCal pour importation dans d'autres calendriers"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Obtenir mes événements",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/events/my?start_date={{start_date}}&end_date={{end_date}}&filters[statut]=PLANIFIEE",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"events",
+						"my"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						},
+						{
+							"key": "filters[statut]",
+							"value": "PLANIFIEE"
+						}
+					]
+				},
+				"description": "Obtenir les événements de l'utilisateur connecté"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Obtenir mes statistiques",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/stats/my?start_date={{start_date}}&end_date={{end_date}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"stats",
+						"my"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques personnelles de l'utilisateur connecté"
+			},
+			"response": []
+		},
+		{
+			"name": "11. Test - Événements avec filtres multiples",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/events?start_date={{start_date}}&end_date={{end_date}}&filters[type_reunion_id]={{type_reunion_id}}&filters[user_id]={{user_id}}&filters[statut]=TERMINEE",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"events"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}"
+						},
+						{
+							"key": "filters[type_reunion_id]",
+							"value": "{{type_reunion_id}}"
+						},
+						{
+							"key": "filters[user_id]",
+							"value": "{{user_id}}"
+						},
+						{
+							"key": "filters[statut]",
+							"value": "TERMINEE"
+						}
+					]
+				},
+				"description": "Tester la récupération d'événements avec plusieurs filtres combinés"
+			},
+			"response": []
+		},
+		{
+			"name": "12. Test - Créneaux disponibles pour plusieurs participants",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"participant_ids\": [{{user_id}}, 2, 3],\n  \"start_date\": \"{{start_date}}\",\n  \"end_date\": \"{{end_date}}\",\n  \"duration\": 120\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/calendar/availability/slots",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"calendar",
+						"availability",
+						"slots"
+					]
+				},
+				"description": "Tester la recherche de créneaux pour plusieurs participants avec une durée de 2h"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir des variables dynamiques",
+					"if (pm.environment.get('auth_token') === '') {",
+					"    console.log('Token d\\'authentification manquant');",
+					"}",
+					"",
+					"// Définir des dates par défaut si non définies",
+					"if (!pm.environment.get('start_date')) {",
+					"    const today = new Date();",
+					"    const startDate = today.toISOString().split('T')[0];",
+					"    pm.environment.set('start_date', startDate);",
+					"}",
+					"",
+					"if (!pm.environment.get('end_date')) {",
+					"    const today = new Date();",
+					"    today.setDate(today.getDate() + 30);",
+					"    const endDate = today.toISOString().split('T')[0];",
+					"    pm.environment.set('end_date', endDate);",
+					"}",
+					"",
+					"if (!pm.environment.get('date')) {",
+					"    const today = new Date();",
+					"    const date = today.toISOString().split('T')[0];",
+					"    pm.environment.set('date', date);",
+					"}",
+					"",
+					"if (!pm.environment.get('year_month')) {",
+					"    const today = new Date();",
+					"    const yearMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');",
+					"    pm.environment.set('year_month', yearMonth);",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automatiques pour chaque requête",
+					"pm.test('Status code is 200 or 201', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});",
+					"",
+					"pm.test('Response has success property', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"pm.test('Response structure is valid', function () {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success) {",
+					"        pm.expect(jsonData).to.have.property('data');",
+					"    }",
+					"});",
+					"",
+					"// Tests spécifiques pour les événements",
+					"if (pm.request.url.path.includes('events') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('Events have required properties', function () {",
+					"            if (jsonData.data.length > 0) {",
+					"                const event = jsonData.data[0];",
+					"                pm.expect(event).to.have.property('id');",
+					"                pm.expect(event).to.have.property('title');",
+					"                pm.expect(event).to.have.property('start');",
+					"                pm.expect(event).to.have.property('end');",
+					"            }",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Tests spécifiques pour les statistiques",
+					"if (pm.request.url.path.includes('stats') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('Stats have required properties', function () {",
+					"            pm.expect(jsonData.data).to.have.property('total_reunions');",
+					"            pm.expect(jsonData.data).to.have.property('reunions_par_statut');",
+					"        });",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "start_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "end_date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "date",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "year_month",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

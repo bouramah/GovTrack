@@ -22,14 +22,12 @@ class ReunionGeneree extends Model
     /**
      * Constantes pour les statuts
      */
-    public const STATUT_GENERE = 'GENERE';
-    public const STATUT_PLANIFIEE = 'PLANIFIEE';
-    public const STATUT_ANNULEE = 'ANNULEE';
+    public const STATUT_SUCCES = 'SUCCES';
+    public const STATUT_ERREUR = 'ERREUR';
 
     public const STATUTS = [
-        self::STATUT_GENERE => 'Généré',
-        self::STATUT_PLANIFIEE => 'Planifiée',
-        self::STATUT_ANNULEE => 'Annulée',
+        self::STATUT_SUCCES => 'Succès',
+        self::STATUT_ERREUR => 'Erreur',
     ];
 
     /**
@@ -38,21 +36,22 @@ class ReunionGeneree extends Model
     protected $fillable = [
         'serie_id',
         'reunion_id',
-        'date_generation',
-        'statut',
-        'configuration_generation',
+        'genere_le',
+        'statut_generation',
+        'message_erreur',
+        'configuration_utilisee',
         'date_creation',
-        'date_modification',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'date_generation' => 'datetime',
-        'configuration_generation' => 'array',
+        'genere_le' => 'datetime',
+        'statut_generation' => 'string',
+        'message_erreur' => 'string',
+        'configuration_utilisee' => 'array',
         'date_creation' => 'datetime',
-        'date_modification' => 'datetime',
     ];
 
     /**
@@ -76,7 +75,7 @@ class ReunionGeneree extends Model
      */
     public function scopeByStatut($query, $statut)
     {
-        return $query->where('statut', $statut);
+        return $query->where('statut_generation', $statut);
     }
 
     /**
@@ -92,6 +91,6 @@ class ReunionGeneree extends Model
      */
     public function getStatutLibelleAttribute(): string
     {
-        return self::STATUTS[$this->statut] ?? $this->statut;
+        return self::STATUTS[$this->statut_generation] ?? $this->statut_generation;
     }
 }

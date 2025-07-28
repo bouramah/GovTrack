@@ -1,0 +1,574 @@
+{
+	"info": {
+		"_postman_id": "reunion-notification-config-service-complete",
+		"name": "GovTrack - ReunionNotificationConfigService - Complete",
+		"description": "Collection complète pour tester le service ReunionNotificationConfigService avec tous les endpoints disponibles",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les configurations d'un type de réunion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/{{type_reunion_id}}?type_notification=CONFIRMATION_PRESENCE&actif=true",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"{{type_reunion_id}}"
+					],
+					"query": [
+						{
+							"key": "type_notification",
+							"value": "CONFIRMATION_PRESENCE"
+						},
+						{
+							"key": "actif",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Récupérer les configurations de notifications d'un type de réunion avec filtres optionnels"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Récupérer une configuration spécifique",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/config/{{config_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"config",
+						"{{config_id}}"
+					]
+				},
+				"description": "Récupérer les détails d'une configuration de notification spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Créer une configuration de notification",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"type_notification\": \"CONFIRMATION_PRESENCE\",\n  \"actif\": true,\n  \"delai_jours\": 2,\n  \"template_email\": \"Bonjour {{nom}}, veuillez confirmer votre présence à la réunion {{titre}}.\",\n  \"destinataires_par_defaut\": [\"PARTICIPANTS\", \"ORGANISATEUR\"],\n  \"configuration_avancee\": {\n    \"rappel_automatique\": true,\n    \"nombre_rappel\": 2,\n    \"intervalle_rappel\": 24\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						""
+					]
+				},
+				"description": "Créer une nouvelle configuration de notification"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Mettre à jour une configuration",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_notification\": \"RAPPEL\",\n  \"actif\": true,\n  \"delai_jours\": 1,\n  \"template_email\": \"Rappel : Réunion {{titre}} demain à {{heure}}.\",\n  \"destinataires_par_defaut\": [\"PARTICIPANTS\"],\n  \"configuration_avancee\": {\n    \"rappel_automatique\": true,\n    \"nombre_rappel\": 1\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/{{config_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"{{config_id}}"
+					]
+				},
+				"description": "Mettre à jour une configuration de notification existante"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Supprimer une configuration",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/{{config_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"{{config_id}}"
+					]
+				},
+				"description": "Supprimer une configuration de notification"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Activer/Désactiver une configuration",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"actif\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/{{config_id}}/toggle-actif",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"{{config_id}}",
+						"toggle-actif"
+					]
+				},
+				"description": "Activer ou désactiver une configuration de notification"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir les statistiques des configurations",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/stats/{{type_reunion_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"stats",
+						"{{type_reunion_id}}"
+					]
+				},
+				"description": "Obtenir les statistiques des configurations pour un type de réunion spécifique"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Obtenir les statistiques globales",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/stats",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"stats"
+					]
+				},
+				"description": "Obtenir les statistiques globales de toutes les configurations"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Copier des configurations",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"source_type_reunion_id\": {{type_reunion_id}},\n  \"destination_type_reunion_id\": 2\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/copier",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"copier"
+					]
+				},
+				"description": "Copier les configurations d'un type de réunion vers un autre"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Test - Créer une configuration de rappel",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"type_notification\": \"RAPPEL\",\n  \"actif\": true,\n  \"delai_jours\": 1,\n  \"template_email\": \"Rappel : Réunion {{titre}} demain à {{heure}} dans {{lieu}}.\",\n  \"destinataires_par_defaut\": [\"PARTICIPANTS\", \"ORGANISATEUR\"],\n  \"configuration_avancee\": {\n    \"rappel_automatique\": true,\n    \"nombre_rappel\": 2,\n    \"intervalle_rappel\": 12,\n    \"inclure_ordre_jour\": true\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						""
+					]
+				},
+				"description": "Tester la création d'une configuration de rappel avec paramètres avancés"
+			},
+			"response": []
+		},
+		{
+			"name": "11. Test - Créer une configuration PV disponible",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type_reunion_id\": {{type_reunion_id}},\n  \"type_notification\": \"PV_DISPONIBLE\",\n  \"actif\": true,\n  \"delai_jours\": 0,\n  \"template_email\": \"Le procès-verbal de la réunion {{titre}} est maintenant disponible.\",\n  \"destinataires_par_defaut\": [\"PARTICIPANTS\", \"ORGANISATEUR\", \"VALIDATEUR\"],\n  \"configuration_avancee\": {\n    \"inclure_lien_pv\": true,\n    \"inclure_resume\": true,\n    \"notifier_actions\": true\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						""
+					]
+				},
+				"description": "Tester la création d'une configuration pour notification PV disponible"
+			},
+			"response": []
+		},
+		{
+			"name": "12. Test - Filtres avancés pour configurations",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/notification-configs/{{type_reunion_id}}?type_notification=RAPPEL&actif=true",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"notification-configs",
+						"{{type_reunion_id}}"
+					],
+					"query": [
+						{
+							"key": "type_notification",
+							"value": "RAPPEL"
+						},
+						{
+							"key": "actif",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Tester la récupération de configurations avec filtres avancés"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir des variables dynamiques",
+					"if (pm.environment.get('auth_token') === '') {",
+					"    console.log('Token d\\'authentification manquant');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automatiques pour chaque requête",
+					"pm.test('Status code is 200, 201 or 204', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has success property', function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"});",
+					"",
+					"pm.test('Response structure is valid', function () {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success) {",
+					"        pm.expect(jsonData).to.have.property('data');",
+					"    }",
+					"});",
+					"",
+					"// Tests spécifiques pour les configurations de notifications",
+					"if (pm.request.url.path.includes('notification-configs') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('NotificationConfig has required properties', function () {",
+					"            if (Array.isArray(jsonData.data)) {",
+					"                if (jsonData.data.length > 0) {",
+					"                    const config = jsonData.data[0];",
+					"                    pm.expect(config).to.have.property('id');",
+					"                    pm.expect(config).to.have.property('type_reunion_id');",
+					"                    pm.expect(config).to.have.property('type_notification');",
+					"                    pm.expect(config).to.have.property('actif');",
+					"                }",
+					"            } else {",
+					"                pm.expect(jsonData.data).to.have.property('id');",
+					"                pm.expect(jsonData.data).to.have.property('type_reunion_id');",
+					"                pm.expect(jsonData.data).to.have.property('type_notification');",
+					"                pm.expect(jsonData.data).to.have.property('actif');",
+					"            }",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Tests spécifiques pour les statistiques",
+					"if (pm.request.url.path.includes('stats') && pm.response.code === 200) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data) {",
+					"        pm.test('Stats have required properties', function () {",
+					"            pm.expect(jsonData.data).to.have.property('total_configs');",
+					"            pm.expect(jsonData.data).to.have.property('configs_par_type');",
+					"        });",
+					"    }",
+					"}",
+					"",
+					"// Sauvegarder l'ID de la configuration créée",
+					"if (pm.request.method === 'POST' && pm.response.code === 201) {",
+					"    const jsonData = pm.response.json();",
+					"    if (jsonData.success && jsonData.data && jsonData.data.id) {",
+					"        pm.environment.set('config_id', jsonData.data.id);",
+					"        console.log('ID de configuration sauvegardé:', jsonData.data.id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "config_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

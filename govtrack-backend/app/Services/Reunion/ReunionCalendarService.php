@@ -28,18 +28,14 @@ class ReunionCalendarService
             $query->where('type_reunion_id', $filters['type_reunion_id']);
         }
 
-        if (!empty($filters['entite_id'])) {
-            $query->where('entite_id', $filters['entite_id']);
-        }
-
         if (!empty($filters['user_id'])) {
             $query->whereHas('participants', function ($q) use ($filters) {
                 $q->where('user_id', $filters['user_id']);
             });
         }
 
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        if (!empty($filters['statut'])) {
+            $query->where('statut', $filters['statut']);
         }
 
         $reunions = $query->get();
@@ -65,15 +61,14 @@ class ReunionCalendarService
 
         return [
             'id' => $reunion->id,
-            'title' => $reunion->titre,
+            'title' => $reunion->nom,
             'start' => $reunion->date_debut,
             'end' => $reunion->date_fin,
             'allDay' => false,
             'type' => 'reunion',
             'type_reunion' => $reunion->typeReunion->nom,
-            'entite' => $reunion->entite->nom,
             'lieu' => $reunion->lieu,
-            'status' => $reunion->status,
+            'statut' => $reunion->statut,
             'participants' => $participants,
             'serie_id' => $reunion->serie_id,
             'color' => $this->getEventColor($reunion),
@@ -87,14 +82,14 @@ class ReunionCalendarService
     private function getEventColor(Reunion $reunion): string
     {
         $colors = [
-            'planifiee' => '#3B82F6', // bleu
-            'en_cours' => '#F59E0B',  // orange
-            'terminee' => '#10B981',  // vert
-            'annulee' => '#EF4444',   // rouge
-            'reportee' => '#8B5CF6'   // violet
+            'PLANIFIEE' => '#3B82F6', // bleu
+            'EN_COURS' => '#F59E0B',  // orange
+            'TERMINEE' => '#10B981',  // vert
+            'ANNULEE' => '#EF4444',   // rouge
+            'REPORTEE' => '#8B5CF6'   // violet
         ];
 
-        return $colors[$reunion->status] ?? '#6B7280';
+        return $colors[$reunion->statut] ?? '#6B7280';
     }
 
     /**
@@ -310,7 +305,7 @@ class ReunionCalendarService
 
         $stats = [
             'total_reunions' => $reunions->count(),
-            'reunions_par_status' => $reunions->groupBy('status')->map->count(),
+            'reunions_par_statut' => $reunions->groupBy('statut')->map->count(),
             'reunions_par_type' => $reunions->groupBy('type_reunion_id')->map->count(),
             'duree_moyenne' => $reunions->avg(function ($reunion) {
                 return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
@@ -342,7 +337,7 @@ class ReunionCalendarService
             $ical .= "SUMMARY:" . $event['title'] . "\r\n";
             $ical .= "DESCRIPTION:" . ($event['description'] ?? '') . "\r\n";
             $ical .= "LOCATION:" . ($event['lieu'] ?? '') . "\r\n";
-            $ical .= "STATUS:" . strtoupper($event['status']) . "\r\n";
+            $ical .= "STATUS:" . strtoupper($event['statut']) . "\r\n";
             $ical .= "END:VEVENT\r\n";
         }
 

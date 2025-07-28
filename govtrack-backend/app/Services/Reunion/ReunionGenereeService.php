@@ -14,7 +14,7 @@ class ReunionGenereeService
     /**
      * Créer un enregistrement de réunion générée
      */
-    public function createReunionGeneree(int $serieId, int $reunionId, string $statut = 'SUCCES', string $messageErreur = null, int $userId): ReunionGeneree
+    public function createReunionGeneree(int $serieId, int $reunionId, string $statut = 'SUCCES', string $messageErreur = null, array $configurationUtilisee = [], int $userId): ReunionGeneree
     {
         try {
             DB::beginTransaction();
@@ -25,9 +25,7 @@ class ReunionGenereeService
                 'genere_le' => now(),
                 'statut_generation' => $statut,
                 'message_erreur' => $messageErreur,
-                'configuration_utilisee' => $data['configuration_utilisee'] ?? [],
-                'creer_par' => $userId,
-                'modifier_par' => $userId,
+                'configuration_utilisee' => $configurationUtilisee,
             ]);
 
             Log::info('Enregistrement de réunion générée créé', [
@@ -124,7 +122,6 @@ class ReunionGenereeService
             $reunionGeneree->update([
                 'statut_generation' => $statut,
                 'message_erreur' => $messageErreur,
-                'modifier_par' => $userId,
             ]);
 
             Log::info('Statut de réunion générée mis à jour', [

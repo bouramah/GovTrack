@@ -29,7 +29,7 @@ return new class extends Migration
             $table->json('fonctionnalites_actives');
             $table->integer('quorum_minimum')->nullable();
             $table->enum('ordre_du_jour_type', ['EXPLICITE', 'IMPLICITE', 'HYBRIDE']);
-            $table->enum('statut', ['PLANIFIEE', 'EN_COURS', 'TERMINEE', 'ANNULEE']);
+            $table->enum('statut', ['PLANIFIEE', 'EN_COURS', 'TERMINEE', 'ANNULEE', 'REPORTEE']);
             $table->unsignedBigInteger('pv_valide_par_id')->nullable();
             $table->timestamp('pv_valide_le')->nullable();
             $table->timestamp('date_creation')->useCurrent();
