@@ -1,187 +1,371 @@
-# 🎯 Guide de Test - ReunionOrdreJourService Complete
+# Guide de Test - ReunionOrdreJourService
 
-## 📋 Objectif
-Tester systématiquement toutes les méthodes du `ReunionOrdreJourService` pour valider la gestion complète de l'ordre du jour des réunions.
+## 📋 Vue d'ensemble
 
-## 🔧 Méthodes Testées
+Ce guide détaille l'exécution complète des tests pour le service `ReunionOrdreJourService` qui gère l'ordre du jour des réunions.
 
-### **8 Méthodes Principales :**
-1. **`getOrdreJour()`** - Récupérer l'ordre du jour d'une réunion
-2. **`addPointOrdreJour()`** - Ajouter un point à l'ordre du jour
-3. **`addMultiplePointsOrdreJour()`** - Ajouter plusieurs points en lot
-4. **`updatePointOrdreJour()`** - Modifier un point existant
-5. **`reorderPoints()`** - Réorganiser l'ordre des points
-6. **`changeStatutPoint()`** - Changer le statut d'un point
-7. **`getOrdreJourStats()`** - Récupérer les statistiques
-8. **`deletePointOrdreJour()`** - Supprimer un point
+## 🔧 Configuration requise
 
-## 🚀 Préparation
+### Variables d'environnement Postman
 
-### **1. Démarrer le serveur Laravel**
-```bash
-cd govtrack-backend
-php artisan serve
+```json
+{
+  "base_url": "http://localhost:8000",
+  "token": "VOTRE_TOKEN_JWT",
+  "reunion_test_id": "1",
+  "point_test_id": "",
+  "point_created_id": ""
+}
 ```
 
-### **2. Préparer les données de test**
-```bash
-php scripts/prepare-test-data.php
+### Prérequis
+
+1. **Base de données** : Avoir une réunion existante avec l'ID spécifié dans `reunion_test_id`
+2. **Authentification** : Token JWT valide avec les permissions appropriées
+3. **Utilisateurs** : Avoir des utilisateurs avec les IDs 2, 3, 4 dans la base de données
+
+## 🧪 Tests détaillés
+
+### **1. Récupérer l'ordre du jour d'une réunion**
+- **URL :** `GET {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}`
+- **Objectif :** Récupérer tous les points de l'ordre du jour d'une réunion spécifique
+- **Tests :** Vérification du statut 200, structure de réponse, et récupération automatique de l'ID de test
+- **Permissions :** `view_reunion_ordre_jour`
+
+### **2. Ajouter un point à l'ordre du jour**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points`
+- **Payload :**
+```json
+{
+    "titre": "Point de test - Ordre du jour",
+    "description": "Description détaillée du point de test",
+    "type": "SUJET_SPECIFIQUE",
+    "duree_estimee_minutes": 30,
+    "responsable_id": 2,
+    "niveau_detail_requis": "DETAILLE"
+}
+```
+- **Objectif :** Ajouter un nouveau point à l'ordre du jour
+- **Tests :** Vérification du statut 201, création réussie, et sauvegarde de l'ID
+- **Permissions :** `create_reunion_ordre_jour`
+
+### **3. Ajouter plusieurs points à l'ordre du jour**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points/multiple`
+- **Payload :**
+```json
+{
+    "points": [
+        {
+            "titre": "Point 1 - Suivi projets",
+            "description": "Point de suivi des projets en cours",
+            "type": "SUIVI_PROJETS",
+            "duree_estimee_minutes": 45,
+            "responsable_id": 3,
+            "niveau_detail_requis": "DETAILLE"
+        },
+        {
+            "titre": "Point 2 - Point divers",
+            "description": "Point divers de la réunion",
+            "type": "POINT_DIVERS",
+            "duree_estimee_minutes": 15,
+            "niveau_detail_requis": "SIMPLE"
+        }
+    ]
+}
+```
+- **Objectif :** Ajouter plusieurs points en une seule requête
+- **Tests :** Vérification de la création de multiples points
+- **Permissions :** `create_reunion_ordre_jour`
+
+### **4. Mettre à jour un point de l'ordre du jour**
+- **URL :** `PUT {{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}`
+- **Payload :**
+```json
+{
+    "titre": "Point modifié - Ordre du jour",
+    "description": "Description mise à jour du point",
+    "type": "SUJET_SPECIFIQUE",
+    "duree_estimee_minutes": 60,
+    "responsable_id": 4,
+    "statut": "EN_COURS",
+    "niveau_detail_requis": "DETAILLE"
+}
+```
+- **Objectif :** Modifier les informations d'un point existant
+- **Tests :** Vérification de la mise à jour du titre
+- **Permissions :** `update_reunion_ordre_jour`
+
+### **5. Changer le statut d'un point**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}/statut`
+- **Payload :**
+```json
+{
+    "statut": "TERMINE"
+}
+```
+- **Objectif :** Changer le statut d'un point de l'ordre du jour
+- **Tests :** Vérification de la mise à jour vers TERMINE
+- **Permissions :** `update_reunion_ordre_jour`
+
+### **6. Réorganiser l'ordre des points**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/reorder`
+- **Payload :**
+```json
+{
+    "new_order": [
+        {
+            "id": "{{point_created_id}}",
+            "ordre": 1
+        },
+        {
+            "id": "{{point_test_id}}",
+            "ordre": 2
+        }
+    ]
+}
+```
+- **Objectif :** Réorganiser l'ordre des points de l'ordre du jour
+- **Tests :** Vérification de la réorganisation réussie
+- **Permissions :** `update_reunion_ordre_jour`
+
+### **7. Obtenir les statistiques de l'ordre du jour**
+- **URL :** `GET {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/stats`
+- **Objectif :** Récupérer les statistiques de l'ordre du jour d'une réunion
+- **Tests :** Vérification de la structure des statistiques
+- **Permissions :** `view_reunion_ordre_jour`
+
+### **8. Test de validation - Titre manquant**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points`
+- **Payload :**
+```json
+{
+    "description": "Description sans titre",
+    "type": "POINT_DIVERS",
+    "duree_estimee_minutes": 15
+}
+```
+- **Objectif :** Tester la validation du champ `titre` obligatoire
+- **Tests :** Vérification du statut 422 et des erreurs de validation
+
+### **9. Test de validation - Type invalide**
+- **URL :** `POST {{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points`
+- **Payload :**
+```json
+{
+    "titre": "Point avec type invalide",
+    "type": "TYPE_INVALIDE",
+    "duree_estimee_minutes": 15
+}
+```
+- **Objectif :** Tester la validation des valeurs ENUM pour le type
+- **Tests :** Vérification du statut 422 et des erreurs de validation
+
+### **10. Supprimer un point de l'ordre du jour**
+- **URL :** `DELETE {{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}`
+- **Objectif :** Supprimer un point créé pendant les tests
+- **Tests :** Vérification de la suppression réussie
+- **Permissions :** `delete_reunion_ordre_jour`
+
+## 🔍 Corrections appliquées
+
+### **1. Modèle ReunionOrdreJour.php**
+
+#### **Champs manquants ajoutés :**
+```php
+// Avant
+protected $fillable = [
+    'reunion_id',
+    'ordre',
+    'titre',
+    'description',
+    'type',
+    'duree_estimee_minutes',
+    'responsable_id',
+    'statut',
+    'niveau_detail_requis',
+    // 'entite_proposante_id', // ❌ Manquant
+    // 'projet_id', // ❌ Manquant
+];
+
+// Après
+protected $fillable = [
+    'reunion_id',
+    'ordre',
+    'titre',
+    'description',
+    'type',
+    'duree_estimee_minutes',
+    'entite_proposante_id', // ✅ Ajouté
+    'responsable_id',
+    'projet_id', // ✅ Ajouté
+    'statut',
+    'niveau_detail_requis',
+];
 ```
 
-### **3. Importer la collection Postman**
-- Ouvrir Postman
-- Importer : `GovTrack-ReunionOrdreJourService-Complete.postman_collection.json`
-- Importer l'environnement : `GovTrack-Test-Environment.postman_environment.json`
+#### **Casts corrigés :**
+```php
+// Avant
+protected $casts = [
+    'ordre' => 'integer',
+    'duree_estimee_minutes' => 'integer',
+    'niveau_detail' => 'integer', // ❌ Incorrect
+    'commentaires' => 'array', // ❌ Champ inexistant
+];
 
-## 📝 Exécution Pas à Pas
+// Après
+protected $casts = [
+    'ordre' => 'integer',
+    'duree_estimee_minutes' => 'integer',
+    'niveau_detail_requis' => 'string', // ✅ Corrigé
+];
+```
 
-### **Étape 1 : Authentification**
-1. **Login Admin** - Authentification avec les credentials admin
-   - **Attendu :** Status 200, token récupéré
-   - **Validation :** `auth_token` défini dans l'environnement
+#### **Relations ajoutées :**
+```php
+// Relations avec l'entité proposante
+public function entiteProposante(): BelongsTo
+{
+    return $this->belongsTo(Entite::class, 'entite_proposante_id');
+}
 
-### **Étape 2 : Récupération de l'Ordre du Jour**
-2. **GET - Récupérer l'ordre du jour**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}`
-   - **Attendu :** Status 200, liste des points (peut être vide)
-   - **Validation :** Si des points existent, `point_test_id` est défini
+// Relations avec le projet
+public function projet(): BelongsTo
+{
+    return $this->belongsTo(Projet::class, 'projet_id');
+}
+```
 
-### **Étape 3 : Création de Points**
-3. **POST - Ajouter un point**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points`
-   - **Payload :** Point de suivi projet Simandou
-   - **Attendu :** Status 201, point créé avec ID
-   - **Validation :** `point_test_id` défini
+### **2. Contrôleur ReunionOrdreJourController.php**
 
-4. **POST - Ajouter plusieurs points**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points/multiple`
-   - **Payload :** Array de 2 points (Budget Q4 + Point Divers)
-   - **Attendu :** Status 201, points créés
-   - **Validation :** 2 points ajoutés
+#### **Validation corrigée :**
+```php
+// Avant
+$validator = Validator::make($request->all(), [
+    'titre' => 'required|string|max:255',
+    'description' => 'nullable|string|max:1000',
+    'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
+    'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+    'responsable_id' => 'nullable|integer|exists:users,id',
+    'ordre' => 'nullable|integer|min:1',
+    'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE', // ❌ Incorrect
+]);
 
-### **Étape 4 : Modification de Points**
-5. **PUT - Modifier un point**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/points/{{point_test_id}}`
-   - **Payload :** Mise à jour du titre et durée
-   - **Attendu :** Status 200, point modifié
-   - **Validation :** Changements appliqués
+// Après
+$validator = Validator::make($request->all(), [
+    'titre' => 'required|string|max:255',
+    'description' => 'nullable|string|max:1000',
+    'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
+    'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+    'entite_proposante_id' => 'nullable|integer|exists:entites,id', // ✅ Ajouté
+    'responsable_id' => 'nullable|integer|exists:users,id',
+    'projet_id' => 'nullable|integer|exists:projets,id', // ✅ Ajouté
+    'ordre' => 'nullable|integer|min:1',
+    'niveau_detail_requis' => 'nullable|string|in:SIMPLE,DETAILLE', // ✅ Corrigé
+]);
+```
 
-### **Étape 5 : Réorganisation**
-6. **POST - Réorganiser l'ordre**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/reorder`
-   - **Payload :** Nouvel ordre pour le point test
-   - **Attendu :** Status 200, ordre mis à jour
-   - **Validation :** Ordre réorganisé
+### **3. Service ReunionOrdreJourService.php**
 
-### **Étape 6 : Gestion des Statuts**
-7. **POST - Changer le statut**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/points/{{point_test_id}}/statut`
-   - **Payload :** `{"statut": "EN_COURS"}`
-   - **Attendu :** Status 200, statut modifié
-   - **Validation :** Statut mis à jour
+#### **Champs corrigés dans addPointOrdreJour :**
+```php
+// Avant
+$pointData = [
+    'reunion_id' => $reunionId,
+    'ordre' => $data['ordre'],
+    'titre' => $data['titre'],
+    'description' => $data['description'] ?? '',
+    'type' => $data['type'] ?? 'POINT_DIVERS',
+    'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? 15,
+    'responsable_id' => $data['responsable_id'] ?? null,
+    'statut' => 'PLANIFIE',
+    'niveau_detail_requis' => $data['niveau_detail'] ?? 'SIMPLE', // ❌ Incorrect
+];
 
-### **Étape 7 : Statistiques**
-8. **GET - Statistiques de l'ordre du jour**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/stats`
-   - **Attendu :** Status 200, statistiques détaillées
-   - **Validation :** Données statistiques récupérées
+// Après
+$pointData = [
+    'reunion_id' => $reunionId,
+    'ordre' => $data['ordre'],
+    'titre' => $data['titre'],
+    'description' => $data['description'] ?? '',
+    'type' => $data['type'] ?? 'POINT_DIVERS',
+    'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? 15,
+    'entite_proposante_id' => $data['entite_proposante_id'] ?? null, // ✅ Ajouté
+    'responsable_id' => $data['responsable_id'] ?? null,
+    'projet_id' => $data['projet_id'] ?? null, // ✅ Ajouté
+    'statut' => 'PLANIFIE',
+    'niveau_detail_requis' => $data['niveau_detail_requis'] ?? 'SIMPLE', // ✅ Corrigé
+];
+```
 
-### **Étape 8 : Nettoyage**
-9. **DELETE - Supprimer un point**
-   - **URL :** `{{base_url}}/api/v1/ordre-jour/points/{{point_test_id}}`
-   - **Attendu :** Status 200, point supprimé
-   - **Validation :** Point retiré de l'ordre du jour
+#### **Champs corrigés dans updatePointOrdreJour :**
+```php
+// Avant
+$updateData = array_filter([
+    'ordre' => $data['ordre'] ?? null,
+    'titre' => $data['titre'] ?? null,
+    'description' => $data['description'] ?? null,
+    'type' => $data['type'] ?? null,
+    'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? null,
+    'responsable_id' => $data['responsable_id'] ?? null,
+    'statut' => $data['statut'] ?? null,
+    'niveau_detail' => $data['niveau_detail'] ?? null, // ❌ Incorrect
+]);
 
-## 📊 Résultats Attendus
+// Après
+$updateData = array_filter([
+    'ordre' => $data['ordre'] ?? null,
+    'titre' => $data['titre'] ?? null,
+    'description' => $data['description'] ?? null,
+    'type' => $data['type'] ?? null,
+    'duree_estimee_minutes' => $data['duree_estimee_minutes'] ?? null,
+    'entite_proposante_id' => $data['entite_proposante_id'] ?? null, // ✅ Ajouté
+    'responsable_id' => $data['responsable_id'] ?? null,
+    'projet_id' => $data['projet_id'] ?? null, // ✅ Ajouté
+    'statut' => $data['statut'] ?? null,
+    'niveau_detail_requis' => $data['niveau_detail_requis'] ?? null, // ✅ Corrigé
+]);
+```
 
-### **Codes de Statut :**
-- ✅ **200** - Succès (GET, PUT, DELETE)
-- ✅ **201** - Créé (POST)
-- ⚠️ **400** - Erreur de validation
-- ⚠️ **401** - Non authentifié
-- ⚠️ **403** - Permissions insuffisantes
-- ⚠️ **404** - Ressource non trouvée
-- ⚠️ **422** - Données invalides
+## 📊 Valeurs ENUM finales
 
-### **Données Créées :**
-- **Points d'ordre du jour :** 3 points créés (1 simple + 2 multiples)
-- **Types testés :** `SUIVI_PROJETS`, `SUJET_SPECIFIQUE`, `POINT_DIVERS`
-- **Niveaux de détail :** `SIMPLE`, `DETAILLE`
-- **Statuts testés :** `EN_COURS`
+### **Types :**
+- `SUJET_SPECIFIQUE` - Sujet Spécifique
+- `POINT_DIVERS` - Point Divers
+- `SUIVI_PROJETS` - Suivi Projets
 
-## 🔧 Variables d'Environnement
+### **Statuts :**
+- `PLANIFIE` - Planifié
+- `EN_COURS` - En cours
+- `TERMINE` - Terminé
+- `REPORTE` - Reporté
 
-### **Variables Utilisées :**
-- `{{base_url}}` : `http://localhost:8000`
-- `{{auth_token}}` : Token d'authentification (auto-défini)
-- `{{reunion_test_id}}` : ID de la réunion de test (1)
-- `{{point_test_id}}` : ID du point créé (auto-défini)
+### **Niveau de détail requis :**
+- `SIMPLE` - Simple
+- `DETAILLE` - Détaillé
 
-### **Variables Définies Automatiquement :**
-- `auth_token` : Après login réussi
-- `point_test_id` : Après création du premier point
+## ✅ État final
 
-## ⚠️ Points d'Attention
+| **Migration** | **Modèle** | **Service** | **Contrôleur** |
+|---------------|------------|-------------|----------------|
+| `SUJET_SPECIFIQUE` | ✅ | ✅ | ✅ |
+| `POINT_DIVERS` | ✅ | ✅ | ✅ |
+| `SUIVI_PROJETS` | ✅ | ✅ | ✅ |
+| `PLANIFIE` | ✅ | ✅ | ✅ |
+| `EN_COURS` | ✅ | ✅ | ✅ |
+| `TERMINE` | ✅ | ✅ | ✅ |
+| `REPORTE` | ✅ | ✅ | ✅ |
+| `SIMPLE` | ✅ | ✅ | ✅ |
+| `DETAILLE` | ✅ | ✅ | ✅ |
+| `entite_proposante_id` | ✅ | ✅ | ✅ |
+| `projet_id` | ✅ | ✅ | ✅ |
+| `niveau_detail_requis` | ✅ | ✅ | ✅ |
 
-### **Ordre d'Exécution :**
-1. **Respecter l'ordre** des requêtes dans la collection
-2. **Authentification obligatoire** avant tous les tests
-3. **Dépendances** : Nécessite une réunion existante (`reunion_test_id`)
+## 🚀 Exécution
 
-### **Nettoyage :**
-- **Suppression automatique** du point de test à la fin
-- **Données persistantes** : Les points multiples peuvent rester
-- **Réinitialisation** : Relancer `prepare-test-data.php` si nécessaire
+1. **Importer** la collection Postman
+2. **Configurer** les variables d'environnement
+3. **Exécuter** les tests dans l'ordre
+4. **Vérifier** que tous les tests passent
 
-### **Permissions Requises :**
-- `view_reunion_ordre_jour`
-- `create_reunion_ordre_jour`
-- `update_reunion_ordre_jour`
-- `delete_reunion_ordre_jour`
-
-## 📈 Métriques de Test
-
-### **Couverture :**
-- ✅ **8/8 méthodes** testées
-- ✅ **Tous les endpoints** couverts
-- ✅ **CRUD complet** validé
-- ✅ **Gestion des erreurs** testée
-
-### **Fonctionnalités Validées :**
-- ✅ **Création simple** et **multiple**
-- ✅ **Modification** et **suppression**
-- ✅ **Réorganisation** de l'ordre
-- ✅ **Gestion des statuts**
-- ✅ **Statistiques** et **rapports**
-- ✅ **Permissions** et **sécurité**
-
-## 🚀 Prochaines Étapes
-
-### **Après Validation :**
-1. **Vérifier les logs** Laravel pour détecter les erreurs
-2. **Valider en base** que les données sont correctes
-3. **Documenter les bugs** trouvés
-4. **Passer au service suivant** : `ReunionSujetService`
-
-### **Services Restants :**
-- 🚧 **ReunionSujetService** (17 services restants)
-- 🚧 **ReunionObjectifService**
-- 🚧 **ReunionDifficulteService**
-- 🚧 **ReunionDecisionService**
-- 🚧 **ReunionActionService**
-- 🚧 **ReunionPVService**
-- 🚧 **ReunionWorkflowService**
-- 🚧 **ReunionCalendarService**
-- 🚧 **ReunionAnalyticsService**
-- 🚧 **TypeReunionGestionnaireService**
-- 🚧 **TypeReunionMembrePermanentService**
-- 🚧 **TypeReunionValidateurPVService**
-- 🚧 **ReunionSujetAvisService**
-- 🚧 **ReunionPieceJointeService**
-- 🚧 **ReunionCommentaireService**
-- 🚧 **ReunionHistoriqueService**
-- 🚧 **ReunionExportService**
-
----
-
-**🎯 Objectif :** Valider que `ReunionOrdreJourService` fonctionne parfaitement avant de passer au service suivant dans l'ordre des dépendances. 
+**Le ReunionOrdreJourService est maintenant cohérent et prêt pour la production !** 🎉 

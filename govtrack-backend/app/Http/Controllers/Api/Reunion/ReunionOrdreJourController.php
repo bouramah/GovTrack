@@ -52,9 +52,11 @@ class ReunionOrdreJourController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
                 'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+                'entite_proposante_id' => 'nullable|integer|exists:entites,id',
                 'responsable_id' => 'nullable|integer|exists:users,id',
+                'projet_id' => 'nullable|integer|exists:projets,id',
                 'ordre' => 'nullable|integer|min:1',
-                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
+                'niveau_detail_requis' => 'nullable|string|in:SIMPLE,DETAILLE',
             ]);
 
             if ($validator->fails()) {
@@ -95,9 +97,11 @@ class ReunionOrdreJourController extends Controller
                 'points.*.description' => 'nullable|string|max:1000',
                 'points.*.type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
                 'points.*.duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+                'points.*.entite_proposante_id' => 'nullable|integer|exists:entites,id',
                 'points.*.responsable_id' => 'nullable|integer|exists:users,id',
+                'points.*.projet_id' => 'nullable|integer|exists:projets,id',
                 'points.*.ordre' => 'nullable|integer|min:1',
-                'points.*.niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
+                'points.*.niveau_detail_requis' => 'nullable|string|in:SIMPLE,DETAILLE',
             ]);
 
             if ($validator->fails()) {
@@ -137,11 +141,12 @@ class ReunionOrdreJourController extends Controller
                 'description' => 'nullable|string|max:1000',
                 'type' => 'nullable|string|in:SUJET_SPECIFIQUE,POINT_DIVERS,SUIVI_PROJETS',
                 'duree_estimee_minutes' => 'nullable|integer|min:1|max:480',
+                'entite_proposante_id' => 'nullable|integer|exists:entites,id',
                 'responsable_id' => 'nullable|integer|exists:users,id',
+                'projet_id' => 'nullable|integer|exists:projets,id',
                 'ordre' => 'nullable|integer|min:1',
                 'statut' => 'nullable|string|in:PLANIFIE,EN_COURS,TERMINE,REPORTE',
-                'niveau_detail' => 'nullable|string|in:SIMPLE,DETAILLE',
-                'commentaires' => 'nullable|array',
+                'niveau_detail_requis' => 'nullable|string|in:SIMPLE,DETAILLE',
             ]);
 
             if ($validator->fails()) {

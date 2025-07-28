@@ -37,6 +37,8 @@ class TypeReunionMembrePermanentService
                 'role_defaut' => $data['role_defaut'] ?? 'PARTICIPANT',
                 'actif' => $data['actif'] ?? true,
                 'notifications_par_defaut' => $data['notifications_par_defaut'] ?? [],
+                'creer_par' => $userId,
+                'modifier_par' => $userId,
             ]);
 
             Log::info('Membre permanent ajouté au type de réunion', [
@@ -101,6 +103,7 @@ class TypeReunionMembrePermanentService
                 'role_defaut' => $data['role_defaut'] ?? $existingMembre->pivot->role_defaut,
                 'actif' => $data['actif'] ?? $existingMembre->pivot->actif,
                 'notifications_par_defaut' => $data['notifications_par_defaut'] ?? $existingMembre->pivot->notifications_par_defaut,
+                'modifier_par' => $userId,
             ]);
 
             Log::info('Membre permanent mis à jour', [
@@ -402,7 +405,8 @@ class TypeReunionMembrePermanentService
                         'role_defaut' => $membre->pivot->role_defaut,
                         'actif' => $membre->pivot->actif,
                         'notifications_par_defaut' => $membre->pivot->notifications_par_defaut,
-                        'date_creation' => now(),
+                        'creer_par' => $userId,
+                        'modifier_par' => $userId,
                     ]);
                     $nombreCopie++;
                 }

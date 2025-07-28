@@ -231,10 +231,10 @@ class ReunionController extends Controller
     /**
      * Récupérer les participants d'une réunion
      */
-    public function participants(Request $request, int $id): JsonResponse
+    public function participants(Request $request, int $reunionId): JsonResponse
     {
         $user = $request->user();
-        $result = $this->participantService->getParticipants($id, $user);
+        $result = $this->participantService->getParticipants($reunionId, $user);
 
         if ($result['success']) {
             return response()->json($result, 200);
@@ -246,7 +246,7 @@ class ReunionController extends Controller
     /**
      * Ajouter un participant à une réunion
      */
-    public function addParticipant(Request $request, int $id): JsonResponse
+    public function addParticipant(Request $request, int $reunionId): JsonResponse
     {
         $user = $request->user();
 
@@ -267,7 +267,7 @@ class ReunionController extends Controller
             ], 422);
         }
 
-        $result = $this->participantService->addParticipant($id, $request->all(), $user);
+        $result = $this->participantService->addParticipant($reunionId, $request->all(), $user);
 
         if ($result['success']) {
             return response()->json($result, 201);
@@ -355,7 +355,7 @@ class ReunionController extends Controller
     /**
      * Ajouter plusieurs participants en lot
      */
-    public function addMultipleParticipants(Request $request, int $id): JsonResponse
+    public function addMultipleParticipants(Request $request, int $reunionId): JsonResponse
     {
         $user = $request->user();
 
@@ -381,7 +381,7 @@ class ReunionController extends Controller
             ], 422);
         }
 
-        $result = $this->participantService->addMultipleParticipants($id, $request->participants, $user);
+        $result = $this->participantService->addMultipleParticipants($reunionId, $request->participants, $user);
 
         if ($result['success']) {
             return response()->json($result, 201);
@@ -393,10 +393,10 @@ class ReunionController extends Controller
     /**
      * Récupérer les statistiques des participants
      */
-    public function participantStats(Request $request, int $id): JsonResponse
+    public function participantStats(Request $request, int $reunionId): JsonResponse
     {
         $user = $request->user();
-        $result = $this->participantService->getParticipantStats($id, $user);
+        $result = $this->participantService->getParticipantStats($reunionId, $user);
 
         if ($result['success']) {
             return response()->json($result, 200);

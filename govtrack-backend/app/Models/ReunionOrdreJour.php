@@ -57,7 +57,9 @@ class ReunionOrdreJour extends Model
         'description',
         'type',
         'duree_estimee_minutes',
+        'entite_proposante_id',
         'responsable_id',
+        'projet_id',
         'statut',
         'niveau_detail_requis',
         'date_creation',
@@ -72,8 +74,7 @@ class ReunionOrdreJour extends Model
     protected $casts = [
         'ordre' => 'integer',
         'duree_estimee_minutes' => 'integer',
-        'niveau_detail' => 'integer',
-        'commentaires' => 'array',
+        'niveau_detail_requis' => 'string',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
     ];
@@ -92,6 +93,22 @@ class ReunionOrdreJour extends Model
     public function responsable(): BelongsTo
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    /**
+     * Relations avec l'entité proposante
+     */
+    public function entiteProposante(): BelongsTo
+    {
+        return $this->belongsTo(Entite::class, 'entite_proposante_id');
+    }
+
+    /**
+     * Relations avec le projet
+     */
+    public function projet(): BelongsTo
+    {
+        return $this->belongsTo(Projet::class, 'projet_id');
     }
 
     /**

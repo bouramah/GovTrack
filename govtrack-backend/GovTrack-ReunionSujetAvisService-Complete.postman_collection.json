@@ -1,13 +1,13 @@
 {
 	"info": {
-		"_postman_id": "reunion-ordre-jour-service-complete",
-		"name": "GovTrack - ReunionOrdreJourService Complete",
-		"description": "Collection complète pour tester le service ReunionOrdreJourService avec toutes les méthodes disponibles",
+		"_postman_id": "reunion-sujet-avis-service-complete",
+		"name": "GovTrack - ReunionSujetAvisService Complete",
+		"description": "Collection complète pour tester le service ReunionSujetAvisService avec toutes les méthodes disponibles",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "1. Récupérer l'ordre du jour d'une réunion",
+			"name": "1. Récupérer tous les avis d'un sujet",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -23,15 +23,16 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis"
 					]
 				}
 			},
@@ -60,10 +61,10 @@
 							"    pm.expect(response.data).to.be.an('array');",
 							"});",
 							"",
-							"// Sauvegarder l'ID du premier point pour les tests suivants",
+							"// Sauvegarder l'ID du premier avis pour les tests suivants",
 							"const response = pm.response.json();",
 							"if (response.data && response.data.length > 0) {",
-							"    pm.environment.set('point_test_id', response.data[0].id);",
+							"    pm.environment.set('avis_test_id', response.data[0].id);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -72,7 +73,7 @@
 			]
 		},
 		{
-			"name": "2. Ajouter un point à l'ordre du jour",
+			"name": "2. Créer un avis",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -94,19 +95,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point de test - Ordre du jour\",\n    \"description\": \"Description détaillée du point de test\",\n    \"type\": \"SUJET_SPECIFIQUE\",\n    \"duree_estimee_minutes\": 30,\n    \"responsable_id\": 2,\n    \"niveau_detail_requis\": \"DETAILLE\"\n}"
+					"raw": "{\n    \"participant_id\": 1,\n    \"type_avis\": \"FAVORABLE\",\n    \"commentaire\": \"Je suis favorable à cette proposition car elle répond aux besoins identifiés.\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
-						"points"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis"
 					]
 				}
 			},
@@ -135,10 +136,10 @@
 							"    pm.expect(response.data).to.have.property('id');",
 							"});",
 							"",
-							"// Sauvegarder l'ID du point créé",
+							"// Sauvegarder l'ID de l'avis créé",
 							"const response = pm.response.json();",
 							"if (response.data && response.data.id) {",
-							"    pm.environment.set('point_created_id', response.data.id);",
+							"    pm.environment.set('avis_created_id', response.data.id);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -147,7 +148,7 @@
 			]
 		},
 		{
-			"name": "3. Ajouter plusieurs points à l'ordre du jour",
+			"name": "3. Créer plusieurs avis en lot",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -169,19 +170,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"points\": [\n        {\n            \"titre\": \"Point 1 - Suivi projets\",\n            \"description\": \"Point de suivi des projets en cours\",\n            \"type\": \"SUIVI_PROJETS\",\n            \"duree_estimee_minutes\": 45,\n            \"responsable_id\": 3,\n            \"niveau_detail_requis\": \"DETAILLE\"\n        },\n        {\n            \"titre\": \"Point 2 - Point divers\",\n            \"description\": \"Point divers de la réunion\",\n            \"type\": \"POINT_DIVERS\",\n            \"duree_estimee_minutes\": 15,\n            \"niveau_detail_requis\": \"SIMPLE\"\n        }\n    ]\n}"
+					"raw": "{\n    \"avis\": [\n        {\n            \"participant_id\": 2,\n            \"type_avis\": \"DEFAVORABLE\",\n            \"commentaire\": \"Je ne suis pas favorable à cette proposition pour les raisons suivantes...\"\n        },\n        {\n            \"participant_id\": 3,\n            \"type_avis\": \"RESERVE\",\n            \"commentaire\": \"J'ai des réserves sur certains aspects de cette proposition.\"\n        },\n        {\n            \"participant_id\": 4,\n            \"type_avis\": \"NEUTRE\",\n            \"commentaire\": \"Je n'ai pas d'avis particulier sur cette proposition.\"\n        }\n    ]\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points/multiple",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis/multiple",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
-						"points",
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis",
 						"multiple"
 					]
 				}
@@ -211,9 +212,9 @@
 							"    pm.expect(response.data).to.be.an('array');",
 							"});",
 							"",
-							"pm.test(\"Multiple points created\", function () {",
+							"pm.test(\"Multiple avis created\", function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data.length).to.be.at.least(2);",
+							"    pm.expect(response.data.length).to.be.at.least(3);",
 							"});"
 						],
 						"type": "text/javascript"
@@ -222,7 +223,68 @@
 			]
 		},
 		{
-			"name": "4. Mettre à jour un point de l'ordre du jour",
+			"name": "4. Récupérer un avis spécifique",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis/{{avis_created_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis",
+						"{{avis_created_id}}"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Response has data\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data).to.have.property('id');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Mettre à jour un avis",
 			"request": {
 				"method": "PUT",
 				"header": [
@@ -244,19 +306,20 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point modifié - Ordre du jour\",\n    \"description\": \"Description mise à jour du point\",\n    \"type\": \"SUJET_SPECIFIQUE\",\n    \"duree_estimee_minutes\": 60,\n    \"responsable_id\": 4,\n    \"statut\": \"EN_COURS\",\n    \"niveau_detail_requis\": \"DETAILLE\"\n}"
+					"raw": "{\n    \"type_avis\": \"RESERVE\",\n    \"commentaire\": \"Après réflexion, j'ai des réserves sur cette proposition. Il faudrait clarifier certains points.\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis/{{avis_created_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis",
+						"{{avis_created_id}}"
 					]
 				}
 			},
@@ -280,9 +343,9 @@
 							"    pm.expect(response.success).to.be.true;",
 							"});",
 							"",
-							"pm.test(\"Title updated\", function () {",
+							"pm.test(\"Type avis updated to RESERVE\", function () {",
 							"    const response = pm.response.json();",
-							"    pm.expect(response.data.titre).to.include('modifié');",
+							"    pm.expect(response.data.type_avis).to.equal('RESERVE');",
 							"});"
 						],
 						"type": "text/javascript"
@@ -291,141 +354,7 @@
 			]
 		},
 		{
-			"name": "5. Changer le statut d'un point",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{token}}",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"statut\": \"TERMINE\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}/statut",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"api",
-						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}",
-						"statut"
-					]
-				}
-			},
-			"response": [],
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response has success field\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response).to.have.property('success');",
-							"});",
-							"",
-							"pm.test(\"Success is true\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.success).to.be.true;",
-							"});",
-							"",
-							"pm.test(\"Status updated to TERMINE\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.data.statut).to.equal('TERMINE');",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			]
-		},
-		{
-			"name": "6. Réorganiser l'ordre des points",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{token}}",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"new_order\": [\n        {\n            \"id\": \"{{point_created_id}}\",\n            \"ordre\": 1\n        },\n        {\n            \"id\": \"{{point_test_id}}\",\n            \"ordre\": 2\n        }\n    ]\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/reorder",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"api",
-						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
-						"reorder"
-					]
-				}
-			},
-			"response": [],
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response has success field\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response).to.have.property('success');",
-							"});",
-							"",
-							"pm.test(\"Success is true\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.success).to.be.true;",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			]
-		},
-		{
-			"name": "7. Obtenir les statistiques de l'ordre du jour",
+			"name": "6. Obtenir les statistiques des avis",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -441,15 +370,16 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/stats",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis/stats",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis",
 						"stats"
 					]
 				}
@@ -477,7 +407,10 @@
 							"pm.test(\"Response has stats data\", function () {",
 							"    const response = pm.response.json();",
 							"    pm.expect(response.data).to.have.property('total');",
-							"    pm.expect(response.data).to.have.property('duree_totale');",
+							"    pm.expect(response.data).to.have.property('favorables');",
+							"    pm.expect(response.data).to.have.property('defavorables');",
+							"    pm.expect(response.data).to.have.property('reserves');",
+							"    pm.expect(response.data).to.have.property('neutres');",
 							"});"
 						],
 						"type": "text/javascript"
@@ -486,7 +419,7 @@
 			]
 		},
 		{
-			"name": "8. Test de validation - Titre manquant",
+			"name": "7. Test de validation - Participant ID manquant",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -508,19 +441,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"description\": \"Description sans titre\",\n    \"type\": \"POINT_DIVERS\",\n    \"duree_estimee_minutes\": 15\n}"
+					"raw": "{\n    \"type_avis\": \"FAVORABLE\",\n    \"commentaire\": \"Avis sans participant_id\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
-						"points"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis"
 					]
 				}
 			},
@@ -545,7 +478,7 @@
 			]
 		},
 		{
-			"name": "9. Test de validation - Type invalide",
+			"name": "8. Test de validation - Type d'avis invalide",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -567,19 +500,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point avec type invalide\",\n    \"type\": \"TYPE_INVALIDE\",\n    \"duree_estimee_minutes\": 15\n}"
+					"raw": "{\n    \"participant_id\": 5,\n    \"type_avis\": \"INVALID_TYPE\",\n    \"commentaire\": \"Avis avec type invalide\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}",
-						"points"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis"
 					]
 				}
 			},
@@ -604,7 +537,66 @@
 			]
 		},
 		{
-			"name": "10. Supprimer un point de l'ordre du jour",
+			"name": "9. Test de validation - Participant inexistant",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"participant_id\": 999,\n    \"type_avis\": \"FAVORABLE\",\n    \"commentaire\": \"Avis avec participant inexistant\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test(\"Response has errors\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Supprimer un avis",
 			"request": {
 				"method": "DELETE",
 				"header": [
@@ -620,16 +612,17 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}",
+					"raw": "{{base_url}}/api/v1/sujets/{{sujet_test_id}}/avis/{{avis_created_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}"
+						"sujets",
+						"{{sujet_test_id}}",
+						"avis",
+						"{{avis_created_id}}"
 					]
 				}
 			},
@@ -691,17 +684,17 @@
 			"type": "string"
 		},
 		{
-			"key": "reunion_test_id",
+			"key": "sujet_test_id",
 			"value": "1",
 			"type": "string"
 		},
 		{
-			"key": "point_test_id",
+			"key": "avis_test_id",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"key": "point_created_id",
+			"key": "avis_created_id",
 			"value": "",
 			"type": "string"
 		}

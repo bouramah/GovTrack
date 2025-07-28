@@ -1,0 +1,400 @@
+{
+	"info": {
+		"_postman_id": "type-reunion-membre-permanent-service-complete",
+		"name": "GovTrack - TypeReunionMembrePermanentService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du TypeReunionMembrePermanentService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les Membres Permanents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"]
+				},
+				"description": "Récupérer la liste des membres permanents d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Ajouter un Membre Permanent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"membres\": [\n    {\n      \"user_id\": {{membre_user_id}},\n      \"role_defaut\": \"PARTICIPANT\",\n      \"notifications_par_defaut\": [\n        \"CONFIRMATION_PRESENCE\",\n        \"RAPPEL_24H\"\n      ],\n      \"actif\": true\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"]
+				},
+				"description": "Ajouter un membre permanent à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Ajouter Plusieurs Membres Permanents",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"membres\": [\n    {\n      \"user_id\": {{membre_user_id}},\n      \"role_defaut\": \"PRESIDENT\",\n      \"notifications_par_defaut\": [\n        \"CONFIRMATION_PRESENCE\",\n        \"RAPPEL_24H\",\n        \"RAPPEL_1H\"\n      ],\n      \"actif\": true\n    },\n    {\n      \"user_id\": {{membre_user_id_2}},\n      \"role_defaut\": \"SECRETAIRE\",\n      \"notifications_par_defaut\": [\n        \"CONFIRMATION_PRESENCE\",\n        \"PV_DISPONIBLE\"\n      ],\n      \"actif\": true\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"]
+				},
+				"description": "Ajouter plusieurs membres permanents à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Supprimer un Membre Permanent",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"membres\": [{{membre_user_id}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"]
+				},
+				"description": "Supprimer un membre permanent d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Supprimer Plusieurs Membres Permanents",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"membres\": [{{membre_user_id}}, {{membre_user_id_2}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"]
+				},
+				"description": "Supprimer plusieurs membres permanents d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Vérifier si Utilisateur est Membre Permanent",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres?user_id={{membre_user_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "{{membre_user_id}}",
+							"description": "ID de l'utilisateur à vérifier"
+						}
+					]
+				},
+				"description": "Vérifier si un utilisateur est membre permanent d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir le Rôle Défaut d'un Membre",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres?user_id={{membre_user_id}}&role_defaut=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "{{membre_user_id}}",
+							"description": "ID de l'utilisateur"
+						},
+						{
+							"key": "role_defaut",
+							"value": "true",
+							"description": "Inclure le rôle défaut"
+						}
+					]
+				},
+				"description": "Obtenir le rôle défaut d'un membre permanent"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Obtenir les Notifications par Défaut",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres?user_id={{membre_user_id}}&notifications=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "{{membre_user_id}}",
+							"description": "ID de l'utilisateur"
+						},
+						{
+							"key": "notifications",
+							"value": "true",
+							"description": "Inclure les notifications par défaut"
+						}
+					]
+				},
+				"description": "Obtenir les notifications par défaut d'un membre permanent"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Statistiques des Membres Permanents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres?stats=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres"],
+					"query": [
+						{
+							"key": "stats",
+							"value": "true",
+							"description": "Inclure les statistiques"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques des membres permanents"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Copier les Membres Permanents",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"source_type_reunion_id\": {{source_type_reunion_id}},\n  \"destination_type_reunion_id\": {{destination_type_reunion_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/membres/copy",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "membres", "copy"]
+				},
+				"description": "Copier les membres permanents d'un type de réunion vers un autre"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir les variables par défaut",
+					"if (!pm.environment.get('type_reunion_id')) {",
+					"    pm.environment.set('type_reunion_id', '1');",
+					"}",
+					"if (!pm.environment.get('membre_user_id')) {",
+					"    pm.environment.set('membre_user_id', '4');",
+					"}",
+					"if (!pm.environment.get('membre_user_id_2')) {",
+					"    pm.environment.set('membre_user_id_2', '5');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "membre_user_id",
+			"value": "4",
+			"type": "string"
+		},
+		{
+			"key": "membre_user_id_2",
+			"value": "5",
+			"type": "string"
+		},
+		{
+			"key": "source_type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "destination_type_reunion_id",
+			"value": "2",
+			"type": "string"
+		}
+	]
+}

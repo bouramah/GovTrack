@@ -71,7 +71,8 @@ class TypeReunion extends Model
     {
         return $this->belongsToMany(User::class, 'type_reunion_gestionnaires', 'type_reunion_id', 'user_id')
                     ->withPivot('permissions', 'actif', 'date_creation', 'date_modification')
-                    ->withTimestamps('date_creation', 'date_modification');
+                    ->withTimestamps('date_creation', 'date_modification')
+                    ->using(TypeReunionGestionnaire::class);
     }
 
     /**
@@ -81,7 +82,8 @@ class TypeReunion extends Model
     {
         return $this->belongsToMany(User::class, 'type_reunion_membres_permanents', 'type_reunion_id', 'user_id')
                     ->withPivot('role_defaut', 'actif', 'notifications_par_defaut', 'date_creation', 'date_modification')
-                    ->withTimestamps('date_creation', 'date_modification');
+                    ->withTimestamps('date_creation', 'date_modification')
+                    ->using(TypeReunionMembrePermanent::class);
     }
 
     /**

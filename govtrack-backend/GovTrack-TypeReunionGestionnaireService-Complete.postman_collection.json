@@ -1,0 +1,397 @@
+{
+	"info": {
+		"_postman_id": "type-reunion-gestionnaire-service-complete",
+		"name": "GovTrack - TypeReunionGestionnaireService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du TypeReunionGestionnaireService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les Gestionnaires",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"]
+				},
+				"description": "Récupérer la liste des gestionnaires d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Ajouter un Gestionnaire",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"gestionnaires\": [\n    {\n      \"user_id\": {{gestionnaire_user_id}},\n      \"permissions\": [\n        \"create_reunions\",\n        \"update_reunions\",\n        \"delete_reunions\"\n      ],\n      \"actif\": true\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"]
+				},
+				"description": "Ajouter un gestionnaire à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Ajouter Plusieurs Gestionnaires",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"gestionnaires\": [\n    {\n      \"user_id\": {{gestionnaire_user_id}},\n      \"permissions\": [\n        \"create_reunions\",\n        \"view_reunions\"\n      ],\n      \"actif\": true\n    },\n    {\n      \"user_id\": {{gestionnaire_user_id_2}},\n      \"permissions\": [\n        \"update_reunions\",\n        \"delete_reunions\"\n      ],\n      \"actif\": true\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"]
+				},
+				"description": "Ajouter plusieurs gestionnaires à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Supprimer un Gestionnaire",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"gestionnaires\": [{{gestionnaire_user_id}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"]
+				},
+				"description": "Supprimer un gestionnaire d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Supprimer Plusieurs Gestionnaires",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"gestionnaires\": [{{gestionnaire_user_id}}, {{gestionnaire_user_id_2}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"]
+				},
+				"description": "Supprimer plusieurs gestionnaires d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Vérifier si Utilisateur est Gestionnaire",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires?user_id={{gestionnaire_user_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "{{gestionnaire_user_id}}",
+							"description": "ID de l'utilisateur à vérifier"
+						}
+					]
+				},
+				"description": "Vérifier si un utilisateur est gestionnaire d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Obtenir les Permissions d'un Gestionnaire",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires?user_id={{gestionnaire_user_id}}&permissions=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "{{gestionnaire_user_id}}",
+							"description": "ID de l'utilisateur"
+						},
+						{
+							"key": "permissions",
+							"value": "true",
+							"description": "Inclure les permissions"
+						}
+					]
+				},
+				"description": "Obtenir les permissions d'un gestionnaire"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Statistiques des Gestionnaires",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires?stats=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires"],
+					"query": [
+						{
+							"key": "stats",
+							"value": "true",
+							"description": "Inclure les statistiques"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques des gestionnaires"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Copier les Gestionnaires",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"source_type_reunion_id\": {{source_type_reunion_id}},\n  \"destination_type_reunion_id\": {{destination_type_reunion_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires/copy",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires", "copy"]
+				},
+				"description": "Copier les gestionnaires d'un type de réunion vers un autre"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Mettre à Jour un Gestionnaire",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"gestionnaires\": [\n    {\n      \"user_id\": {{gestionnaire_user_id}},\n      \"permissions\": [\n        \"create_reunions\",\n        \"update_reunions\",\n        \"delete_reunions\",\n        \"view_reunions\"\n      ],\n      \"actif\": false\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/gestionnaires/{{gestionnaire_user_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "gestionnaires", "{{gestionnaire_user_id}}"]
+				},
+				"description": "Mettre à jour les permissions d'un gestionnaire"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir les variables par défaut",
+					"if (!pm.environment.get('type_reunion_id')) {",
+					"    pm.environment.set('type_reunion_id', '1');",
+					"}",
+					"if (!pm.environment.get('gestionnaire_user_id')) {",
+					"    pm.environment.set('gestionnaire_user_id', '2');",
+					"}",
+					"if (!pm.environment.get('gestionnaire_user_id_2')) {",
+					"    pm.environment.set('gestionnaire_user_id_2', '3');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "gestionnaire_user_id",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "gestionnaire_user_id_2",
+			"value": "3",
+			"type": "string"
+		},
+		{
+			"key": "source_type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "destination_type_reunion_id",
+			"value": "2",
+			"type": "string"
+		}
+	]
+}

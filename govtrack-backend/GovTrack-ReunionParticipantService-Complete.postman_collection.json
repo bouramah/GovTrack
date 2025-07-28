@@ -1,13 +1,13 @@
 {
 	"info": {
-		"_postman_id": "reunion-ordre-jour-service-complete",
-		"name": "GovTrack - ReunionOrdreJourService Complete",
-		"description": "Collection complète pour tester le service ReunionOrdreJourService avec toutes les méthodes disponibles",
+		"_postman_id": "reunion-participant-service-complete",
+		"name": "GovTrack - ReunionParticipantService Complete",
+		"description": "Collection complète pour tester le service ReunionParticipantService avec toutes les méthodes disponibles",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "1. Récupérer l'ordre du jour d'une réunion",
+			"name": "1. Lister les participants d'une réunion",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -23,15 +23,16 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"{{reunion_test_id}}"
+						"reunions",
+						"{{reunion_test_id}}",
+						"participants"
 					]
 				}
 			},
@@ -60,10 +61,10 @@
 							"    pm.expect(response.data).to.be.an('array');",
 							"});",
 							"",
-							"// Sauvegarder l'ID du premier point pour les tests suivants",
+							"// Sauvegarder l'ID du premier participant pour les tests suivants",
 							"const response = pm.response.json();",
 							"if (response.data && response.data.length > 0) {",
-							"    pm.environment.set('point_test_id', response.data[0].id);",
+							"    pm.environment.set('participant_test_id', response.data[0].id);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -72,7 +73,7 @@
 			]
 		},
 		{
-			"name": "2. Ajouter un point à l'ordre du jour",
+			"name": "2. Ajouter un participant",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -94,19 +95,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point de test - Ordre du jour\",\n    \"description\": \"Description détaillée du point de test\",\n    \"type\": \"SUJET_SPECIFIQUE\",\n    \"duree_estimee_minutes\": 30,\n    \"responsable_id\": 2,\n    \"niveau_detail_requis\": \"DETAILLE\"\n}"
+					"raw": "{\n    \"user_id\": 2,\n    \"role\": \"PARTICIPANT\",\n    \"type\": \"INVITE\",\n    \"statut_presence\": \"EN_ATTENTE\",\n    \"notifications_actives\": {\n        \"CONFIRMATION_PRESENCE\": true,\n        \"RAPPEL_24H\": true,\n        \"RAPPEL_1H\": false\n    }\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
-						"points"
+						"participants"
 					]
 				}
 			},
@@ -135,10 +136,10 @@
 							"    pm.expect(response.data).to.have.property('id');",
 							"});",
 							"",
-							"// Sauvegarder l'ID du point créé",
+							"// Sauvegarder l'ID du participant créé",
 							"const response = pm.response.json();",
 							"if (response.data && response.data.id) {",
-							"    pm.environment.set('point_created_id', response.data.id);",
+							"    pm.environment.set('participant_created_id', response.data.id);",
 							"}"
 						],
 						"type": "text/javascript"
@@ -147,7 +148,7 @@
 			]
 		},
 		{
-			"name": "3. Ajouter plusieurs points à l'ordre du jour",
+			"name": "3. Ajouter plusieurs participants",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -169,19 +170,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"points\": [\n        {\n            \"titre\": \"Point 1 - Suivi projets\",\n            \"description\": \"Point de suivi des projets en cours\",\n            \"type\": \"SUIVI_PROJETS\",\n            \"duree_estimee_minutes\": 45,\n            \"responsable_id\": 3,\n            \"niveau_detail_requis\": \"DETAILLE\"\n        },\n        {\n            \"titre\": \"Point 2 - Point divers\",\n            \"description\": \"Point divers de la réunion\",\n            \"type\": \"POINT_DIVERS\",\n            \"duree_estimee_minutes\": 15,\n            \"niveau_detail_requis\": \"SIMPLE\"\n        }\n    ]\n}"
+					"raw": "{\n    \"participants\": [\n        {\n            \"user_id\": 3,\n            \"role\": \"SECRETAIRE\",\n            \"type\": \"PERMANENT\",\n            \"statut_presence\": \"CONFIRME\",\n            \"notifications_actives\": {\n                \"CONFIRMATION_PRESENCE\": true,\n                \"RAPPEL_24H\": true,\n                \"RAPPEL_1H\": true\n            }\n        },\n        {\n            \"user_id\": 4,\n            \"role\": \"OBSERVATEUR\",\n            \"type\": \"INVITE\",\n            \"statut_presence\": \"EN_ATTENTE\",\n            \"notifications_actives\": {\n                \"CONFIRMATION_PRESENCE\": false,\n                \"RAPPEL_24H\": true\n            }\n        }\n    ]\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points/multiple",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/multiple",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
-						"points",
+						"participants",
 						"multiple"
 					]
 				}
@@ -211,7 +212,7 @@
 							"    pm.expect(response.data).to.be.an('array');",
 							"});",
 							"",
-							"pm.test(\"Multiple points created\", function () {",
+							"pm.test(\"Multiple participants created\", function () {",
 							"    const response = pm.response.json();",
 							"    pm.expect(response.data.length).to.be.at.least(2);",
 							"});"
@@ -222,7 +223,7 @@
 			]
 		},
 		{
-			"name": "4. Mettre à jour un point de l'ordre du jour",
+			"name": "4. Mettre à jour un participant",
 			"request": {
 				"method": "PUT",
 				"header": [
@@ -244,158 +245,20 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point modifié - Ordre du jour\",\n    \"description\": \"Description mise à jour du point\",\n    \"type\": \"SUJET_SPECIFIQUE\",\n    \"duree_estimee_minutes\": 60,\n    \"responsable_id\": 4,\n    \"statut\": \"EN_COURS\",\n    \"niveau_detail_requis\": \"DETAILLE\"\n}"
+					"raw": "{\n    \"role\": \"PRESIDENT\",\n    \"type\": \"PERMANENT\",\n    \"statut_presence\": \"CONFIRME\",\n    \"notifications_actives\": {\n        \"CONFIRMATION_PRESENCE\": true,\n        \"RAPPEL_24H\": true,\n        \"RAPPEL_1H\": true,\n        \"RAPPEL_15MIN\": true\n    }\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_created_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}"
-					]
-				}
-			},
-			"response": [],
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response has success field\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response).to.have.property('success');",
-							"});",
-							"",
-							"pm.test(\"Success is true\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.success).to.be.true;",
-							"});",
-							"",
-							"pm.test(\"Title updated\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.data.titre).to.include('modifié');",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			]
-		},
-		{
-			"name": "5. Changer le statut d'un point",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{token}}",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"statut\": \"TERMINE\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}/statut",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"api",
-						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}",
-						"statut"
-					]
-				}
-			},
-			"response": [],
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"pm.test(\"Response has success field\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response).to.have.property('success');",
-							"});",
-							"",
-							"pm.test(\"Success is true\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.success).to.be.true;",
-							"});",
-							"",
-							"pm.test(\"Status updated to TERMINE\", function () {",
-							"    const response = pm.response.json();",
-							"    pm.expect(response.data.statut).to.equal('TERMINE');",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			]
-		},
-		{
-			"name": "6. Réorganiser l'ordre des points",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer {{token}}",
-						"type": "text"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json",
-						"type": "text"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"new_order\": [\n        {\n            \"id\": \"{{point_created_id}}\",\n            \"ordre\": 1\n        },\n        {\n            \"id\": \"{{point_test_id}}\",\n            \"ordre\": 2\n        }\n    ]\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/reorder",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"api",
-						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
-						"reorder"
+						"participants",
+						"{{participant_created_id}}"
 					]
 				}
 			},
@@ -417,6 +280,11 @@
 							"pm.test(\"Success is true\", function () {",
 							"    const response = pm.response.json();",
 							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Role updated to PRESIDENT\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.role).to.equal('PRESIDENT');",
 							"});"
 						],
 						"type": "text/javascript"
@@ -425,7 +293,78 @@
 			]
 		},
 		{
-			"name": "7. Obtenir les statistiques de l'ordre du jour",
+			"name": "5. Mettre à jour le statut de présence",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"statut\": \"ABSENT\",\n    \"commentaire_absence\": \"Participant indisponible pour cette réunion\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_created_id}}/presence",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"participants",
+						"{{participant_created_id}}",
+						"presence"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has success field\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('success');",
+							"});",
+							"",
+							"pm.test(\"Success is true\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.success).to.be.true;",
+							"});",
+							"",
+							"pm.test(\"Status updated to ABSENT\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.data.statut_presence).to.equal('ABSENT');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Obtenir les statistiques des participants",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -441,15 +380,16 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/stats",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/stats",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
+						"participants",
 						"stats"
 					]
 				}
@@ -477,7 +417,9 @@
 							"pm.test(\"Response has stats data\", function () {",
 							"    const response = pm.response.json();",
 							"    pm.expect(response.data).to.have.property('total');",
-							"    pm.expect(response.data).to.have.property('duree_totale');",
+							"    pm.expect(response.data).to.have.property('confirmes');",
+							"    pm.expect(response.data).to.have.property('absents');",
+							"    pm.expect(response.data).to.have.property('en_attente');",
 							"});"
 						],
 						"type": "text/javascript"
@@ -486,7 +428,7 @@
 			]
 		},
 		{
-			"name": "8. Test de validation - Titre manquant",
+			"name": "7. Test de validation - User ID manquant",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -508,19 +450,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"description\": \"Description sans titre\",\n    \"type\": \"POINT_DIVERS\",\n    \"duree_estimee_minutes\": 15\n}"
+					"raw": "{\n    \"role\": \"PARTICIPANT\",\n    \"type\": \"INVITE\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
-						"points"
+						"participants"
 					]
 				}
 			},
@@ -545,7 +487,7 @@
 			]
 		},
 		{
-			"name": "9. Test de validation - Type invalide",
+			"name": "8. Test de validation - Rôle invalide",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -567,19 +509,19 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"titre\": \"Point avec type invalide\",\n    \"type\": \"TYPE_INVALIDE\",\n    \"duree_estimee_minutes\": 15\n}"
+					"raw": "{\n    \"user_id\": 5,\n    \"role\": \"INVALID_ROLE\",\n    \"type\": \"INVITE\"\n}"
 				},
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/{{reunion_test_id}}/points",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
+						"reunions",
 						"{{reunion_test_id}}",
-						"points"
+						"participants"
 					]
 				}
 			},
@@ -604,7 +546,66 @@
 			]
 		},
 		{
-			"name": "10. Supprimer un point de l'ordre du jour",
+			"name": "9. Test de validation - Statut de présence invalide",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user_id\": 6,\n    \"role\": \"PARTICIPANT\",\n    \"type\": \"INVITE\",\n    \"statut_presence\": \"INVALID_STATUS\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reunions",
+						"{{reunion_test_id}}",
+						"participants"
+					]
+				}
+			},
+			"response": [],
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test(\"Response has errors\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('errors');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Supprimer un participant",
 			"request": {
 				"method": "DELETE",
 				"header": [
@@ -620,16 +621,17 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/v1/ordre-jour/points/{{point_created_id}}",
+					"raw": "{{base_url}}/api/v1/reunions/{{reunion_test_id}}/participants/{{participant_created_id}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
 						"v1",
-						"ordre-jour",
-						"points",
-						"{{point_created_id}}"
+						"reunions",
+						"{{reunion_test_id}}",
+						"participants",
+						"{{participant_created_id}}"
 					]
 				}
 			},
@@ -696,12 +698,12 @@
 			"type": "string"
 		},
 		{
-			"key": "point_test_id",
+			"key": "participant_test_id",
 			"value": "",
 			"type": "string"
 		},
 		{
-			"key": "point_created_id",
+			"key": "participant_created_id",
 			"value": "",
 			"type": "string"
 		}

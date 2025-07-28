@@ -26,42 +26,38 @@ class ReunionParticipant extends Model
     public const ROLE_SECRETAIRE = 'SECRETAIRE';
     public const ROLE_PARTICIPANT = 'PARTICIPANT';
     public const ROLE_OBSERVATEUR = 'OBSERVATEUR';
-    public const ROLE_INVITE = 'INVITE';
+        public const ROLE_VALIDATEUR_PV = 'VALIDATEUR_PV';
 
     public const ROLES = [
         self::ROLE_PRESIDENT => 'Président',
         self::ROLE_SECRETAIRE => 'Secrétaire',
         self::ROLE_PARTICIPANT => 'Participant',
         self::ROLE_OBSERVATEUR => 'Observateur',
-        self::ROLE_INVITE => 'Invité',
+        self::ROLE_VALIDATEUR_PV => 'Validateur PV',
     ];
 
     /**
      * Constantes pour les types
      */
-    public const TYPE_INTERNE = 'INTERNE';
-    public const TYPE_EXTERNE = 'EXTERNE';
+    public const TYPE_PERMANENT = 'PERMANENT';
+    public const TYPE_INVITE = 'INVITE';
 
     public const TYPES = [
-        self::TYPE_INTERNE => 'Interne',
-        self::TYPE_EXTERNE => 'Externe',
+        self::TYPE_PERMANENT => 'Permanent',
+        self::TYPE_INVITE => 'Invité',
     ];
 
     /**
      * Constantes pour les statuts de présence
      */
-    public const STATUT_PRESENCE_INVITE = 'INVITE';
     public const STATUT_PRESENCE_CONFIRME = 'CONFIRME';
-    public const STATUT_PRESENCE_REFUSE = 'REFUSE';
     public const STATUT_PRESENCE_ABSENT = 'ABSENT';
-    public const STATUT_PRESENCE_PRESENT = 'PRESENT';
+    public const STATUT_PRESENCE_EN_ATTENTE = 'EN_ATTENTE';
 
     public const STATUTS_PRESENCE = [
-        self::STATUT_PRESENCE_INVITE => 'Invité',
         self::STATUT_PRESENCE_CONFIRME => 'Confirmé',
-        self::STATUT_PRESENCE_REFUSE => 'Refusé',
         self::STATUT_PRESENCE_ABSENT => 'Absent',
-        self::STATUT_PRESENCE_PRESENT => 'Présent',
+        self::STATUT_PRESENCE_EN_ATTENTE => 'En attente',
     ];
 
     /**
@@ -137,14 +133,6 @@ class ReunionParticipant extends Model
     }
 
     /**
-     * Scope pour les participants présents
-     */
-    public function scopePresents($query)
-    {
-        return $query->where('statut_presence', self::STATUT_PRESENCE_PRESENT);
-    }
-
-    /**
      * Scope pour les participants absents
      */
     public function scopeAbsents($query)
@@ -153,11 +141,11 @@ class ReunionParticipant extends Model
     }
 
     /**
-     * Scope pour les participants refusés
+     * Scope pour les participants en attente
      */
-    public function scopeRefuses($query)
+    public function scopeEnAttente($query)
     {
-        return $query->where('statut_presence', self::STATUT_PRESENCE_REFUSE);
+        return $query->where('statut_presence', self::STATUT_PRESENCE_EN_ATTENTE);
     }
 
     /**
@@ -201,14 +189,6 @@ class ReunionParticipant extends Model
     }
 
     /**
-     * Vérifier si le participant est présent
-     */
-    public function getEstPresentAttribute(): bool
-    {
-        return $this->statut_presence === self::STATUT_PRESENCE_PRESENT;
-    }
-
-    /**
      * Vérifier si le participant est absent
      */
     public function getEstAbsentAttribute(): bool
@@ -225,19 +205,11 @@ class ReunionParticipant extends Model
     }
 
     /**
-     * Vérifier si le participant a refusé
+     * Vérifier si le participant est en attente
      */
-    public function getEstRefuseAttribute(): bool
+    public function getEstEnAttenteAttribute(): bool
     {
-        return $this->statut_presence === self::STATUT_PRESENCE_REFUSE;
-    }
-
-    /**
-     * Vérifier si le participant est invité
-     */
-    public function getEstInviteAttribute(): bool
-    {
-        return $this->statut_presence === self::STATUT_PRESENCE_INVITE;
+        return $this->statut_presence === self::STATUT_PRESENCE_EN_ATTENTE;
     }
 
     /**
@@ -257,19 +229,19 @@ class ReunionParticipant extends Model
     }
 
     /**
-     * Vérifier si le participant est interne
+     * Vérifier si le participant est permanent
      */
-    public function getEstInterneAttribute(): bool
+    public function getEstPermanentAttribute(): bool
     {
-        return $this->type === self::TYPE_INTERNE;
+        return $this->type === self::TYPE_PERMANENT;
     }
 
     /**
-     * Vérifier si le participant est externe
+     * Vérifier si le participant est invité
      */
-    public function getEstExterneAttribute(): bool
+    public function getEstInviteAttribute(): bool
     {
-        return $this->type === self::TYPE_EXTERNE;
+        return $this->type === self::TYPE_INVITE;
     }
 
     /**
@@ -278,11 +250,9 @@ class ReunionParticipant extends Model
     public function getStatutPresenceCouleurAttribute(): string
     {
         return match($this->statut_presence) {
-            self::STATUT_PRESENCE_INVITE => 'gray',
             self::STATUT_PRESENCE_CONFIRME => 'blue',
-            self::STATUT_PRESENCE_PRESENT => 'green',
             self::STATUT_PRESENCE_ABSENT => 'red',
-            self::STATUT_PRESENCE_REFUSE => 'orange',
+            self::STATUT_PRESENCE_EN_ATTENTE => 'gray',
             default => 'gray',
         };
     }
@@ -293,11 +263,9 @@ class ReunionParticipant extends Model
     public function getStatutPresenceIconeAttribute(): string
     {
         return match($this->statut_presence) {
-            self::STATUT_PRESENCE_INVITE => 'mail',
             self::STATUT_PRESENCE_CONFIRME => 'check-circle',
-            self::STATUT_PRESENCE_PRESENT => 'user-check',
             self::STATUT_PRESENCE_ABSENT => 'user-x',
-            self::STATUT_PRESENCE_REFUSE => 'x-circle',
+            self::STATUT_PRESENCE_EN_ATTENTE => 'clock',
             default => 'help-circle',
         };
     }

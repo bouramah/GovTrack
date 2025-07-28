@@ -316,11 +316,8 @@ class TypeReunionValidateurPVService
                     'user_id' => $validateurSource->user_id,
                     'ordre_priorite' => $validateurSource->ordre_priorite,
                     'actif' => $validateurSource->actif,
-                    'conditions_validation' => $validateurSource->conditions_validation,
-                    'delai_validation_jours' => $validateurSource->delai_validation_jours,
-                    'notifications_actives' => $validateurSource->notifications_actives,
-                    'created_by' => $userId,
-                    'updated_by' => $userId,
+                    'creer_par' => $userId,
+                    'modifier_par' => $userId,
                 ]);
                 $nombreCopie++;
             }

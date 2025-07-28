@@ -1,0 +1,492 @@
+{
+	"info": {
+		"_postman_id": "reunion-analytics-service-complete",
+		"name": "GovTrack - ReunionAnalyticsService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du ReunionAnalyticsService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Statistiques Globales",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/global-stats?start_date={{start_date}}&end_date={{end_date}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "global-stats"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (optionnel, défaut: début du mois)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (optionnel, défaut: fin du mois)"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques globales des réunions pour une période donnée"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Tendances Temporelles",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/trends?start_date={{start_date}}&end_date={{end_date}}&group_by={{group_by}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "trends"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						},
+						{
+							"key": "group_by",
+							"value": "{{group_by}}",
+							"description": "Groupement: day, week, month (défaut: day)"
+						}
+					]
+				},
+				"description": "Obtenir les tendances temporelles des réunions"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Rapport par Type de Réunion",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/entity-report?start_date={{start_date}}&end_date={{end_date}}&type_reunion_id={{type_reunion_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "entity-report"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						},
+						{
+							"key": "type_reunion_id",
+							"value": "{{type_reunion_id}}",
+							"description": "ID du type de réunion (optionnel)"
+						}
+					]
+				},
+				"description": "Obtenir un rapport détaillé par type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Performance des Participants",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/participant-performance?start_date={{start_date}}&end_date={{end_date}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "participant-performance"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						}
+					]
+				},
+				"description": "Obtenir un rapport de performance des participants"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Qualité des PV",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/pv-quality?start_date={{start_date}}&end_date={{end_date}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "pv-quality"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						}
+					]
+				},
+				"description": "Obtenir un rapport de qualité des procès-verbaux"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Métriques de Performance",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/performance-metrics?start_date={{start_date}}&end_date={{end_date}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "performance-metrics"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						}
+					]
+				},
+				"description": "Obtenir les métriques de performance des réunions"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Tableau de Bord Exécutif",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/executive-dashboard?start_date={{start_date}}&end_date={{end_date}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "executive-dashboard"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (optionnel)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (optionnel)"
+						}
+					]
+				},
+				"description": "Obtenir le tableau de bord exécutif complet"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Rapport de Comparaison",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/comparison-report?period1_start={{period1_start}}&period1_end={{period1_end}}&period2_start={{period2_start}}&period2_end={{period2_end}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "comparison-report"],
+					"query": [
+						{
+							"key": "period1_start",
+							"value": "{{period1_start}}",
+							"description": "Début période 1 (requis)"
+						},
+						{
+							"key": "period1_end",
+							"value": "{{period1_end}}",
+							"description": "Fin période 1 (requis)"
+						},
+						{
+							"key": "period2_start",
+							"value": "{{period2_start}}",
+							"description": "Début période 2 (requis)"
+						},
+						{
+							"key": "period2_end",
+							"value": "{{period2_end}}",
+							"description": "Fin période 2 (requis)"
+						}
+					]
+				},
+				"description": "Comparer les statistiques entre deux périodes"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Export de Données",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/export-data?start_date={{start_date}}&end_date={{end_date}}&format={{format}}",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "export-data"],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "{{start_date}}",
+							"description": "Date de début (requis)"
+						},
+						{
+							"key": "end_date",
+							"value": "{{end_date}}",
+							"description": "Date de fin (requis)"
+						},
+						{
+							"key": "format",
+							"value": "{{format}}",
+							"description": "Format d'export: json (défaut)"
+						}
+					]
+				},
+				"description": "Exporter les données pour analyse externe"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Rapport Personnalisé",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"filters\": {\n    \"date_debut\": \"{{start_date}}\",\n    \"date_fin\": \"{{end_date}}\",\n    \"type_reunion_id\": {{type_reunion_id}},\n    \"statut\": \"{{statut}}\"\n  },\n  \"metrics\": [\n    \"duree_moyenne\",\n    \"taux_presence\",\n    \"repartition_par_type_reunion\",\n    \"evolution_temporelle\"\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/custom-report",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "analytics", "custom-report"]
+				},
+				"description": "Générer un rapport personnalisé avec filtres et métriques spécifiques"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir les variables par défaut",
+					"if (!pm.environment.get('start_date')) {",
+					"    pm.environment.set('start_date', new Date().toISOString().split('T')[0]);",
+					"}",
+					"if (!pm.environment.get('end_date')) {",
+					"    pm.environment.set('end_date', new Date().toISOString().split('T')[0]);",
+					"}",
+					"if (!pm.environment.get('group_by')) {",
+					"    pm.environment.set('group_by', 'day');",
+					"}",
+					"if (!pm.environment.get('format')) {",
+					"    pm.environment.set('format', 'json');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "start_date",
+			"value": "2025-01-01",
+			"type": "string"
+		},
+		{
+			"key": "end_date",
+			"value": "2025-12-31",
+			"type": "string"
+		},
+		{
+			"key": "group_by",
+			"value": "day",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "statut",
+			"value": "TERMINEE",
+			"type": "string"
+		},
+		{
+			"key": "period1_start",
+			"value": "2025-01-01",
+			"type": "string"
+		},
+		{
+			"key": "period1_end",
+			"value": "2025-03-31",
+			"type": "string"
+		},
+		{
+			"key": "period2_start",
+			"value": "2025-04-01",
+			"type": "string"
+		},
+		{
+			"key": "period2_end",
+			"value": "2025-06-30",
+			"type": "string"
+		},
+		{
+			"key": "format",
+			"value": "json",
+			"type": "string"
+		}
+	]
+}

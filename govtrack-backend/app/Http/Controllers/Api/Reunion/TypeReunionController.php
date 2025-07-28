@@ -4,17 +4,31 @@ namespace App\Http\Controllers\Api\Reunion;
 
 use App\Http\Controllers\Controller;
 use App\Services\Reunion\TypeReunionService;
+use App\Services\Reunion\TypeReunionGestionnaireService;
+use App\Services\Reunion\TypeReunionMembrePermanentService;
+use App\Services\Reunion\TypeReunionValidateurPVService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Exception;
 
 class TypeReunionController extends Controller
 {
     protected TypeReunionService $typeReunionService;
+    protected TypeReunionGestionnaireService $gestionnaireService;
+    protected TypeReunionMembrePermanentService $membreService;
+    protected TypeReunionValidateurPVService $validateurService;
 
-    public function __construct(TypeReunionService $typeReunionService)
-    {
+    public function __construct(
+        TypeReunionService $typeReunionService,
+        TypeReunionGestionnaireService $gestionnaireService,
+        TypeReunionMembrePermanentService $membreService,
+        TypeReunionValidateurPVService $validateurService
+    ) {
         $this->typeReunionService = $typeReunionService;
+        $this->gestionnaireService = $gestionnaireService;
+        $this->membreService = $membreService;
+        $this->validateurService = $validateurService;
     }
 
     /**
@@ -295,22 +309,15 @@ class TypeReunionController extends Controller
     public function gestionnaires(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+        $filters = $request->all();
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
+        $result = $this->gestionnaireService->getGestionnaires($id, $filters);
 
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
         }
-
-        $type = $typeReunion['data'];
-        $gestionnaires = $type->gestionnaires()->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $gestionnaires,
-            'message' => 'Gestionnaires récupérés avec succès'
-        ], 200);
     }
 
     /**
@@ -319,22 +326,15 @@ class TypeReunionController extends Controller
     public function membres(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+        $filters = $request->all();
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
+        $result = $this->membreService->getMembresPermanents($id, $filters);
 
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
         }
-
-        $type = $typeReunion['data'];
-        $membres = $type->membres()->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $membres,
-            'message' => 'Membres récupérés avec succès'
-        ], 200);
     }
 
     /**
@@ -343,22 +343,123 @@ class TypeReunionController extends Controller
     public function validateursPV(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+        $filters = $request->all();
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
+        try {
+            $result = $this->validateurService->getValidateurs($id, $filters);
 
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des validateurs PV',
+                'error' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * Ajouter des validateurs PV à un type de réunion
+     */
+    public function addValidateursPV(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'validateurs' => 'required|array|min:1',
+            'validateurs.*.role_validateur' => 'required|string|in:SECRETAIRE,PRESIDENT,AUTRE',
+            'validateurs.*.user_id' => 'nullable|exists:users,id',
+            'validateurs.*.ordre_priorite' => 'required|integer|min:1',
+            'validateurs.*.actif' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $type = $typeReunion['data'];
-        $validateurs = $type->validateursPV()->get();
+        $results = [];
+        foreach ($request->validateurs as $validateurData) {
+            try {
+                $validateurData['type_reunion_id'] = $id;
+                $result = $this->validateurService->createValidateur($validateurData, $user->id);
+                $results[] = [
+                    'success' => true,
+                    'message' => 'Validateur PV créé avec succès',
+                    'data' => $result
+                ];
+            } catch (Exception $e) {
+                $results[] = [
+                    'success' => false,
+                    'message' => 'Erreur lors de la création du validateur PV',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
 
         return response()->json([
-            'success' => true,
-            'data' => $validateurs,
-            'message' => 'Validateurs PV récupérés avec succès'
-        ], 200);
+            'success' => $errorCount === 0,
+            'message' => "Ajout terminé : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
+    }
+
+    /**
+     * Retirer des validateurs PV d'un type de réunion
+     */
+    public function removeValidateursPV(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'validateurs' => 'required|array|min:1',
+            'validateurs.*' => 'required|integer|exists:type_reunion_validateur_pvs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $results = [];
+        foreach ($request->validateurs as $validateurId) {
+            try {
+                $result = $this->validateurService->deleteValidateur($validateurId, $user->id);
+                $results[] = [
+                    'success' => $result,
+                    'message' => $result ? 'Validateur PV supprimé avec succès' : 'Erreur lors de la suppression'
+                ];
+            } catch (Exception $e) {
+                $results[] = [
+                    'success' => false,
+                    'message' => 'Erreur lors de la suppression',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
+
+        return response()->json([
+            'success' => $errorCount === 0,
+            'message' => "Suppression terminée : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
     }
 
     /**
@@ -371,7 +472,9 @@ class TypeReunionController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'gestionnaires' => 'required|array|min:1',
-            'gestionnaires.*' => 'exists:users,id',
+            'gestionnaires.*.user_id' => 'required|exists:users,id',
+            'gestionnaires.*.permissions' => 'nullable|array',
+            'gestionnaires.*.actif' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -382,22 +485,20 @@ class TypeReunionController extends Controller
             ], 422);
         }
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
-
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        $results = [];
+        foreach ($request->gestionnaires as $gestionnaireData) {
+            $result = $this->gestionnaireService->addGestionnaire($id, $gestionnaireData, $user->id);
+            $results[] = $result;
         }
 
-        $type = $typeReunion['data'];
-
-        // Ajouter les gestionnaires
-        $type->gestionnaires()->attach($request->gestionnaires);
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
 
         return response()->json([
-            'success' => true,
-            'message' => 'Gestionnaires ajoutés avec succès'
-        ], 200);
+            'success' => $errorCount === 0,
+            'message' => "Ajout terminé : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
     }
 
     /**
@@ -410,7 +511,7 @@ class TypeReunionController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'gestionnaires' => 'required|array|min:1',
-            'gestionnaires.*' => 'exists:users,id',
+            'gestionnaires.*' => 'required|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -421,22 +522,144 @@ class TypeReunionController extends Controller
             ], 422);
         }
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
-
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        $results = [];
+        foreach ($request->gestionnaires as $gestionnaireId) {
+            $result = $this->gestionnaireService->removeGestionnaire($id, $gestionnaireId, $user->id);
+            $results[] = $result;
         }
 
-        $type = $typeReunion['data'];
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
 
-        // Retirer les gestionnaires
-        $type->gestionnaires()->detach($request->gestionnaires);
+        return response()->json([
+            'success' => $errorCount === 0,
+            'message' => "Suppression terminée : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
+    }
+
+    /**
+     * Vérifier si un utilisateur est gestionnaire d'un type de réunion
+     */
+    public function checkGestionnaire(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $isGestionnaire = $this->gestionnaireService->isGestionnaire($id, $userId);
 
         return response()->json([
             'success' => true,
-            'message' => 'Gestionnaires retirés avec succès'
+            'data' => [
+                'type_reunion_id' => $id,
+                'user_id' => $userId,
+                'is_gestionnaire' => $isGestionnaire
+            ]
         ], 200);
+    }
+
+    /**
+     * Récupérer les permissions d'un gestionnaire
+     */
+    public function getGestionnairePermissions(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $permissions = $this->gestionnaireService->getGestionnairePermissions($id, $userId);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'type_reunion_id' => $id,
+                'user_id' => $userId,
+                'permissions' => $permissions
+            ]
+        ], 200);
+    }
+
+    /**
+     * Mettre à jour un gestionnaire spécifique
+     */
+    public function updateGestionnaire(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'permissions' => 'nullable|array',
+            'actif' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $result = $this->gestionnaireService->updateGestionnaire($id, $userId, $request->all(), $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Supprimer un gestionnaire spécifique
+     */
+    public function removeGestionnaire(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $result = $this->gestionnaireService->removeGestionnaire($id, $userId, $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Récupérer les statistiques des gestionnaires
+     */
+    public function getGestionnairesStats(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $stats = $this->gestionnaireService->getStats($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ], 200);
+    }
+
+    /**
+     * Copier les gestionnaires vers un autre type de réunion
+     */
+    public function copyGestionnaires(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'type_reunion_destination_id' => 'required|exists:type_reunions,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $result = $this->gestionnaireService->copierGestionnaires($id, $request->type_reunion_destination_id, $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
     }
 
     /**
@@ -449,7 +672,10 @@ class TypeReunionController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'membres' => 'required|array|min:1',
-            'membres.*' => 'exists:users,id',
+            'membres.*.user_id' => 'required|exists:users,id',
+            'membres.*.role_defaut' => 'nullable|string|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR',
+            'membres.*.notifications_par_defaut' => 'nullable|array',
+            'membres.*.actif' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -460,22 +686,20 @@ class TypeReunionController extends Controller
             ], 422);
         }
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
-
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        $results = [];
+        foreach ($request->membres as $membreData) {
+            $result = $this->membreService->addMembrePermanent($id, $membreData, $user->id);
+            $results[] = $result;
         }
 
-        $type = $typeReunion['data'];
-
-        // Ajouter les membres
-        $type->membres()->attach($request->membres);
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
 
         return response()->json([
-            'success' => true,
-            'message' => 'Membres ajoutés avec succès'
-        ], 200);
+            'success' => $errorCount === 0,
+            'message' => "Ajout terminé : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
     }
 
     /**
@@ -488,7 +712,7 @@ class TypeReunionController extends Controller
         // Validation des données
         $validator = Validator::make($request->all(), [
             'membres' => 'required|array|min:1',
-            'membres.*' => 'exists:users,id',
+            'membres.*' => 'required|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -499,21 +723,201 @@ class TypeReunionController extends Controller
             ], 422);
         }
 
-        // Récupérer le type de réunion
-        $typeReunion = $this->typeReunionService->getTypeReunion($id, $user);
-
-        if (!$typeReunion['success']) {
-            return response()->json($typeReunion, 404);
+        $results = [];
+        foreach ($request->membres as $membreId) {
+            $result = $this->membreService->removeMembrePermanent($id, $membreId, $user->id);
+            $results[] = $result;
         }
 
-        $type = $typeReunion['data'];
+        $successCount = collect($results)->where('success', true)->count();
+        $errorCount = count($results) - $successCount;
 
-        // Retirer les membres
-        $type->membres()->detach($request->membres);
+        return response()->json([
+            'success' => $errorCount === 0,
+            'message' => "Suppression terminée : {$successCount} succès, {$errorCount} erreurs",
+            'results' => $results
+        ], $errorCount === 0 ? 200 : 207);
+    }
+
+    /**
+     * Vérifier si un utilisateur est membre permanent d'un type de réunion
+     */
+    public function checkMembre(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $isMembre = $this->membreService->isMembrePermanent($id, $userId);
 
         return response()->json([
             'success' => true,
-            'message' => 'Membres retirés avec succès'
+            'data' => [
+                'type_reunion_id' => $id,
+                'user_id' => $userId,
+                'is_membre_permanent' => $isMembre
+            ]
         ], 200);
+    }
+
+    /**
+     * Récupérer le rôle par défaut d'un membre
+     */
+    public function getMembreRole(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $role = $this->membreService->getMembreRoleDefaut($id, $userId);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'type_reunion_id' => $id,
+                'user_id' => $userId,
+                'role_defaut' => $role
+            ]
+        ], 200);
+    }
+
+    /**
+     * Récupérer les notifications par défaut d'un membre
+     */
+    public function getMembreNotifications(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $notifications = $this->membreService->getMembreNotificationsDefaut($id, $userId);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'type_reunion_id' => $id,
+                'user_id' => $userId,
+                'notifications_par_defaut' => $notifications
+            ]
+        ], 200);
+    }
+
+    /**
+     * Mettre à jour un membre permanent spécifique
+     */
+    public function updateMembre(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'role_defaut' => 'nullable|string|in:PRESIDENT,SECRETAIRE,PARTICIPANT,OBSERVATEUR',
+            'notifications_par_defaut' => 'nullable|array',
+            'actif' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $result = $this->membreService->updateMembrePermanent($id, $userId, $request->all(), $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Supprimer un membre permanent spécifique
+     */
+    public function removeMembre(Request $request, int $id, int $userId): JsonResponse
+    {
+        $user = $request->user();
+        $result = $this->membreService->removeMembrePermanent($id, $userId, $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Récupérer les statistiques des membres permanents
+     */
+    public function getMembresStats(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $stats = $this->membreService->getStats($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ], 200);
+    }
+
+    /**
+     * Copier les membres permanents vers un autre type de réunion
+     */
+    public function copyMembres(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'type_reunion_destination_id' => 'required|exists:type_reunions,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $result = $this->membreService->copierMembresPermanents($id, $request->type_reunion_destination_id, $user->id);
+
+        if ($result['success']) {
+            return response()->json($result, 200);
+        } else {
+            return response()->json($result, 400);
+        }
+    }
+
+    /**
+     * Copier les validateurs PV vers un autre type de réunion
+     */
+    public function copyValidateursPV(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Validation des données
+        $validator = Validator::make($request->all(), [
+            'type_reunion_destination_id' => 'required|exists:type_reunions,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données de validation invalides',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $nombreCopie = $this->validateurService->copierValidateurs($id, $request->type_reunion_destination_id, $user->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Validateurs PV copiés avec succès',
+                'data' => [
+                    'nombre_copie' => $nombreCopie
+                ]
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la copie des validateurs PV',
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 }

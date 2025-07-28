@@ -125,41 +125,40 @@ class ReunionAnalyticsService
     }
 
     /**
-     * Rapport détaillé par entité
+     * Rapport détaillé par type de réunion
      */
-    public function getEntityReport(string $startDate, string $endDate, ?int $entiteId = null): array
+    public function getEntityReport(string $startDate, string $endDate, ?int $typeReunionId = null): array
     {
-        $query = Reunion::with(['entite', 'typeReunion', 'participants'])
+        $query = Reunion::with(['typeReunion', 'participants'])
             ->whereBetween('date_debut', [$startDate, $endDate]);
 
-        if ($entiteId) {
-            $query->where('entite_id', $entiteId);
+        if ($typeReunionId) {
+            $query->where('type_reunion_id', $typeReunionId);
         }
 
         $reunions = $query->get();
 
-        $entites = $reunions->groupBy('entite_id')->map(function ($entiteReunions, $entiteId) {
-            $entite = $entiteReunions->first()->entite;
-            $totalReunions = $entiteReunions->count();
-            $dureeTotale = $entiteReunions->sum(function ($reunion) {
+        $typesReunion = $reunions->groupBy('type_reunion_id')->map(function ($typeReunions, $typeId) {
+            $type = $typeReunions->first()->typeReunion;
+            $totalReunions = $typeReunions->count();
+            $dureeTotale = $typeReunions->sum(function ($reunion) {
                 return Carbon::parse($reunion->date_debut)->diffInMinutes($reunion->date_fin);
             });
 
             return [
-                'entite_id' => $entiteId,
-                'entite_nom' => $entite->nom,
+                'type_reunion_id' => $typeId,
+                'type_reunion_nom' => $type->nom,
                 'total_reunions' => $totalReunions,
-                            'reunions_terminees' => $entiteReunions->where('statut', 'TERMINEE')->count(),
-            'reunions_annulees' => $entiteReunions->where('statut', 'ANNULEE')->count(),
+                'reunions_terminees' => $typeReunions->where('statut', 'TERMINEE')->count(),
+                'reunions_annulees' => $typeReunions->where('statut', 'ANNULEE')->count(),
                 'duree_totale_heures' => round($dureeTotale / 60, 2),
                 'duree_moyenne_minutes' => $totalReunions > 0 ? round($dureeTotale / $totalReunions, 2) : 0,
-                'participants_uniques' => $entiteReunions->flatMap->participants->unique('user_id')->count(),
-                'types_reunion' => $entiteReunions->groupBy('type_reunion_id')->map(function ($typeReunions, $typeId) {
-                    $type = $typeReunions->first()->typeReunion;
+                'participants_uniques' => $typeReunions->flatMap->participants->unique('user_id')->count(),
+                'niveau_complexite' => $type->niveau_complexite,
+                'statistiques_par_niveau' => $typeReunions->groupBy('niveau_complexite_actuel')->map(function ($niveauReunions, $niveau) {
                     return [
-                        'type_id' => $typeId,
-                        'type_nom' => $type->nom,
-                        'count' => $typeReunions->count()
+                        'niveau' => $niveau,
+                        'count' => $niveauReunions->count()
                     ];
                 })->values()
             ];
@@ -170,9 +169,9 @@ class ReunionAnalyticsService
                 'debut' => $startDate,
                 'fin' => $endDate
             ],
-            'entites' => $entites,
-            'total_entites' => $entites->count(),
-            'entite_la_plus_active' => $entites->sortByDesc('total_reunions')->first()
+            'types_reunion' => $typesReunion,
+            'total_types' => $typesReunion->count(),
+            'type_le_plus_actif' => $typesReunion->sortByDesc('total_reunions')->first()
         ];
     }
 
@@ -191,7 +190,7 @@ class ReunionAnalyticsService
                 $user = $userParticipations->first()->user;
                 $reunions = $userParticipations->map->reunion;
                 $totalReunions = $reunions->count();
-                        $reunionsPresent = $userParticipations->where('statut_presence', 'PRESENT')->count();
+                        $reunionsPresent = $userParticipations->where('statut_presence', 'CONFIRME')->count();
         $reunionsAbsent = $userParticipations->where('statut_presence', 'ABSENT')->count();
 
                 return [
@@ -279,7 +278,7 @@ class ReunionAnalyticsService
             if ($participants->isEmpty()) return false;
 
             $dateDebut = Carbon::parse($reunion->date_debut);
-            $premierPresent = $participants->where('statut_presence', 'PRESENT')
+            $premierPresent = $participants->where('statut_presence', 'CONFIRME')
                 ->min('heure_arrivee');
 
             return $premierPresent && Carbon::parse($premierPresent)->gt($dateDebut);
@@ -315,7 +314,7 @@ class ReunionAnalyticsService
                     return $reunion->participants->count();
                 }),
                 'pv_par_reunion' => $reunions->avg(function ($reunion) {
-                    return $reunion->pv()->count();
+                    return $reunion->pvs()->count();
                 })
             ]
         ];
@@ -326,7 +325,7 @@ class ReunionAnalyticsService
      */
     public function exportData(string $startDate, string $endDate, string $format = 'json'): array
     {
-        $reunions = Reunion::with(['entite', 'typeReunion', 'participants.user', 'pv'])
+        $reunions = Reunion::with(['typeReunion', 'participants.user', 'pvs'])
             ->whereBetween('date_debut', [$startDate, $endDate])
             ->get();
 
@@ -346,10 +345,6 @@ class ReunionAnalyticsService
                     'date_fin' => $reunion->date_fin,
                     'lieu' => $reunion->lieu,
                     'statut' => $reunion->statut,
-                    'entite' => [
-                        'id' => $reunion->entite->id,
-                        'nom' => $reunion->entite->nom
-                    ],
                     'type_reunion' => [
                         'id' => $reunion->typeReunion->id,
                         'nom' => $reunion->typeReunion->nom
@@ -365,7 +360,7 @@ class ReunionAnalyticsService
                             'heure_arrivee' => $participant->heure_arrivee
                         ];
                     }),
-                    'pv' => $reunion->pv->map(function ($pv) {
+                    'pv' => $reunion->pvs->map(function ($pv) {
                         return [
                             'id' => $pv->id,
                             'contenu' => $pv->contenu,
@@ -386,7 +381,7 @@ class ReunionAnalyticsService
      */
     public function generateCustomReport(array $filters, array $metrics): array
     {
-        $query = Reunion::with(['entite', 'typeReunion', 'participants', 'pv']);
+        $query = Reunion::with(['typeReunion', 'participants', 'pvs']);
 
         // Appliquer les filtres
         if (!empty($filters['date_debut'])) {
@@ -395,9 +390,7 @@ class ReunionAnalyticsService
         if (!empty($filters['date_fin'])) {
             $query->where('date_debut', '<=', $filters['date_fin']);
         }
-        if (!empty($filters['entite_id'])) {
-            $query->where('entite_id', $filters['entite_id']);
-        }
+
         if (!empty($filters['type_reunion_id'])) {
             $query->where('type_reunion_id', $filters['type_reunion_id']);
         }
@@ -426,17 +419,17 @@ class ReunionAnalyticsService
                         return $reunion->participants->count();
                     });
                     $participantsPresent = $reunions->sum(function ($reunion) {
-                        return $reunion->participants->where('statut_presence', 'PRESENT')->count();
+                        return $reunion->participants->where('statut_presence', 'CONFIRME')->count();
                     });
                     $report['taux_presence'] = $totalParticipants > 0 ? round(($participantsPresent / $totalParticipants) * 100, 2) : 0;
                     break;
-                case 'repartition_par_entite':
-                    $report['repartition_par_entite'] = $reunions->groupBy('entite_id')->map(function ($entiteReunions, $entiteId) {
-                        $entite = $entiteReunions->first()->entite;
+                case 'repartition_par_type_reunion':
+                    $report['repartition_par_type_reunion'] = $reunions->groupBy('type_reunion_id')->map(function ($typeReunions, $typeId) {
+                        $type = $typeReunions->first()->typeReunion;
                         return [
-                            'entite_id' => $entiteId,
-                            'entite_nom' => $entite->nom,
-                            'count' => $entiteReunions->count()
+                            'type_reunion_id' => $typeId,
+                            'type_reunion_nom' => $type->nom,
+                            'count' => $typeReunions->count()
                         ];
                     })->values();
                     break;

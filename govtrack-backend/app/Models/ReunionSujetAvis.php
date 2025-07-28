@@ -10,6 +10,9 @@ class ReunionSujetAvis extends Model
 {
     use HasFactory;
 
+    // Désactiver les timestamps automatiques
+    public $timestamps = false;
+
     /**
      * Le nom de la table associée au modèle
      */

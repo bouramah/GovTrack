@@ -23,13 +23,17 @@ class ReunionNotification extends Model
      * Constantes pour les types de notifications
      */
     public const TYPE_CONFIRMATION_PRESENCE = 'CONFIRMATION_PRESENCE';
-    public const TYPE_RAPPEL = 'RAPPEL';
+    public const TYPE_RAPPEL_24H = 'RAPPEL_24H';
+    public const TYPE_RAPPEL_1H = 'RAPPEL_1H';
+    public const TYPE_RAPPEL_15MIN = 'RAPPEL_15MIN';
     public const TYPE_PV_DISPONIBLE = 'PV_DISPONIBLE';
     public const TYPE_RAPPEL_ACTIONS = 'RAPPEL_ACTIONS';
 
     public const TYPES = [
         self::TYPE_CONFIRMATION_PRESENCE => 'Confirmation de présence',
-        self::TYPE_RAPPEL => 'Rappel',
+        self::TYPE_RAPPEL_24H => 'Rappel 24h avant',
+        self::TYPE_RAPPEL_1H => 'Rappel 1h avant',
+        self::TYPE_RAPPEL_15MIN => 'Rappel 15min avant',
         self::TYPE_PV_DISPONIBLE => 'PV disponible',
         self::TYPE_RAPPEL_ACTIONS => 'Rappel actions',
     ];
@@ -37,14 +41,14 @@ class ReunionNotification extends Model
     /**
      * Constantes pour les statuts
      */
-    public const STATUT_ENVOYEE = 'ENVOYEE';
-    public const STATUT_ECHEC = 'ECHEC';
-    public const STATUT_LUE = 'LUE';
+    public const STATUT_ENVOYE = 'ENVOYE';
+    public const STATUT_LU = 'LU';
+    public const STATUT_ERREUR = 'ERREUR';
 
     public const STATUTS = [
-        self::STATUT_ENVOYEE => 'Envoyée',
-        self::STATUT_ECHEC => 'Échec',
-        self::STATUT_LUE => 'Lue',
+        self::STATUT_ENVOYE => 'Envoyé',
+        self::STATUT_LU => 'Lu',
+        self::STATUT_ERREUR => 'Erreur',
     ];
 
     /**
@@ -107,7 +111,7 @@ class ReunionNotification extends Model
      */
     public function scopeEnvoyees($query)
     {
-        return $query->where('statut', self::STATUT_ENVOYEE);
+        return $query->where('statut', self::STATUT_ENVOYE);
     }
 
     /**
@@ -115,15 +119,15 @@ class ReunionNotification extends Model
      */
     public function scopeLues($query)
     {
-        return $query->where('statut', self::STATUT_LUE);
+        return $query->where('statut', self::STATUT_LU);
     }
 
     /**
-     * Scope pour les notifications en échec
+     * Scope pour les notifications en erreur
      */
-    public function scopeEchecs($query)
+    public function scopeErreurs($query)
     {
-        return $query->where('statut', self::STATUT_ECHEC);
+        return $query->where('statut', self::STATUT_ERREUR);
     }
 
     /**
@@ -131,7 +135,7 @@ class ReunionNotification extends Model
      */
     public function getTypeLibelleAttribute(): string
     {
-        return self::TYPES[$this->type_notification] ?? $this->type_notification;
+        return self::TYPES[$this->type] ?? $this->type;
     }
 
     /**
@@ -147,7 +151,7 @@ class ReunionNotification extends Model
      */
     public function getEstEnvoyeeAttribute(): bool
     {
-        return $this->statut === self::STATUT_ENVOYEE;
+        return $this->statut === self::STATUT_ENVOYE;
     }
 
     /**
@@ -155,15 +159,15 @@ class ReunionNotification extends Model
      */
     public function getEstLueAttribute(): bool
     {
-        return $this->statut === self::STATUT_LUE;
+        return $this->statut === self::STATUT_LU;
     }
 
     /**
      * Vérifier si la notification a échoué
      */
-    public function getEstEchecAttribute(): bool
+    public function getEstErreurAttribute(): bool
     {
-        return $this->statut === self::STATUT_ECHEC;
+        return $this->statut === self::STATUT_ERREUR;
     }
 
     /**
@@ -172,9 +176,9 @@ class ReunionNotification extends Model
     public function getStatutCouleurAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_ENVOYEE => 'blue',
-            self::STATUT_LUE => 'green',
-            self::STATUT_ECHEC => 'red',
+            self::STATUT_ENVOYE => 'blue',
+            self::STATUT_LU => 'green',
+            self::STATUT_ERREUR => 'red',
             default => 'gray',
         };
     }
@@ -185,9 +189,9 @@ class ReunionNotification extends Model
     public function getStatutIconeAttribute(): string
     {
         return match($this->statut) {
-            self::STATUT_ENVOYEE => 'mail',
-            self::STATUT_LUE => 'check-circle',
-            self::STATUT_ECHEC => 'x-circle',
+            self::STATUT_ENVOYE => 'mail',
+            self::STATUT_LU => 'check-circle',
+            self::STATUT_ERREUR => 'x-circle',
             default => 'help-circle',
         };
     }

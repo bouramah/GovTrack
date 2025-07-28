@@ -36,6 +36,8 @@ class TypeReunionGestionnaireService
             $typeReunion->gestionnaires()->attach($data['user_id'], [
                 'permissions' => $data['permissions'] ?? [],
                 'actif' => $data['actif'] ?? true,
+                'creer_par' => $userId,
+                'modifier_par' => $userId,
             ]);
 
             Log::info('Gestionnaire ajouté au type de réunion', [
@@ -99,6 +101,7 @@ class TypeReunionGestionnaireService
             $typeReunion->gestionnaires()->updateExistingPivot($gestionnaireId, [
                 'permissions' => $data['permissions'] ?? $existingGestionnaire->pivot->permissions,
                 'actif' => $data['actif'] ?? $existingGestionnaire->pivot->actif,
+                'modifier_par' => $userId,
             ]);
 
             Log::info('Gestionnaire mis à jour', [
@@ -356,7 +359,8 @@ class TypeReunionGestionnaireService
                     $destinationTypeReunion->gestionnaires()->attach($gestionnaire->id, [
                         'permissions' => $gestionnaire->pivot->permissions,
                         'actif' => $gestionnaire->pivot->actif,
-                        'date_creation' => now(),
+                        'creer_par' => $userId,
+                        'modifier_par' => $userId,
                     ]);
                     $nombreCopie++;
                 }

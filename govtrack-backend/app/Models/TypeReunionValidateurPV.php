@@ -24,18 +24,22 @@ class TypeReunionValidateurPV extends Model
      */
     protected $fillable = [
         'type_reunion_id',
+        'role_validateur',
         'user_id',
-        'niveau_validation',
+        'ordre_priorite',
         'actif',
         'date_creation',
         'date_modification',
+        'creer_par',
+        'modifier_par',
     ];
 
     /**
      * Les attributs qui doivent être castés
      */
     protected $casts = [
-        'niveau_validation' => 'integer',
+        'role_validateur' => 'string',
+        'ordre_priorite' => 'integer',
         'actif' => 'boolean',
         'date_creation' => 'datetime',
         'date_modification' => 'datetime',
@@ -66,11 +70,11 @@ class TypeReunionValidateurPV extends Model
     }
 
     /**
-     * Scope par niveau de validation
+     * Scope par rôle validateur
      */
-    public function scopeByNiveauValidation($query, $niveau)
+    public function scopeByRoleValidateur($query, $role)
     {
-        return $query->where('niveau_validation', $niveau);
+        return $query->where('role_validateur', $role);
     }
 
     /**

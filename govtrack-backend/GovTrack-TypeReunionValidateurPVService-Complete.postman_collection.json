@@ -1,0 +1,408 @@
+{
+	"info": {
+		"_postman_id": "type-reunion-validateur-pv-service-complete",
+		"name": "GovTrack - TypeReunionValidateurPVService Complete",
+		"description": "Collection complète pour tester toutes les méthodes du TypeReunionValidateurPVService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Récupérer les Validateurs PV",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"]
+				},
+				"description": "Récupérer la liste des validateurs PV d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Ajouter un Validateur PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"validateurs\": [\n    {\n      \"role_validateur\": \"SECRETAIRE\",\n      \"user_id\": {{validateur_user_id}},\n      \"ordre_priorite\": 1,\n      \"actif\": true\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"]
+				},
+				"description": "Ajouter un validateur PV à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Ajouter Plusieurs Validateurs PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"validateurs\": [\n    {\n      \"role_validateur\": \"PRESIDENT\",\n      \"user_id\": {{validateur_user_id}},\n      \"ordre_priorite\": 1,\n      \"actif\": true\n    },\n    {\n      \"role_validateur\": \"SECRETAIRE\",\n      \"user_id\": {{validateur_user_id_2}},\n      \"ordre_priorite\": 2,\n      \"actif\": true\n    },\n    {\n      \"role_validateur\": \"AUTRE\",\n      \"user_id\": {{validateur_user_id_3}},\n      \"ordre_priorite\": 3,\n      \"actif\": false\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"]
+				},
+				"description": "Ajouter plusieurs validateurs PV à un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Supprimer un Validateur PV",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"validateurs\": [{{validateur_id}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"]
+				},
+				"description": "Supprimer un validateur PV d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Supprimer Plusieurs Validateurs PV",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"validateurs\": [{{validateur_id}}, {{validateur_id_2}}]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"]
+				},
+				"description": "Supprimer plusieurs validateurs PV d'un type de réunion"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Vérifier Validateur par Rôle",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv?role_validateur=SECRETAIRE",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"],
+					"query": [
+						{
+							"key": "role_validateur",
+							"value": "SECRETAIRE",
+							"description": "Rôle du validateur à filtrer"
+						}
+					]
+				},
+				"description": "Vérifier les validateurs PV par rôle"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Validateurs Actifs",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv?actif=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"],
+					"query": [
+						{
+							"key": "actif",
+							"value": "true",
+							"description": "Filtrer les validateurs actifs"
+						}
+					]
+				},
+				"description": "Récupérer uniquement les validateurs PV actifs"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Validateurs par Priorité",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv?ordre_priorite=1",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"],
+					"query": [
+						{
+							"key": "ordre_priorite",
+							"value": "1",
+							"description": "Priorité du validateur"
+						}
+					]
+				},
+				"description": "Récupérer les validateurs PV par ordre de priorité"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Statistiques des Validateurs PV",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv?stats=true",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv"],
+					"query": [
+						{
+							"key": "stats",
+							"value": "true",
+							"description": "Inclure les statistiques"
+						}
+					]
+				},
+				"description": "Obtenir les statistiques des validateurs PV"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Copier les Validateurs PV",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{auth_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"source_type_reunion_id\": {{source_type_reunion_id}},\n  \"destination_type_reunion_id\": {{destination_type_reunion_id}}\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/types-reunions/{{type_reunion_id}}/validateurs-pv/copy",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "types-reunions", "{{type_reunion_id}}", "validateurs-pv", "copy"]
+				},
+				"description": "Copier les validateurs PV d'un type de réunion vers un autre"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pré-requête pour définir les variables par défaut",
+					"if (!pm.environment.get('type_reunion_id')) {",
+					"    pm.environment.set('type_reunion_id', '1');",
+					"}",
+					"if (!pm.environment.get('validateur_user_id')) {",
+					"    pm.environment.set('validateur_user_id', '6');",
+					"}",
+					"if (!pm.environment.get('validateur_user_id_2')) {",
+					"    pm.environment.set('validateur_user_id_2', '7');",
+					"}",
+					"if (!pm.environment.get('validateur_user_id_3')) {",
+					"    pm.environment.set('validateur_user_id_3', '8');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_auth_token_here",
+			"type": "string"
+		},
+		{
+			"key": "type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "validateur_user_id",
+			"value": "6",
+			"type": "string"
+		},
+		{
+			"key": "validateur_user_id_2",
+			"value": "7",
+			"type": "string"
+		},
+		{
+			"key": "validateur_user_id_3",
+			"value": "8",
+			"type": "string"
+		},
+		{
+			"key": "validateur_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "validateur_id_2",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "source_type_reunion_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "destination_type_reunion_id",
+			"value": "2",
+			"type": "string"
+		}
+	]
+}

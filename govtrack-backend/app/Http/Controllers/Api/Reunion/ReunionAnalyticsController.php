@@ -95,14 +95,14 @@ class ReunionAnalyticsController extends Controller
     }
 
     /**
-     * Rapport détaillé par entité
+     * Rapport détaillé par type de réunion
      */
     public function getEntityReport(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'entite_id' => 'nullable|integer|exists:entites,id'
+            'type_reunion_id' => 'nullable|integer|exists:type_reunions,id'
         ]);
 
         if ($validator->fails()) {
@@ -117,7 +117,7 @@ class ReunionAnalyticsController extends Controller
             $report = $this->analyticsService->getEntityReport(
                 $request->start_date,
                 $request->end_date,
-                $request->entite_id
+                $request->type_reunion_id
             );
 
             return response()->json([
@@ -127,7 +127,7 @@ class ReunionAnalyticsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la génération du rapport par entité',
+                'message' => 'Erreur lors de la génération du rapport par type de réunion',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -291,11 +291,10 @@ class ReunionAnalyticsController extends Controller
         $validator = Validator::make($request->all(), [
             'filters.date_debut' => 'nullable|date',
             'filters.date_fin' => 'nullable|date|after_or_equal:filters.date_debut',
-            'filters.entite_id' => 'nullable|integer|exists:entites,id',
             'filters.type_reunion_id' => 'nullable|integer|exists:type_reunions,id',
-            'filters.status' => 'nullable|string|in:planifiee,en_cours,terminee,annulee,reportee',
+            'filters.statut' => 'nullable|string|in:PLANIFIEE,EN_COURS,TERMINEE,ANNULEE',
             'metrics' => 'required|array|min:1',
-            'metrics.*' => 'string|in:duree_moyenne,taux_presence,repartition_par_entite,evolution_temporelle'
+            'metrics.*' => 'string|in:duree_moyenne,taux_presence,repartition_par_type_reunion,evolution_temporelle'
         ]);
 
         if ($validator->fails()) {

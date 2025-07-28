@@ -290,14 +290,34 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('{id}/gestionnaires', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'gestionnaires'])->middleware('permission:view_reunion_types');
         Route::post('{id}/gestionnaires', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'addGestionnaires'])->middleware('permission:update_reunion_types');
         Route::delete('{id}/gestionnaires', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'removeGestionnaires'])->middleware('permission:update_reunion_types');
+        Route::get('{id}/gestionnaires/stats', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'getGestionnairesStats'])->middleware('permission:view_reunion_types');
+        Route::post('{id}/gestionnaires/copier', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'copyGestionnaires'])->middleware('permission:update_reunion_types');
+
+        // Opérations individuelles sur les gestionnaires
+        Route::get('{id}/gestionnaires/{userId}/check', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'checkGestionnaire'])->middleware('permission:view_reunion_types');
+        Route::get('{id}/gestionnaires/{userId}/permissions', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'getGestionnairePermissions'])->middleware('permission:view_reunion_types');
+        Route::put('{id}/gestionnaires/{userId}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'updateGestionnaire'])->middleware('permission:update_reunion_types');
+        Route::delete('{id}/gestionnaires/{userId}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'removeGestionnaire'])->middleware('permission:update_reunion_types');
 
         // Gestion des membres
         Route::get('{id}/membres', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'membres'])->middleware('permission:view_reunion_types');
         Route::post('{id}/membres', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'addMembres'])->middleware('permission:update_reunion_types');
         Route::delete('{id}/membres', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'removeMembres'])->middleware('permission:update_reunion_types');
+        Route::get('{id}/membres/stats', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'getMembresStats'])->middleware('permission:view_reunion_types');
+        Route::post('{id}/membres/copier', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'copyMembres'])->middleware('permission:update_reunion_types');
+
+        // Opérations individuelles sur les membres
+        Route::get('{id}/membres/{userId}/check', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'checkMembre'])->middleware('permission:view_reunion_types');
+        Route::get('{id}/membres/{userId}/role', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'getMembreRole'])->middleware('permission:view_reunion_types');
+        Route::get('{id}/membres/{userId}/notifications', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'getMembreNotifications'])->middleware('permission:view_reunion_types');
+        Route::put('{id}/membres/{userId}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'updateMembre'])->middleware('permission:update_reunion_types');
+        Route::delete('{id}/membres/{userId}', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'removeMembre'])->middleware('permission:update_reunion_types');
 
         // Gestion des validateurs PV
         Route::get('{id}/validateurs-pv', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'validateursPV'])->middleware('permission:view_reunion_types');
+        Route::post('{id}/validateurs-pv', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'addValidateursPV'])->middleware('permission:update_reunion_types');
+        Route::delete('{id}/validateurs-pv', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'removeValidateursPV'])->middleware('permission:update_reunion_types');
+        Route::post('{id}/validateurs-pv/copier', [\App\Http\Controllers\Api\Reunion\TypeReunionController::class, 'copyValidateursPV'])->middleware('permission:update_reunion_types');
     });
 
     // Réunions principales
@@ -311,13 +331,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('{id}/changer-statut', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'changeStatut'])->middleware('permission:update_reunions');
 
         // Gestion des participants
-        Route::get('{id}/participants', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'participants'])->middleware('permission:view_reunions');
-        Route::post('{id}/participants', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'addParticipant'])->middleware('permission:update_reunions');
-        Route::post('{id}/participants/multiple', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'addMultipleParticipants'])->middleware('permission:update_reunions');
+        Route::get('{reunionId}/participants', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'participants'])->middleware('permission:view_reunions');
+        Route::post('{reunionId}/participants', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'addParticipant'])->middleware('permission:update_reunions');
+        Route::post('{reunionId}/participants/multiple', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'addMultipleParticipants'])->middleware('permission:update_reunions');
         Route::put('{reunionId}/participants/{participantId}', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'updateParticipant'])->middleware('permission:update_reunions');
         Route::delete('{reunionId}/participants/{participantId}', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'removeParticipant'])->middleware('permission:update_reunions');
         Route::post('{reunionId}/participants/{participantId}/presence', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'updatePresenceStatus'])->middleware('permission:update_reunions');
-        Route::get('{id}/participants/stats', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'participantStats'])->middleware('permission:view_reunions');
+        Route::get('{reunionId}/participants/stats', [\App\Http\Controllers\Api\Reunion\ReunionController::class, 'participantStats'])->middleware('permission:view_reunions');
 
         // =================================================================
         // PHASE 2 : PROCÈS-VERBAUX
